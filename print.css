@@ -1,0 +1,9 @@
+/* ==========================================================================
+   Keystone Field Kit — Print / PDF Styles
+   Stub for Milestone 1. Wired up now; populated when the Report view
+   (later milestone) exists. Report export uses window.print() per Part 5.
+   ========================================================================== */
+
+@media print {
+  /* Intentionally empty until the Report view is built. */
+}

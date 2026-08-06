@@ -1,0 +1,177 @@
+/* ==========================================================================
+   Keystone Field Kit — Components
+   Button, status marker. Grows as later milestones add components.
+   ========================================================================== */
+
+/* Buttons — one primary, one secondary. No tertiary variant. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--control-min-height);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--color-orange-600);
+  color: #FFFFFF;
+}
+
+.btn-primary:active {
+  background: #9C4F26;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:active {
+  background: var(--color-orange-50);
+}
+
+/* Status marker — status is never colour-only: dot + label always paired. */
+
+.status-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.status-marker__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-marker__label {
+  font-size: var(--text-caption-size);
+  font-weight: var(--text-caption-weight);
+  color: var(--color-text-secondary);
+}
+
+.status-marker--not-started .status-marker__dot {
+  background: var(--color-status-not-started);
+}
+
+.status-marker--in-progress .status-marker__dot {
+  background: var(--color-status-in-progress);
+}
+
+.status-marker--in-progress .status-marker__label {
+  color: var(--color-text-primary);
+}
+
+.status-marker--complete .status-marker__dot {
+  background: var(--color-status-complete);
+}
+
+.status-marker--complete .status-marker__label {
+  color: var(--color-text-primary);
+}
+
+/* Form fields — labels always visible above the input. */
+
+.field__label {
+  display: block;
+  font-size: var(--text-caption-size);
+  font-weight: var(--text-caption-weight);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.field__input {
+  display: block;
+  width: 100%;
+  min-height: var(--control-min-height);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--text-body-size);
+}
+
+textarea.field__input {
+  min-height: calc(var(--control-min-height) * 1.6);
+  padding-top: var(--space-1);
+  padding-bottom: var(--space-1);
+  resize: vertical;
+}
+
+.field__input:focus-visible {
+  outline: 2px solid var(--color-orange-500);
+  outline-offset: 1px;
+  border-color: var(--color-orange-500);
+}
+
+/* Cards — list items only, not a general container. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-2);
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.card:active {
+  background: var(--color-orange-50);
+}
+
+.card__title {
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.card__meta {
+  font-size: var(--text-body-secondary-size);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.card__footer {
+  margin-top: var(--space-1);
+}
+
+/* Empty state */
+
+.empty-state {
+  padding: var(--space-4) 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* Secondary action row (e.g. backup controls) */
+
+.action-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.action-row .btn {
+  width: auto;
+  flex: 1;
+}
