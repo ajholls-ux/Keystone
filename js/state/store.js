@@ -24,8 +24,12 @@ function loadFromStorage() {
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
-      // No migrations defined yet for MVP — future schema changes add a
-      // migration step here rather than discarding data silently.
+      // v1 -> v2: Review/PillarAssessment shape changed (Assessment Engine
+      // v1.0). Existing Organisation records remain valid as-is; any
+      // reviews[] created under v1 predate real pillar data (Milestone 2
+      // shipped with no review-creation UI), so no data-loss migration is
+      // required. Future schema changes should add a real migration step
+      // here instead of this comment.
       return parsed && parsed.organisations ? parsed : createEmptyState();
     }
     return parsed;

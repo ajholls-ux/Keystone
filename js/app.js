@@ -12,6 +12,9 @@ import { renderLanding } from "./views/landing.js";
 import { renderOrganisationList } from "./views/organisationList.js";
 import { renderNewOrganisation } from "./views/newOrganisation.js";
 import { renderOrganisationDetail } from "./views/organisationDetail.js";
+import { renderReviewOverview } from "./views/reviewOverview.js";
+import { renderPillarAssessment } from "./views/pillarAssessment.js";
+import { renderDiagnosticPillarSelection } from "./views/diagnosticPillarSelection.js";
 
 function start() {
   initStore();
@@ -23,6 +26,9 @@ function start() {
   registerView("organisationList", renderOrganisationList);
   registerView("newOrganisation", renderNewOrganisation);
   registerView("organisationDetail", renderOrganisationDetail);
+  registerView("reviewOverview", renderReviewOverview);
+  registerView("pillarAssessment", renderPillarAssessment);
+  registerView("diagnosticPillarSelection", renderDiagnosticPillarSelection);
 
   // Initial screen. Uses replace() rather than navigate() so the stack
   // starts with exactly one entry, not two.

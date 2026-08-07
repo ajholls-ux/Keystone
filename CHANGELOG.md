@@ -64,3 +64,35 @@ Milestone 2 — full Organisation List, New Organisation workflow, real persiste
 
 ### Next Milestone
 Milestone 3 — Review Overview (ten-pillar progress map) and the ability to start a new Review against an organisation.
+
+---
+
+## v0.3.0 — Assessment Engine Implementation
+
+**Release date:** 2026-08-07
+
+### Added
+- Schema updated to Assessment Engine v1.0: two-stage Review (`stage`, `diagnosticUnlocked`, `diagnosticLocked`), dual pillar status tracks (`healthReviewStatus` / `diagnosticStatus`), `reviewVersion` field recording the governing methodology version, `scoreHistory[]` audit trail, `assessorConfidence`, evidence source classification, separate `professionalObservation` / `internalAssessorNotes` fields, Diagnostic-layer fields (root cause, risk, cost of inaction, `recommendations[]`, `implementationPlan[]`, reserved `businessImpact`).
+- Organisation Detail: start a new Operational Health Review, view and resume existing reviews.
+- Review Overview: full dashboard per locked Part 2 — summary card (organisation, assessment type, stage, progress, average maturity, dates), progress bar, pillar groupings (flat list pre-Diagnostic; Selected/Available/Completed post-unlock), "Start Operational Diagnostic" and "Manage/View Diagnostic Scope" actions.
+- Pillar Assessment: summary strip (score, confidence, evidence count, stage); Health Review layer (observation, conversation, evidence with source type, strengths, opportunities, professional observation, internal notes, 1–4 maturity score, assessor confidence); Diagnostic layer rendered conditionally once a pillar is selected; score revision prompts for a reason and appends to history rather than overwriting; "Mark pillar complete" enforces evidence + score presence.
+- Diagnostic Pillar Selection: single screen, shows Health Review outcome per pillar, select/deselect, read-only once Diagnostic is locked.
+- New reusable components: score selector, text list editor, evidence list editor.
+
+### Changed
+- `organisationList.js` status derivation updated for the new Review schema (previously referenced a field removed in this release).
+- Schema version bumped to 2; store's migration comment updated to explain why no data migration is required at this stage.
+
+### Fixed
+- N/A (no prior release had review-creation functionality to contain bugs in).
+
+### Known Issues
+- Assessment Complete, Analysis Transition, and Assessment Report screens (Screen Map items 8–10) are not yet built — completing all pillars currently returns the assessor to Review Overview with no explicit "review complete" moment or report output.
+- "Mark pillar complete" evidence check is a presence check (at least one evidence item), not a judgement check on whether evidence sufficiently justifies the score — the Engine's rule is inherently a human judgement call the software can only partially enforce.
+- Score/confidence "reason" prompts use native `window.prompt()`, not an in-brand input — acceptable for MVP, worth revisiting once form patterns mature.
+
+### Technical Debt
+- None introduced beyond the noted native-dialog usage above.
+
+### Next Milestone
+Milestone 4 — Assessment Complete, Analysis Transition, and the Assessment Report engine (Client Report and Diagnostic Report outputs), completing the full assessment-to-report journey.

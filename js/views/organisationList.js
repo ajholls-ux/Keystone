@@ -14,8 +14,8 @@ import { navigate, replace } from "../router.js";
 /** Derives an organisation's overall status from its reviews. */
 function deriveOrgStatus(org) {
   if (!org.reviews || org.reviews.length === 0) return "not-started";
-  if (org.reviews.some((r) => r.status === "in-progress")) return "in-progress";
-  return "complete";
+  const anyIncomplete = org.reviews.some((r) => !r.diagnosticLocked);
+  return anyIncomplete ? "in-progress" : "complete";
 }
 
 function renderOrgCard(org) {
