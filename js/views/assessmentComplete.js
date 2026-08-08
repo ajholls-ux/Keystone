@@ -14,7 +14,7 @@ import {
   isRecommendationAligned,
 } from "../state/schema.js";
 import { createButton } from "../components/button.js";
-import { navigate, back } from "../router.js";
+import { replace, back } from "../router.js";
 
 function findReview(state, organisationId, reviewId) {
   const org = state.organisations.find((o) => o.id === organisationId);
@@ -102,7 +102,7 @@ function renderHealthReviewCompletion(screen, org, review) {
         return s;
       });
 
-      navigate("analysisTransition", {
+      replace("analysisTransition", {
         organisationId: org.id,
         reviewId: review.id,
         reportType: "client",
@@ -146,7 +146,7 @@ function renderDiagnosticCompletion(screen, org, review) {
         return s;
       });
 
-      navigate("analysisTransition", {
+      replace("analysisTransition", {
         organisationId: org.id,
         reviewId: review.id,
         reportType: "diagnostic",

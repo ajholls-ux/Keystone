@@ -131,3 +131,35 @@ Milestone 4 — Assessment Complete, Analysis Transition, and the Assessment Rep
 
 ### Next Milestone
 To be determined with the founder — remaining candidates include authoring pillar guidance content, confirming Health Indicator thresholds, and psychological/UX polish items (progressive disclosure refinements, cover page design) not yet addressed.
+
+---
+
+## v0.3.6 — UX, Navigation & Report Quality Fixes
+
+**Release date:** 2026-08-08
+
+First real iPhone testing pass against Milestone 3.5 surfaced genuine UX/navigation/report-quality issues. This release fixes those without touching the locked Assessment Engine, Screen Map, or Data Model.
+
+### Fixed
+- **Report regeneration-on-Back bug:** pressing Back from a generated report re-rendered the Analysis Transition screen (still in the navigation stack), which immediately auto-forwarded again — making the report feel like it was regenerating on every Back press. Fixed by using `replace()` instead of `navigate()` when moving through Assessment Complete → Analysis Transition → Assessment Report, so the intermediate screens never sit in the back stack. Back from a report now returns directly to Review Overview, and reopening an existing report loads the same generated report — nothing is recreated or duplicated.
+- **Strengths/Opportunities input too small on iPhone:** replaced the single-line text input with an auto-growing multi-line textarea (88px minimum height, ~4 lines), full-width Add button below rather than cramped alongside. Add/remove-multiple-entries structure unchanged — only the input affordance changed, not the underlying data model.
+- **Guidance placement corrected:** guidance was previously one large block at the top of each pillar. It's now attached directly beneath each individual field it supports (Observation Notes, Conversation Notes, Evidence, Strengths, Opportunities, Professional Observation, Maturity Score) — the assessor encounters it at the point of need, not as a wall of text before starting. `PILLAR_GUIDANCE` restructured from one-block-per-pillar to one-block-per-field-per-pillar; content remains entirely unauthored placeholder, per "framework first, content later."
+- **Report no longer looks like a screenshot of the app:** the report screen is now split into a `.report-toolbar` (Back, Export PDF — viewer chrome only) and a `.report-document` (the actual report). Print stylesheet now hides everything except `.report-document` when exporting, so PDF output contains the document only — no navigation, no buttons, no app UI.
+
+### Added
+- Report document restructured to a genuine document shape: branded cover page (Keystone Field Kit, report type, organisation, prepared-by/date, value statement) → Executive Summary → Overall Operational Health (indicator) → Strengths (aggregated, pillar-attributed) → Opportunities (aggregated, pillar-attributed) → Pillar Overview (all ten, maturity level per pillar) → Professional Observations → Further Consideration (recommendation-outcome messaging) → [Diagnostic Report only: per-pillar root cause/risk/cost/recommendations/implementation plan, Priority Matrix placeholder] → Closing.
+
+### Changed
+- Schema version bumped to 4 (guidance restructure — no persisted-data migration required; guidance is a static export, not stored per-Review).
+- `GUIDANCE_SECTIONS` gained a "What to look for" section per the corrected content architecture; "Suggested observations" removed as a distinct section (folded into "What to look for" to avoid overlap with the Observation Notes field it sits under).
+
+### Known Issues
+- Still unable to test on a physical iPhone directly — verification here is limited to logic tracing and syntax checking. Please test the specific navigation flow (Review Overview → View Client Report → Back → Review Overview → Reopen) as the highest-priority check, since it's the exact bug this release targets.
+- Guidance panels remain empty for all fields, all ten pillars — structure only, as instructed.
+- Health Indicator thresholds and recommendation-alignment rules remain provisional, unconfirmed defaults.
+
+### Technical Debt
+- None introduced.
+
+### Next Milestone
+Recommend: get this release verified against the real iPhone workflow first (per the 30-point testing checklist provided). Only after that passes should work begin on authoring actual pillar guidance content and the deeper Keystone questioning engine — that's real methodology work and deserves to be built on a confirmed-solid mechanical foundation, not layered onto unverified navigation fixes.

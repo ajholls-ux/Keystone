@@ -60,7 +60,7 @@ function renderSummaryStrip(pillar, review) {
 }
 
 function renderHealthReviewLayer(container, pillar, review, org, refresh) {
-  container.append(createGuidancePanel(PILLAR_GUIDANCE[pillar.pillarKey]));
+  const guidance = PILLAR_GUIDANCE[pillar.pillarKey];
 
   const obs = createTextField({ id: "observationNotes", label: "Observation notes", textarea: true });
   obs.input.value = pillar.observationNotes;
@@ -168,20 +168,29 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
     confidenceRow.append(btn);
   });
 
+  // Guidance is attached directly under the field it supports, not
+  // bundled into one block at the top of the pillar (Milestone 3.6 fix).
   container.append(
     obs.element,
+    createGuidancePanel(guidance.observationNotes),
     conv.element,
+    createGuidancePanel(guidance.conversationNotes),
     evidenceLabel,
     evidenceEditor,
+    createGuidancePanel(guidance.evidence),
     strengthsLabel,
     strengthsEditor,
+    createGuidancePanel(guidance.strengths),
     oppsLabel,
     oppsHint,
     oppsEditor,
+    createGuidancePanel(guidance.opportunities),
     profObs.element,
+    createGuidancePanel(guidance.professionalObservation),
     internalNotes.element,
     scoreLabel,
     scoreSelector,
+    createGuidancePanel(guidance.maturityScore),
     confidenceLabel,
     confidenceRow
   );

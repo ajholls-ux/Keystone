@@ -6,7 +6,7 @@
 // transforms captured information into insight. Auto-advances.
 // ==========================================================================
 
-import { navigate } from "../router.js";
+import { replace } from "../router.js";
 
 const STATES = ["Reviewing findings…", "Building operational profile…", "Preparing report…"];
 const STEP_MS = 650;
@@ -32,7 +32,11 @@ export function renderAnalysisTransition(container, params) {
       label.textContent = STATES[index];
     } else {
       clearInterval(interval);
-      navigate("assessmentReport", {
+      // replace(), not navigate(): this screen must not remain in the
+      // back stack, or pressing Back from the report would re-render this
+      // transition, which would immediately auto-forward again — making
+      // the report feel like it's being regenerated on every Back press.
+      replace("assessmentReport", {
         organisationId: params.organisationId,
         reviewId: params.reviewId,
         reportType: params.reportType,

@@ -9,14 +9,15 @@ import { GUIDANCE_SECTIONS } from "../state/schema.js";
 
 /**
  * @param {Object} guidance - keyed by GUIDANCE_SECTIONS[].key
+ * @param {string} [triggerLabel] - defaults to "Guidance"
  */
-export function createGuidancePanel(guidance) {
+export function createGuidancePanel(guidance, triggerLabel = "Guidance") {
   const details = document.createElement("details");
   details.className = "guidance-panel";
 
   const summary = document.createElement("summary");
   summary.className = "guidance-panel__summary";
-  summary.textContent = "Assessor guidance";
+  summary.textContent = triggerLabel;
   details.append(summary);
 
   const body = document.createElement("div");

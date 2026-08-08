@@ -24,12 +24,11 @@ function loadFromStorage() {
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
-      // v2 -> v3 (Milestone 3.5): Review gained report-lifecycle and
-      // recommendation fields; evidence entries gained entryType. Existing
-      // Organisation/Review records remain structurally valid — new fields
-      // are additive and read as undefined/null until touched, which the
-      // views already treat as "not yet set." No destructive migration
-      // needed at this stage of the project.
+      // v3 -> v4 (Milestone 3.6): PILLAR_GUIDANCE restructured from one
+      // block per pillar to one block per field within a pillar. This is
+      // a static export (not stored per-Review), so no persisted data
+      // migration is required — existing Organisation/Review records are
+      // unaffected. No destructive migration needed at this stage.
       return parsed && parsed.organisations ? parsed : createEmptyState();
     }
     return parsed;

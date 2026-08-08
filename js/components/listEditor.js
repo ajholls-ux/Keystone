@@ -23,9 +23,10 @@ export function createTextListEditor({ placeholder, items, onChange }) {
     list.innerHTML = "";
     items.forEach((text, index) => {
       const li = document.createElement("li");
-      li.className = "list-editor__item";
+      li.className = "list-editor__item list-editor__item--entry";
 
       const span = document.createElement("span");
+      span.className = "list-editor__entry-text";
       span.textContent = text;
 
       const removeBtn = document.createElement("button");
@@ -47,10 +48,17 @@ export function createTextListEditor({ placeholder, items, onChange }) {
   const inputRow = document.createElement("div");
   inputRow.className = "list-editor__input-row";
 
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "field__input";
+  const input = document.createElement("textarea");
+  input.className = "field__input list-editor__textarea";
   input.placeholder = placeholder;
+  input.rows = 3;
+
+  // Auto-grow as content increases, so the assessor can always see what
+  // they've written rather than fighting a fixed-height box.
+  input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
+  });
 
   const addBtn = document.createElement("button");
   addBtn.type = "button";
@@ -63,16 +71,14 @@ export function createTextListEditor({ placeholder, items, onChange }) {
     items.push(val);
     onChange(items);
     input.value = "";
+    input.style.height = "auto";
     renderList();
   }
 
   addBtn.addEventListener("click", commit);
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      commit();
-    }
-  });
+  // Enter now inserts a newline (textarea, multi-line professional
+  // writing) rather than submitting — submission is the explicit Add
+  // button only.
 
   inputRow.append(input, addBtn);
   renderList();

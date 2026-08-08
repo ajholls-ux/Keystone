@@ -104,14 +104,18 @@ export function isRecommendationAligned(indicatorLevel, recommendationKey) {
 }
 
 // Assessment Guidance framework. Structure only — content is authored
-// pillar-by-pillar over time, not invented here. Every section starts
-// empty; the UI shows "Not yet added" for anything unpopulated so it's
-// always visible what still needs authoring.
+// field-by-field, pillar-by-pillar over time, not invented here. Every
+// section starts empty; the UI shows "Not yet added" for anything
+// unpopulated so it's always visible what still needs authoring.
+//
+// Guidance is attached to the individual field it supports (Strengths,
+// Opportunities, Evidence, etc.), not bundled into one block per pillar —
+// the assessor should encounter guidance at the point they need it.
 export const GUIDANCE_SECTIONS = [
   { key: "purpose", label: "Purpose" },
   { key: "whyItMatters", label: "Why it matters" },
+  { key: "whatToLookFor", label: "What to look for" },
   { key: "evidenceToCollect", label: "Evidence to collect" },
-  { key: "suggestedObservations", label: "Suggested observations" },
   { key: "suggestedConversations", label: "Suggested conversations" },
   { key: "suggestedPhotographs", label: "Suggested photographs" },
   { key: "goodExample", label: "Good example" },
@@ -120,22 +124,39 @@ export const GUIDANCE_SECTIONS = [
   { key: "scoringGuidance", label: "Scoring guidance" },
 ];
 
+// The fields, within each pillar's Health Review layer, that carry their
+// own contextual guidance. Extend this list if a future field should also
+// earn guidance — no restructuring required elsewhere to do so.
+export const GUIDANCE_FIELDS = [
+  "observationNotes",
+  "conversationNotes",
+  "evidence",
+  "strengths",
+  "opportunities",
+  "professionalObservation",
+  "maturityScore",
+];
+
 function emptyGuidance() {
   const g = {};
   GUIDANCE_SECTIONS.forEach((s) => (g[s.key] = ""));
   return g;
 }
 
-// Keyed by pillarKey. Populate incrementally — this framework works
-// correctly with every section empty; it does not block on full content.
+// Keyed by pillarKey, then by field key. Populate incrementally — this
+// framework works correctly with every section empty; it does not block
+// on full content.
 export const PILLAR_GUIDANCE = PILLARS.reduce((acc, p) => {
-  acc[p.key] = emptyGuidance();
+  acc[p.key] = GUIDANCE_FIELDS.reduce((fieldAcc, fieldKey) => {
+    fieldAcc[fieldKey] = emptyGuidance();
+    return fieldAcc;
+  }, {});
   return acc;
 }, {});
 
 // Current schema version. Bump this and add a migration step in store.js
 // if the shape of persisted state ever changes.
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)

@@ -1,9 +1,47 @@
 /* ==========================================================================
    Keystone Field Kit — Print / PDF Styles
-   Stub for Milestone 1. Wired up now; populated when the Report view
-   (later milestone) exists. Report export uses window.print() per Part 5.
+   Report export uses window.print() (Part 5). Only .report-document is
+   visible when printing — viewer chrome (toolbar, Back, Export) and any
+   other app UI must never appear in the exported document.
    ========================================================================== */
 
 @media print {
-  /* Intentionally empty until the Report view is built. */
+  /* Hide everything by default, then explicitly reveal the report. */
+  body * {
+    visibility: hidden;
+  }
+
+  .report-document,
+  .report-document * {
+    visibility: visible;
+  }
+
+  .report-toolbar {
+    display: none !important;
+  }
+
+  .report-document {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .screen {
+    max-width: none;
+    padding: 0;
+  }
+
+  .report-cover {
+    padding: var(--space-4) 0;
+  }
+
+  /* Status/UI colour accents remain, but ensure body text stays
+     print-legible on plain white regardless of screen theme. */
+  body {
+    background: #FFFFFF;
+  }
 }
