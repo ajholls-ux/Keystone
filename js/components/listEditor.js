@@ -151,6 +151,8 @@ export function createEvidenceListEditor({ sourceTypes, items, onChange }) {
     items.push({
       id: `ev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
       sourceType: select.value,
+      entryType: "text", // reserved: future values "voice" | "photo" slot in
+                          // here without restructuring the evidence array
       content,
       capturedAt: new Date().toISOString(),
     });

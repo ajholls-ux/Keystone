@@ -96,3 +96,38 @@ Milestone 3 — Review Overview (ten-pillar progress map) and the ability to sta
 
 ### Next Milestone
 Milestone 4 — Assessment Complete, Analysis Transition, and the Assessment Report engine (Client Report and Diagnostic Report outputs), completing the full assessment-to-report journey.
+
+---
+
+## v0.3.5 — Assessment Experience Layer
+
+**Release date:** 2026-08-07
+
+### Added
+- **Client Report gating fixed:** Operational Diagnostic can no longer start until a Client Report has been generated — the Assessment Engine's lifecycle already required this; it was not correctly enforced in Milestone 3. This was treated as Priority One per founder direction.
+- **Assessment Complete screen** (Screen 8): handles both Health Review completion (Operational Health Indicator, assessor recommendation, Client Report generation) and Diagnostic completion (final lock confirmation, Diagnostic Report generation).
+- **Analysis Transition screen** (Screen 9): brief auto-advancing state sequence between completion and report.
+- **Assessment Report screen** (Screen 10): renders both Client Report and Diagnostic Report from the same underlying data, filtered per Assessment Engine §Internal vs. Client Behaviour. Includes cover page, value statement, executive summary, aggregated strengths/opportunities with professional observations, recommendation-outcome messaging, and (Diagnostic only) root cause/risk/cost-of-inaction/recommendations/implementation plan per selected pillar, plus a placeholder Priority Matrix section. PDF export via `window.print()`.
+- **Operational Health Indicator** (Assessment Engine v1.0 addendum): a calculated traffic-light summary (🟢/🟡/🔴) of Health Review maturity, shown as decision support only. Thresholds centralised in one config constant — provisional defaults, not yet founder-confirmed as final.
+- **Assessor recommendation with validation:** three assessor-chosen outcomes (No Diagnostic Recommended / Recommended / Optional), never auto-derived from score. A justification is required only when the choice doesn't align with the calculated indicator; alignment rules are a provisional, centrally-configured default extrapolated from founder-given examples.
+- **Assessment Guidance framework**: ten-section guidance structure (purpose, why it matters, evidence to collect, suggested observations/conversations/photographs, good/poor examples, common mistakes, scoring guidance) per pillar, rendered as a collapsible panel at the top of each Pillar Assessment screen. Structure only — all content starts empty and displays "Not yet added"; methodology content is authored incrementally, not invented here.
+- Evidence entries now carry an `entryType` field (currently always `"text"`), reserved so future voice/photo capture can slot in without restructuring the evidence array. No capture UI beyond typed evidence is implemented in this release.
+
+### Changed
+- Review Overview: "Start Operational Diagnostic" now only appears after a Client Report exists; added "Complete Health Review," "View Client Report," "Complete Operational Diagnostic," and "View Diagnostic Report" actions at the appropriate lifecycle points.
+- Schema version bumped to 3. Review gained `clientReportGeneratedAt`, `diagnosticReportGeneratedAt`, `diagnosticRecommendation`, `recommendationJustification`.
+
+### Fixed
+- **Recommendation selection bug caught before release:** the initial implementation lost the assessor's in-progress recommendation selection on every click, because it re-rendered the whole screen from persisted state before that state existed. Fixed to update button styling in place instead.
+
+### Known Issues
+- Pillar Assessment guidance panels are empty for all ten pillars — framework only, awaiting authored content.
+- Health Indicator thresholds and recommendation-alignment rules are provisional defaults requiring founder sign-off, not final methodology.
+- Executive Summary is data-derived (counts, indicator) rather than assessor-authored narrative — there is currently no field for the assessor to write a custom executive summary; flagging as a possible future addition rather than building it now.
+- No voice or photo evidence capture — typed evidence only, by design for this milestone.
+
+### Technical Debt
+- None introduced beyond what's already noted above as provisional/placeholder by design.
+
+### Next Milestone
+To be determined with the founder — remaining candidates include authoring pillar guidance content, confirming Health Indicator thresholds, and psychological/UX polish items (progressive disclosure refinements, cover page design) not yet addressed.

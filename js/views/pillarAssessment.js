@@ -7,11 +7,12 @@
 // ==========================================================================
 
 import { getState, updateState } from "../state/store.js";
-import { PILLARS, EVIDENCE_SOURCE_TYPES, CONFIDENCE_LEVELS } from "../state/schema.js";
+import { PILLARS, EVIDENCE_SOURCE_TYPES, CONFIDENCE_LEVELS, PILLAR_GUIDANCE } from "../state/schema.js";
 import { createTextField } from "../components/textField.js";
 import { createButton } from "../components/button.js";
 import { createScoreSelector, SCORE_LABELS } from "../components/scoreSelector.js";
 import { createTextListEditor, createEvidenceListEditor } from "../components/listEditor.js";
+import { createGuidancePanel } from "../components/guidancePanel.js";
 import { back } from "../router.js";
 
 function findPillar(state, organisationId, reviewId, pillarKey) {
@@ -59,6 +60,8 @@ function renderSummaryStrip(pillar, review) {
 }
 
 function renderHealthReviewLayer(container, pillar, review, org, refresh) {
+  container.append(createGuidancePanel(PILLAR_GUIDANCE[pillar.pillarKey]));
+
   const obs = createTextField({ id: "observationNotes", label: "Observation notes", textarea: true });
   obs.input.value = pillar.observationNotes;
   obs.input.addEventListener("blur", () => {

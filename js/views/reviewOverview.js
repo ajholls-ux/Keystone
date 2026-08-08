@@ -173,26 +173,61 @@ export function renderReviewOverview(container, params) {
     (p) => p.healthReviewStatus === "complete"
   );
 
+  const selectedDiagnosticPillars = review.pillarAssessments.filter(
+    (p) => p.diagnosticStatus !== "not-selected"
+  );
+  const allSelectedDiagnosticComplete =
+    selectedDiagnosticPillars.length > 0 &&
+    selectedDiagnosticPillars.every((p) => p.diagnosticStatus === "complete");
+
   const actions = document.createElement("div");
   actions.className = "screen-actions stack-tight";
 
-  if (review.stage !== "diagnostic" && allHealthReviewComplete) {
-    actions.append(
-      createButton({
-        label: "Start Operational Diagnostic",
-        variant: "primary",
-        onClick: () => {
-          updateState((s) => {
-            const { review: r } = findOrgAndReview(s, org.id, review.id);
-            r.stage = "diagnostic";
-            r.diagnosticUnlocked = true;
-            r.lastUpdatedAt = new Date().toISOString();
-            return s;
-          });
-          navigate("diagnosticPillarSelection", { organisationId: org.id, reviewId: review.id });
-        },
-      })
-    );
+  // Health Review stage: must complete the Client Report before Diagnostic
+  // can ever start (Milestone 3.5 fix — Assessment Engine's lifecycle
+  // requires this; it was not correctly enforced in Milestone 3).
+  if (review.stage !== "diagnostic") {
+    if (allHealthReviewComplete && !review.clientReportGeneratedAt) {
+      actions.append(
+        createButton({
+          label: "Complete Health Review",
+          variant: "primary",
+          onClick: () =>
+            navigate("assessmentComplete", { organisationId: org.id, reviewId: review.id }),
+        })
+      );
+    }
+
+    if (review.clientReportGeneratedAt) {
+      actions.append(
+        createButton({
+          label: "View Client Report",
+          variant: "secondary",
+          onClick: () =>
+            navigate("assessmentReport", {
+              organisationId: org.id,
+              reviewId: review.id,
+              reportType: "client",
+            }),
+        })
+      );
+      actions.append(
+        createButton({
+          label: "Start Operational Diagnostic",
+          variant: "primary",
+          onClick: () => {
+            updateState((s) => {
+              const { review: r } = findOrgAndReview(s, org.id, review.id);
+              r.stage = "diagnostic";
+              r.diagnosticUnlocked = true;
+              r.lastUpdatedAt = new Date().toISOString();
+              return s;
+            });
+            navigate("diagnosticPillarSelection", { organisationId: org.id, reviewId: review.id });
+          },
+        })
+      );
+    }
   }
 
   if (review.stage === "diagnostic") {
@@ -204,6 +239,34 @@ export function renderReviewOverview(container, params) {
           navigate("diagnosticPillarSelection", { organisationId: org.id, reviewId: review.id }),
       })
     );
+
+    if (review.diagnosticLocked) {
+      actions.append(
+        createButton({
+          label: "View Diagnostic Report",
+          variant: "primary",
+          onClick: () =>
+            navigate("assessmentReport", {
+              organisationId: org.id,
+              reviewId: review.id,
+              reportType: "diagnostic",
+            }),
+        })
+      );
+    } else if (allSelectedDiagnosticComplete) {
+      actions.append(
+        createButton({
+          label: "Complete Operational Diagnostic",
+          variant: "primary",
+          onClick: () =>
+            navigate("assessmentComplete", {
+              organisationId: org.id,
+              reviewId: review.id,
+              completionStage: "diagnostic",
+            }),
+        })
+      );
+    }
   }
 
   actions.append(createButton({ label: "Back", variant: "secondary", onClick: () => back() }));

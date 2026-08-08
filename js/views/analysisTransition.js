@@ -1,0 +1,42 @@
+// ==========================================================================
+// Keystone Field Kit — Analysis Transition View
+//
+// Screen 9 of the locked Screen Map. Deliberate brief transition between
+// assessment completion and report generation, reinforcing that Keystone
+// transforms captured information into insight. Auto-advances.
+// ==========================================================================
+
+import { navigate } from "../router.js";
+
+const STATES = ["Reviewing findings…", "Building operational profile…", "Preparing report…"];
+const STEP_MS = 650;
+
+export function renderAnalysisTransition(container, params) {
+  const screen = document.createElement("div");
+  screen.className = "screen";
+  screen.style.justifyContent = "center";
+  screen.style.alignItems = "center";
+  screen.style.textAlign = "center";
+
+  const label = document.createElement("p");
+  label.className = "text-heading-section";
+  label.textContent = STATES[0];
+
+  screen.append(label);
+  container.append(screen);
+
+  let index = 0;
+  const interval = setInterval(() => {
+    index += 1;
+    if (index < STATES.length) {
+      label.textContent = STATES[index];
+    } else {
+      clearInterval(interval);
+      navigate("assessmentReport", {
+        organisationId: params.organisationId,
+        reviewId: params.reviewId,
+        reportType: params.reportType,
+      });
+    }
+  }, STEP_MS);
+}

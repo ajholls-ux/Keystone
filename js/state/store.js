@@ -24,12 +24,12 @@ function loadFromStorage() {
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
-      // v1 -> v2: Review/PillarAssessment shape changed (Assessment Engine
-      // v1.0). Existing Organisation records remain valid as-is; any
-      // reviews[] created under v1 predate real pillar data (Milestone 2
-      // shipped with no review-creation UI), so no data-loss migration is
-      // required. Future schema changes should add a real migration step
-      // here instead of this comment.
+      // v2 -> v3 (Milestone 3.5): Review gained report-lifecycle and
+      // recommendation fields; evidence entries gained entryType. Existing
+      // Organisation/Review records remain structurally valid — new fields
+      // are additive and read as undefined/null until touched, which the
+      // views already treat as "not yet set." No destructive migration
+      // needed at this stage of the project.
       return parsed && parsed.organisations ? parsed : createEmptyState();
     }
     return parsed;
