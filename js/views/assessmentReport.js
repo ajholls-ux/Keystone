@@ -12,7 +12,8 @@
 // ==========================================================================
 
 import { getState } from "../state/store.js";
-import { PILLARS, calculateHealthIndicator, SCORE_LABELS } from "../state/schema.js";
+import { PILLARS, calculateHealthIndicator } from "../state/schema.js";
+import { SCORE_LABELS } from "../components/scoreSelector.js";
 import { createButton } from "../components/button.js";
 import { back } from "../router.js";
 
