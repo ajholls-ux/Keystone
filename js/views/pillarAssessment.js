@@ -2,8 +2,15 @@
 // Keystone Field Kit — Pillar Assessment View
 //
 // Screen 6 of the locked Screen Map (Part 2 v1.0). Governed by Assessment
-// Engine v1.0. Health Review layer always present; Diagnostic layer only
-// once this pillar's diagnosticStatus is selected-not-started or beyond.
+// Engine v1.0 plus the Diagnostic Cycles architectural clarification.
+//
+// Health Review layer (params.pillarKey only) is the permanent baseline —
+// always editable, never touched by Diagnostic activity.
+//
+// Diagnostic layer (params.pillarKey + params.cycleId) operates on that
+// specific cycle's entry for this pillar — separate storage per cycle, so
+// investigating a pillar in one cycle never overwrites another cycle's
+// findings on the same or a different pillar.
 // ==========================================================================
 
 import { getState, updateState } from "../state/store.js";
@@ -22,6 +29,10 @@ function findPillar(state, organisationId, reviewId, pillarKey) {
   return { org, review, pillar };
 }
 
+function findCycle(review, cycleId) {
+  return review?.diagnosticCycles.find((c) => c.id === cycleId) || null;
+}
+
 function mutatePillar(organisationId, reviewId, pillarKey, mutator) {
   updateState((state) => {
     const { review, pillar } = findPillar(state, organisationId, reviewId, pillarKey);
@@ -32,7 +43,19 @@ function mutatePillar(organisationId, reviewId, pillarKey, mutator) {
   });
 }
 
-function renderSummaryStrip(pillar, review) {
+function mutateCyclePillar(organisationId, reviewId, cycleId, pillarKey, mutator) {
+  updateState((state) => {
+    const { review } = findPillar(state, organisationId, reviewId, pillarKey);
+    const cycle = findCycle(review, cycleId);
+    const entry = cycle?.pillars[pillarKey];
+    if (!entry) return state;
+    mutator(entry);
+    review.lastUpdatedAt = new Date().toISOString();
+    return state;
+  });
+}
+
+function renderSummaryStrip(pillar, isDiagnosticMode, cycle) {
   const strip = document.createElement("div");
   strip.className = "summary-strip";
 
@@ -40,7 +63,7 @@ function renderSummaryStrip(pillar, review) {
     ["Maturity score", pillar.maturityScore ? `${pillar.maturityScore} — ${SCORE_LABELS[pillar.maturityScore]}` : "Not yet scored"],
     ["Assessor confidence", pillar.assessorConfidence ? pillar.assessorConfidence.level : "Not set"],
     ["Evidence collected", `${pillar.evidence.length} item${pillar.evidence.length === 1 ? "" : "s"}`],
-    ["Stage", review.stage === "diagnostic" ? "Operational Diagnostic" : "Operational Health Review"],
+    ["Stage", isDiagnosticMode ? `Operational Diagnostic — Cycle ${cycle.cycleNumber}` : "Operational Health Review"],
   ];
 
   items.forEach(([label, value]) => {
@@ -140,7 +163,6 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
         p.scoreHistory.push({
           score,
           setAt: new Date().toISOString(),
-          stage: review.stage,
           reason: reason || (previousScore == null ? "Initial score" : ""),
         });
       });
@@ -169,7 +191,7 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   });
 
   // Guidance is attached directly under the field it supports, not
-  // bundled into one block at the top of the pillar (Milestone 3.6 fix).
+  // bundled into one block at the top of the pillar.
   container.append(
     obs.element,
     createGuidancePanel(guidance.observationNotes),
@@ -196,7 +218,7 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   );
 }
 
-function renderDiagnosticLayer(container, pillar, review, org) {
+function renderDiagnosticLayer(container, pillarKey, cycleEntry, review, org, cycleId, refresh) {
   const divider = document.createElement("hr");
   divider.className = "section-divider";
 
@@ -205,21 +227,21 @@ function renderDiagnosticLayer(container, pillar, review, org) {
   heading.textContent = "Operational Diagnostic";
 
   const rootCause = createTextField({ id: "rootCauseAnalysis", label: "Root cause analysis", textarea: true });
-  rootCause.input.value = pillar.rootCauseAnalysis;
+  rootCause.input.value = cycleEntry.rootCauseAnalysis;
   rootCause.input.addEventListener("blur", () => {
-    mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.rootCauseAnalysis = rootCause.input.value));
+    mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => (e.rootCauseAnalysis = rootCause.input.value));
   });
 
   const risk = createTextField({ id: "operationalRisk", label: "Operational risk", textarea: true });
-  risk.input.value = pillar.operationalRisk;
+  risk.input.value = cycleEntry.operationalRisk;
   risk.input.addEventListener("blur", () => {
-    mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.operationalRisk = risk.input.value));
+    mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => (e.operationalRisk = risk.input.value));
   });
 
   const cost = createTextField({ id: "costOfInaction", label: "Cost of inaction", textarea: true });
-  cost.input.value = pillar.costOfInaction;
+  cost.input.value = cycleEntry.costOfInaction;
   cost.input.addEventListener("blur", () => {
-    mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.costOfInaction = cost.input.value));
+    mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => (e.costOfInaction = cost.input.value));
   });
 
   const recLabel = document.createElement("p");
@@ -227,11 +249,11 @@ function renderDiagnosticLayer(container, pillar, review, org) {
   recLabel.textContent = "Recommendations (client-visible, paid tier)";
   const recEditor = createTextListEditor({
     placeholder: "What should change?",
-    items: pillar.recommendations.map((r) => r.text),
+    items: cycleEntry.recommendations.map((r) => r.text),
     onChange: (texts) => {
-      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
-        p.recommendations = texts.map((text, i) => ({
-          id: p.recommendations[i]?.id || `rec_${Date.now().toString(36)}_${i}`,
+      mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
+        e.recommendations = texts.map((text, i) => ({
+          id: e.recommendations[i]?.id || `rec_${Date.now().toString(36)}_${i}`,
           text,
           businessImpact: [],
         }));
@@ -244,13 +266,13 @@ function renderDiagnosticLayer(container, pillar, review, org) {
   planLabel.textContent = "Implementation plan (client-visible, paid tier)";
   const planEditor = createTextListEditor({
     placeholder: "e.g. Week 1 — Develop briefing template",
-    items: pillar.implementationPlan.map((s) => s.step),
+    items: cycleEntry.implementationPlan.map((s) => s.step),
     onChange: (steps) => {
-      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
-        p.implementationPlan = steps.map((step, i) => ({
-          id: p.implementationPlan[i]?.id || `plan_${Date.now().toString(36)}_${i}`,
+      mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
+        e.implementationPlan = steps.map((step, i) => ({
+          id: e.implementationPlan[i]?.id || `plan_${Date.now().toString(36)}_${i}`,
           step,
-          timeframe: p.implementationPlan[i]?.timeframe || "",
+          timeframe: e.implementationPlan[i]?.timeframe || "",
         }));
       });
     },
@@ -290,28 +312,39 @@ export function renderPillarAssessment(container, params) {
     return;
   }
 
+  const isDiagnosticMode = Boolean(params.cycleId);
+  const cycle = isDiagnosticMode ? findCycle(review, params.cycleId) : null;
+
+  if (isDiagnosticMode && !cycle) {
+    const notFound = document.createElement("p");
+    notFound.className = "text-body-secondary";
+    notFound.textContent = "Diagnostic cycle not found.";
+    screen.append(notFound);
+    container.append(screen);
+    return;
+  }
+
+  const cycleEntry = isDiagnosticMode ? cycle.pillars[pillar.pillarKey] : null;
+  if (isDiagnosticMode && !cycleEntry) {
+    const notFound = document.createElement("p");
+    notFound.className = "text-body-secondary";
+    notFound.textContent = "This pillar is not selected for this Diagnostic cycle.";
+    screen.append(notFound);
+    container.append(screen);
+    return;
+  }
+
   const pillarMeta = PILLARS.find((p) => p.key === pillar.pillarKey);
 
   const heading = document.createElement("h1");
   heading.className = "text-heading-screen";
   heading.textContent = pillarMeta.name;
 
-  const isLocked = review.diagnosticLocked;
+  screen.append(heading, renderSummaryStrip(pillar, isDiagnosticMode, cycle));
 
-  screen.append(heading, renderSummaryStrip(pillar, review));
-
-  if (isLocked) {
-    const lockedNotice = document.createElement("p");
-    lockedNotice.className = "text-body-secondary";
-    lockedNotice.textContent = "This review is complete and locked. No further edits are possible.";
-    screen.append(lockedNotice);
-    const actions = document.createElement("div");
-    actions.className = "screen-actions";
-    actions.append(createButton({ label: "Back", variant: "secondary", onClick: () => back() }));
-    screen.append(actions);
-    container.append(screen);
-    return;
-  }
+  // Only the active cycle's own Diagnostic content locks when that cycle
+  // completes. The Health Review layer is never locked by this.
+  const diagnosticLocked = isDiagnosticMode && cycle.locked;
 
   const form = document.createElement("div");
   form.className = "stack";
@@ -321,45 +354,76 @@ export function renderPillarAssessment(container, params) {
     renderPillarAssessment(container, params);
   }
 
-  renderHealthReviewLayer(form, pillar, review, org, refresh);
-
-  if (pillar.diagnosticStatus !== "not-selected") {
-    renderDiagnosticLayer(form, pillar, review, org);
+  if (isDiagnosticMode) {
+    if (diagnosticLocked) {
+      const lockedNotice = document.createElement("p");
+      lockedNotice.className = "text-body-secondary";
+      lockedNotice.textContent = `Diagnostic Cycle ${cycle.cycleNumber} is complete and locked. This cycle's findings are a permanent historical record.`;
+      form.append(lockedNotice);
+    } else {
+      renderDiagnosticLayer(form, pillar.pillarKey, cycleEntry, review, org, cycle.id, refresh);
+    }
+  } else {
+    // Health Review layer — always editable, the permanent baseline.
+    renderHealthReviewLayer(form, pillar, review, org, refresh);
   }
 
   screen.append(form);
 
-  const statusField = review.stage === "diagnostic" ? "diagnosticStatus" : "healthReviewStatus";
-  const currentStatus = pillar[statusField];
-  if (currentStatus === "not-started" || currentStatus === "selected-not-started") {
+  // Mark in-progress the moment the assessor opens a not-started item.
+  if (isDiagnosticMode && !diagnosticLocked) {
+    if (cycleEntry.status === "selected-not-started") {
+      mutateCyclePillar(org.id, review.id, cycle.id, pillar.pillarKey, (e) => {
+        e.status = "in-progress";
+      });
+    }
+  } else if (!isDiagnosticMode && pillar.healthReviewStatus === "not-started") {
     mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
-      p[statusField] = "in-progress";
+      p.healthReviewStatus = "in-progress";
     });
   }
 
   const actions = document.createElement("div");
   actions.className = "screen-actions stack-tight";
 
-  const canComplete = pillar.evidence.length > 0 && pillar.maturityScore != null;
-
-  const completeBtn = createButton({
-    label: currentStatus === "complete" ? "Marked complete" : "Mark pillar complete",
-    variant: "primary",
-    onClick: () => {
-      if (!canComplete) {
-        window.alert(
-          "A pillar cannot be marked complete until at least one piece of evidence and a maturity score are recorded."
-        );
-        return;
-      }
-      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
-        p[statusField] = "complete";
+  if (!diagnosticLocked) {
+    if (isDiagnosticMode) {
+      const currentStatus = cycleEntry.status;
+      const completeBtn = createButton({
+        label: currentStatus === "complete" ? "Marked complete" : "Mark pillar complete",
+        variant: "primary",
+        onClick: () => {
+          mutateCyclePillar(org.id, review.id, cycle.id, pillar.pillarKey, (e) => {
+            e.status = "complete";
+          });
+          back();
+        },
       });
-      back();
-    },
-  });
+      actions.append(completeBtn);
+    } else {
+      const currentStatus = pillar.healthReviewStatus;
+      const canComplete = pillar.evidence.length > 0 && pillar.maturityScore != null;
+      const completeBtn = createButton({
+        label: currentStatus === "complete" ? "Marked complete" : "Mark pillar complete",
+        variant: "primary",
+        onClick: () => {
+          if (!canComplete) {
+            window.alert(
+              "A pillar cannot be marked complete until at least one piece of evidence and a maturity score are recorded."
+            );
+            return;
+          }
+          mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+            p.healthReviewStatus = "complete";
+          });
+          back();
+        },
+      });
+      actions.append(completeBtn);
+    }
+  }
 
-  actions.append(completeBtn, createButton({ label: "Back", variant: "secondary", onClick: () => back() }));
+  actions.append(createButton({ label: "Back", variant: "secondary", onClick: () => back() }));
   screen.append(actions);
 
   container.append(screen);

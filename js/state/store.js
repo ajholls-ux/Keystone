@@ -24,11 +24,16 @@ function loadFromStorage() {
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
-      // v3 -> v4 (Milestone 3.6): PILLAR_GUIDANCE restructured from one
-      // block per pillar to one block per field within a pillar. This is
-      // a static export (not stored per-Review), so no persisted data
-      // migration is required — existing Organisation/Review records are
-      // unaffected. No destructive migration needed at this stage.
+      // v4 -> v5 (Diagnostic Cycles): Diagnostic-layer fields moved off
+      // PillarAssessment into per-cycle records (review.diagnosticCycles).
+      // This is a structural change to how Diagnostic data is stored, but
+      // Health Review data (the baseline) is untouched. Any pre-v5
+      // in-progress Diagnostic data (from schema versions 3-4, which
+      // stored it directly on the pillar) would not carry forward under
+      // the new shape. Given the project's current stage, no destructive
+      // migration is implemented — existing Organisations/Health Review
+      // data remain intact; only incomplete in-progress Diagnostic work
+      // under the old shape would need to be re-entered under a new cycle.
       return parsed && parsed.organisations ? parsed : createEmptyState();
     }
     return parsed;

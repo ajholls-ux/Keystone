@@ -163,3 +163,36 @@ First real iPhone testing pass against Milestone 3.5 surfaced genuine UX/navigat
 
 ### Next Milestone
 Recommend: get this release verified against the real iPhone workflow first (per the 30-point testing checklist provided). Only after that passes should work begin on authoring actual pillar guidance content and the deeper Keystone questioning engine — that's real methodology work and deserves to be built on a confirmed-solid mechanical foundation, not layered onto unverified navigation fixes.
+
+---
+
+## v0.3.7 — Diagnostic Cycles Architecture
+
+**Release date:** 2026-08-09
+
+Architectural clarification: an organisation must support an ongoing improvement journey — one Health Review baseline followed by zero or more Diagnostic Cycles over time — rather than being permanently closed off after a single Diagnostic. This release restructures how Diagnostic data is stored to make that possible.
+
+### Changed (breaking schema change — schema version 4 → 5)
+- **Diagnostic-layer fields moved off the shared pillar record into per-cycle records.** Previously `rootCauseAnalysis`, `operationalRisk`, `costOfInaction`, `recommendations[]`, and `implementationPlan[]` lived directly on each `PillarAssessment` — meaning a second Diagnostic investigation of any pillar would have overwritten the first, and there was no way to represent more than one cycle. These fields now live in `review.diagnosticCycles[].pillars[pillarKey]`, one independent snapshot per cycle.
+- **Review-level `diagnosticLocked` removed entirely.** Locking is now scoped to the individual cycle (`cycle.locked`) — completing a Diagnostic Cycle locks that cycle's findings permanently, but never the Review or the organisation. A new cycle can always be started once the previous one is locked.
+- **Pillar-level `diagnosticStatus` removed.** Replaced by `cycle.pillars[pillarKey].status`, meaning pillar selection is scoped to one cycle at a time — a pillar not selected in Cycle 1 remains fully available for Cycle 2, with no permanent "not selected" flag lingering on the pillar itself.
+- Review Overview restructured: Health Review pillar list is now always visible (the permanent baseline), followed by the active cycle's pillar groupings (if one is open), followed by a Diagnostic History section listing every locked cycle with its own "View Report" link.
+- "Start Operational Diagnostic" is now "Start Operational Diagnostic" for Cycle 1 and "Start Diagnostic Cycle N" for subsequent cycles — appears whenever the Client Report exists and no cycle is currently active. Selecting pillars for a new cycle is entirely manual; nothing is auto-selected by score.
+- Diagnostic Pillar Selection, Pillar Assessment (Diagnostic layer), Assessment Complete (Diagnostic path), and Assessment Report (Diagnostic Report) all updated to operate on a specific `cycleId` passed through navigation params, rather than assuming one Review-wide Diagnostic state.
+
+### Fixed
+- Two stale references to the removed `review.diagnosticLocked`/`review.stage` fields, found in `organisationDetail.js` and `organisationList.js`, that would have thrown at runtime. Caught this time by a deliberate cross-file reference search after the schema change, not just syntax checking — direct response to the SCORE_LABELS import bug in the previous release.
+
+### Testing performed before this release
+Given the previous release shipped with a broken import, verification this time included: syntax checking every file, a static cross-file check that every named import resolves to a real export in its target file, and a targeted search for any remaining references to every field removed or renamed in this schema change. All three passed clean. **This is still not the same as running the app on a physical iPhone** — that remains outstanding and should happen before this is considered done.
+
+### Known Issues
+- Not yet tested on a physical device. Priority test path: complete a Health Review → generate Client Report → start Diagnostic Cycle 1 → select one pillar → complete it → complete Cycle 1 → return to Review Overview → confirm Cycle 1 appears under Diagnostic History with a working "View Report" link → start Cycle 2 → confirm a previously unselected pillar is available → confirm Cycle 1's report is unchanged.
+- Guidance panels remain empty for all fields, all ten pillars.
+- Health Indicator thresholds and recommendation-alignment rules remain provisional, unconfirmed defaults.
+
+### Technical Debt
+- None introduced.
+
+### Next Milestone
+Physical device verification of the Diagnostic Cycles flow above, then a reconciliation pass against the newly-provided Master Context document (separate from this build — see conversation).

@@ -17,8 +17,12 @@ function formatDate(iso) {
 }
 
 function reviewStatusLabel(review) {
-  if (review.diagnosticLocked) return "Complete";
-  if (review.stage === "diagnostic") return "Operational Diagnostic in progress";
+  const activeCycle = review.diagnosticCycles.find((c) => !c.locked);
+  const lockedCycleCount = review.diagnosticCycles.filter((c) => c.locked).length;
+
+  if (activeCycle) return `Diagnostic Cycle ${activeCycle.cycleNumber} in progress`;
+  if (lockedCycleCount > 0) return `${lockedCycleCount} Diagnostic cycle${lockedCycleCount === 1 ? "" : "s"} completed`;
+
   const allComplete = review.pillarAssessments.every((p) => p.healthReviewStatus === "complete");
   if (allComplete) return "Operational Health Review complete";
   return "Operational Health Review in progress";

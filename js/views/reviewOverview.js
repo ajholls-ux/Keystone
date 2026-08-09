@@ -2,11 +2,15 @@
 // Keystone Field Kit — Review Overview View
 //
 // Screen 5 of the locked Screen Map (Part 2 v1.0). The assessor's command
-// centre. Governed by Assessment Engine v1.0.
+// centre. Governed by Assessment Engine v1.0 plus the Diagnostic Cycles
+// architectural clarification: the Review supports an ongoing improvement
+// journey — one Health Review baseline, followed by zero or more
+// Diagnostic Cycles over time. Only individual completed cycles lock;
+// the Review and organisation are never permanently closed off.
 // ==========================================================================
 
 import { getState, updateState } from "../state/store.js";
-import { PILLARS } from "../state/schema.js";
+import { PILLARS, createDiagnosticCycle } from "../state/schema.js";
 import { createButton } from "../components/button.js";
 import { createStatusMarker } from "../components/statusMarker.js";
 import { navigate, back } from "../router.js";
@@ -23,11 +27,11 @@ function formatDate(iso) {
   return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 }
 
-function pillarStatusForCurrentStage(pillar, review) {
-  return review.stage === "diagnostic" ? pillar.diagnosticStatus : pillar.healthReviewStatus;
+function findActiveCycle(review) {
+  return review.diagnosticCycles.find((c) => !c.locked) || null;
 }
 
-function renderSummaryCard(org, review) {
+function renderSummaryCard(org, review, activeCycle) {
   const card = document.createElement("div");
   card.className = "summary-card";
 
@@ -40,15 +44,17 @@ function renderSummaryCard(org, review) {
     ? (scored.reduce((sum, p) => sum + p.maturityScore, 0) / scored.length).toFixed(1)
     : "—";
 
+  const lockedCycleCount = review.diagnosticCycles.filter((c) => c.locked).length;
+
   const rows = [
     ["Organisation", org.businessName],
+    ["Health Review progress", `${completedCount} / 10 pillars complete`],
+    ["Health Review maturity", avgMaturity === "—" ? "—" : `${avgMaturity} / 4`],
     [
-      "Assessment type",
-      review.stage === "diagnostic" ? "Operational Diagnostic" : "Operational Health Review",
+      "Diagnostic history",
+      lockedCycleCount === 0 ? "No completed cycles yet" : `${lockedCycleCount} completed cycle${lockedCycleCount === 1 ? "" : "s"}`,
     ],
-    ["Current stage", review.stage === "diagnostic" ? "Diagnostic" : "Health Review"],
-    ["Progress", `${completedCount} / 10 pillars complete`],
-    ["Operational maturity", avgMaturity === "—" ? "—" : `${avgMaturity} / 4`],
+    ["Currently active", activeCycle ? `Diagnostic Cycle ${activeCycle.cycleNumber}` : "None"],
     ["Started", formatDate(review.dateStarted)],
     ["Last updated", formatDate(review.lastUpdatedAt)],
   ];
@@ -78,7 +84,7 @@ function renderSummaryCard(org, review) {
   return card;
 }
 
-function renderPillarRow(pillar, status, onClick) {
+function renderPillarRow(pillarKey, status, onClick) {
   const row = document.createElement("button");
   row.type = "button";
   row.className = "card pillar-row";
@@ -86,7 +92,7 @@ function renderPillarRow(pillar, status, onClick) {
 
   const name = document.createElement("span");
   name.className = "pillar-row__name";
-  name.textContent = PILLARS.find((p) => p.key === pillar.pillarKey).name;
+  name.textContent = PILLARS.find((p) => p.key === pillarKey).name;
 
   row.append(name, createStatusMarker(status));
   return row;
@@ -108,161 +114,209 @@ export function renderReviewOverview(container, params) {
     return;
   }
 
+  const activeCycle = findActiveCycle(review);
+
   const heading = document.createElement("h1");
   heading.className = "text-heading-screen";
   heading.textContent = "Review Overview";
 
-  screen.append(heading, renderSummaryCard(org, review));
+  screen.append(heading, renderSummaryCard(org, review, activeCycle));
 
-  const pillarList = document.createElement("div");
-  pillarList.className = "stack-tight";
+  function goToHealthReviewPillar(pillarKey) {
+    navigate("pillarAssessment", { organisationId: org.id, reviewId: review.id, pillarKey });
+  }
 
-  function goToPillar(pillarKey) {
+  function goToDiagnosticPillar(pillarKey) {
     navigate("pillarAssessment", {
       organisationId: org.id,
       reviewId: review.id,
       pillarKey,
+      cycleId: activeCycle.id,
     });
   }
 
-  if (review.stage !== "diagnostic") {
-    // Flat list — Health Review stage only.
-    review.pillarAssessments.forEach((pillar) => {
-      pillarList.append(
-        renderPillarRow(pillar, pillar.healthReviewStatus, () => goToPillar(pillar.pillarKey))
+  // Health Review baseline — always visible, always the permanent record.
+  const hrHeading = document.createElement("p");
+  hrHeading.className = "pillar-group-title";
+  hrHeading.textContent = "Operational Health Review";
+  screen.append(hrHeading);
+
+  const hrList = document.createElement("div");
+  hrList.className = "stack-tight";
+  review.pillarAssessments.forEach((pillar) => {
+    hrList.append(
+      renderPillarRow(pillar.pillarKey, pillar.healthReviewStatus, () =>
+        goToHealthReviewPillar(pillar.pillarKey)
+      )
+    );
+  });
+  screen.append(hrList);
+
+  // Active Diagnostic Cycle — pillar groupings scoped to this cycle only.
+  if (activeCycle) {
+    const cycleHeading = document.createElement("p");
+    cycleHeading.className = "pillar-group-title";
+    cycleHeading.textContent = `Diagnostic Cycle ${activeCycle.cycleNumber}`;
+    screen.append(cycleHeading);
+
+    const cycleList = document.createElement("div");
+    cycleList.className = "stack-tight";
+
+    const selectedKeys = Object.keys(activeCycle.pillars);
+    selectedKeys.forEach((pillarKey) => {
+      cycleList.append(
+        renderPillarRow(pillarKey, activeCycle.pillars[pillarKey].status, () =>
+          goToDiagnosticPillar(pillarKey)
+        )
       );
     });
-  } else {
-    // Grouped view once Diagnostic has unlocked.
-    const groups = [
-      {
-        title: "Selected for Diagnostic",
-        filter: (p) => p.diagnosticStatus === "selected-not-started" || p.diagnosticStatus === "in-progress",
-      },
-      {
-        title: "Available for Diagnostic",
-        filter: (p) => p.diagnosticStatus === "not-selected",
-      },
-      {
-        title: "Completed",
-        filter: (p) => p.diagnosticStatus === "complete",
-      },
-    ];
 
-    groups.forEach(({ title, filter }) => {
-      const matches = review.pillarAssessments.filter(filter);
-      if (matches.length === 0) return;
-      const groupTitle = document.createElement("p");
-      groupTitle.className = "pillar-group-title";
-      groupTitle.textContent = title;
-      pillarList.append(groupTitle);
-      matches.forEach((pillar) => {
-        pillarList.append(
-          renderPillarRow(pillar, pillarStatusForCurrentStage(pillar, review), () =>
-            goToPillar(pillar.pillarKey)
-          )
-        );
-      });
-    });
-  }
-
-  screen.append(pillarList);
-
-  // Diagnostic stage actions
-  const allHealthReviewComplete = review.pillarAssessments.every(
-    (p) => p.healthReviewStatus === "complete"
-  );
-
-  const selectedDiagnosticPillars = review.pillarAssessments.filter(
-    (p) => p.diagnosticStatus !== "not-selected"
-  );
-  const allSelectedDiagnosticComplete =
-    selectedDiagnosticPillars.length > 0 &&
-    selectedDiagnosticPillars.every((p) => p.diagnosticStatus === "complete");
-
-  const actions = document.createElement("div");
-  actions.className = "screen-actions stack-tight";
-
-  // Health Review stage: must complete the Client Report before Diagnostic
-  // can ever start (Milestone 3.5 fix — Assessment Engine's lifecycle
-  // requires this; it was not correctly enforced in Milestone 3).
-  if (review.stage !== "diagnostic") {
-    if (allHealthReviewComplete && !review.clientReportGeneratedAt) {
-      actions.append(
-        createButton({
-          label: "Complete Health Review",
-          variant: "primary",
-          onClick: () =>
-            navigate("assessmentComplete", { organisationId: org.id, reviewId: review.id }),
-        })
-      );
+    if (selectedKeys.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "No pillars selected for this cycle yet.";
+      cycleList.append(empty);
     }
 
-    if (review.clientReportGeneratedAt) {
-      actions.append(
+    screen.append(cycleList);
+  }
+
+  // Historical, locked Diagnostic Cycles — permanent records.
+  const lockedCycles = review.diagnosticCycles.filter((c) => c.locked);
+  if (lockedCycles.length > 0) {
+    const historyHeading = document.createElement("p");
+    historyHeading.className = "pillar-group-title";
+    historyHeading.textContent = "Diagnostic History";
+    screen.append(historyHeading);
+
+    const historyList = document.createElement("div");
+    historyList.className = "stack-tight";
+    lockedCycles.forEach((cycle) => {
+      const row = document.createElement("div");
+      row.className = "card";
+      const title = document.createElement("span");
+      title.className = "card__title";
+      title.textContent = `Diagnostic Cycle ${cycle.cycleNumber}`;
+      const meta = document.createElement("span");
+      meta.className = "card__meta";
+      meta.textContent = `Completed ${formatDate(cycle.completedAt)}`;
+      const footer = document.createElement("div");
+      footer.className = "card__footer";
+      footer.append(
         createButton({
-          label: "View Client Report",
+          label: "View Report",
           variant: "secondary",
           onClick: () =>
             navigate("assessmentReport", {
               organisationId: org.id,
               reviewId: review.id,
-              reportType: "client",
+              reportType: "diagnostic",
+              cycleId: cycle.id,
             }),
         })
       );
-      actions.append(
-        createButton({
-          label: "Start Operational Diagnostic",
-          variant: "primary",
-          onClick: () => {
-            updateState((s) => {
-              const { review: r } = findOrgAndReview(s, org.id, review.id);
-              r.stage = "diagnostic";
-              r.diagnosticUnlocked = true;
-              r.lastUpdatedAt = new Date().toISOString();
-              return s;
-            });
-            navigate("diagnosticPillarSelection", { organisationId: org.id, reviewId: review.id });
-          },
-        })
-      );
-    }
+      row.append(title, meta, footer);
+      historyList.append(row);
+    });
+    screen.append(historyList);
   }
 
-  if (review.stage === "diagnostic") {
+  // Actions
+  const allHealthReviewComplete = review.pillarAssessments.every(
+    (p) => p.healthReviewStatus === "complete"
+  );
+
+  const activeCycleSelectedKeys = activeCycle ? Object.keys(activeCycle.pillars) : [];
+  const allActiveCyclePillarsComplete =
+    activeCycle &&
+    activeCycleSelectedKeys.length > 0 &&
+    activeCycleSelectedKeys.every((key) => activeCycle.pillars[key].status === "complete");
+
+  const actions = document.createElement("div");
+  actions.className = "screen-actions stack-tight";
+
+  if (allHealthReviewComplete && !review.clientReportGeneratedAt) {
     actions.append(
       createButton({
-        label: review.diagnosticLocked ? "View Diagnostic Scope" : "Manage Diagnostic Scope",
+        label: "Complete Health Review",
+        variant: "primary",
+        onClick: () => navigate("assessmentComplete", { organisationId: org.id, reviewId: review.id }),
+      })
+    );
+  }
+
+  if (review.clientReportGeneratedAt) {
+    actions.append(
+      createButton({
+        label: "View Client Report",
         variant: "secondary",
         onClick: () =>
-          navigate("diagnosticPillarSelection", { organisationId: org.id, reviewId: review.id }),
+          navigate("assessmentReport", {
+            organisationId: org.id,
+            reviewId: review.id,
+            reportType: "client",
+          }),
+      })
+    );
+  }
+
+  // A new Diagnostic Cycle can start once the Client Report exists and no
+  // cycle is currently active — this deliberately does not auto-select
+  // pillars by score; the assessor chooses what matters most to
+  // investigate next (Assessment Engine principle: investigate only what
+  // creates meaningful operational value).
+  if (review.clientReportGeneratedAt && !activeCycle) {
+    const nextCycleNumber = review.diagnosticCycles.length + 1;
+    actions.append(
+      createButton({
+        label:
+          nextCycleNumber === 1
+            ? "Start Operational Diagnostic"
+            : `Start Diagnostic Cycle ${nextCycleNumber}`,
+        variant: "primary",
+        onClick: () => {
+          const newCycle = createDiagnosticCycle(nextCycleNumber);
+          updateState((s) => {
+            const { review: r } = findOrgAndReview(s, org.id, review.id);
+            r.diagnosticCycles.push(newCycle);
+            r.lastUpdatedAt = new Date().toISOString();
+            return s;
+          });
+          navigate("diagnosticPillarSelection", {
+            organisationId: org.id,
+            reviewId: review.id,
+            cycleId: newCycle.id,
+          });
+        },
+      })
+    );
+  }
+
+  if (activeCycle) {
+    actions.append(
+      createButton({
+        label: "Manage Diagnostic Scope",
+        variant: "secondary",
+        onClick: () =>
+          navigate("diagnosticPillarSelection", {
+            organisationId: org.id,
+            reviewId: review.id,
+            cycleId: activeCycle.id,
+          }),
       })
     );
 
-    if (review.diagnosticLocked) {
+    if (allActiveCyclePillarsComplete) {
       actions.append(
         createButton({
-          label: "View Diagnostic Report",
-          variant: "primary",
-          onClick: () =>
-            navigate("assessmentReport", {
-              organisationId: org.id,
-              reviewId: review.id,
-              reportType: "diagnostic",
-            }),
-        })
-      );
-    } else if (allSelectedDiagnosticComplete) {
-      actions.append(
-        createButton({
-          label: "Complete Operational Diagnostic",
+          label: `Complete Diagnostic Cycle ${activeCycle.cycleNumber}`,
           variant: "primary",
           onClick: () =>
             navigate("assessmentComplete", {
               organisationId: org.id,
               reviewId: review.id,
               completionStage: "diagnostic",
+              cycleId: activeCycle.id,
             }),
         })
       );

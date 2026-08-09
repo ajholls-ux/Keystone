@@ -118,30 +118,40 @@ function renderHealthReviewCompletion(screen, org, review) {
   screen.append(actions);
 }
 
-function renderDiagnosticCompletion(screen, org, review) {
+function renderDiagnosticCompletion(screen, org, review, cycleId) {
+  const cycle = review.diagnosticCycles.find((c) => c.id === cycleId);
+
+  if (!cycle) {
+    const notFound = document.createElement("p");
+    notFound.className = "text-body-secondary";
+    notFound.textContent = "Diagnostic cycle not found.";
+    screen.append(notFound);
+    return;
+  }
+
   const heading = document.createElement("h1");
   heading.className = "text-heading-screen";
   heading.textContent = "Assessment Complete";
 
   const subhead = document.createElement("p");
   subhead.className = "text-body-secondary";
-  subhead.textContent =
-    "The Operational Diagnostic is ready to be marked complete. This action is final — the entire Review will be locked and no further edits will be possible.";
+  subhead.textContent = `Diagnostic Cycle ${cycle.cycleNumber} is ready to be marked complete. This action is final for this cycle — its findings become a permanent historical record. The organisation remains open to future Diagnostic Cycles.`;
 
   const confirmBtn = createButton({
-    label: "Complete Operational Diagnostic",
+    label: `Complete Diagnostic Cycle ${cycle.cycleNumber}`,
     variant: "primary",
     onClick: () => {
       const confirmed = window.confirm(
-        "This will lock the Review permanently. No pillar can be edited afterward. Continue?"
+        `This will lock Diagnostic Cycle ${cycle.cycleNumber} permanently. Its findings cannot be edited afterward. Continue?`
       );
       if (!confirmed) return;
 
       updateState((s) => {
         const { review: r } = findReview(s, org.id, review.id);
-        r.diagnosticCompletedAt = new Date().toISOString();
-        r.diagnosticReportGeneratedAt = new Date().toISOString();
-        r.diagnosticLocked = true;
+        const c = r.diagnosticCycles.find((cy) => cy.id === cycleId);
+        c.completedAt = new Date().toISOString();
+        c.reportGeneratedAt = new Date().toISOString();
+        c.locked = true;
         r.lastUpdatedAt = new Date().toISOString();
         return s;
       });
@@ -150,6 +160,7 @@ function renderDiagnosticCompletion(screen, org, review) {
         organisationId: org.id,
         reviewId: review.id,
         reportType: "diagnostic",
+        cycleId,
       });
     },
   });
@@ -179,7 +190,7 @@ export function renderAssessmentComplete(container, params) {
   }
 
   if (params.completionStage === "diagnostic") {
-    renderDiagnosticCompletion(screen, org, review);
+    renderDiagnosticCompletion(screen, org, review, params.cycleId);
   } else {
     renderHealthReviewCompletion(screen, org, review);
   }

@@ -58,7 +58,7 @@ function section(titleText) {
   return wrap;
 }
 
-function renderCoverPage(org, review, reportType) {
+function renderCoverPage(org, review, reportType, cycle) {
   const cover = document.createElement("div");
   cover.className = "report-cover stack-loose";
 
@@ -70,7 +70,10 @@ function renderCoverPage(org, review, reportType) {
 
   const title = document.createElement("h1");
   title.className = "text-display";
-  title.textContent = reportType === "diagnostic" ? "Operational Diagnostic Report" : "Operational Health Review";
+  title.textContent =
+    reportType === "diagnostic"
+      ? `Operational Diagnostic Report${cycle ? ` — Cycle ${cycle.cycleNumber}` : ""}`
+      : "Operational Health Review";
 
   const orgName = document.createElement("p");
   orgName.className = "text-heading-section";
@@ -79,7 +82,7 @@ function renderCoverPage(org, review, reportType) {
   const meta = document.createElement("p");
   meta.className = "text-body-secondary";
   meta.textContent = `Prepared by ${org.assessorName || "Keystone Assessor"} · ${formatDate(
-    reportType === "diagnostic" ? review.diagnosticReportGeneratedAt : review.clientReportGeneratedAt
+    reportType === "diagnostic" ? cycle?.reportGeneratedAt : review.clientReportGeneratedAt
   )}`;
 
   const valueStatement = document.createElement("p");
@@ -239,20 +242,20 @@ function renderClosing() {
   return wrap;
 }
 
-function renderDiagnosticSections(review) {
-  const selectedPillars = review.pillarAssessments.filter((p) => p.diagnosticStatus === "complete");
-  if (selectedPillars.length === 0) return document.createDocumentFragment();
+function renderDiagnosticSections(cycle) {
+  const completeEntries = Object.entries(cycle.pillars).filter(([, entry]) => entry.status === "complete");
+  if (completeEntries.length === 0) return document.createDocumentFragment();
 
   const frag = document.createDocumentFragment();
 
-  selectedPillars.forEach((pillar) => {
-    const pillarMeta = PILLARS.find((p) => p.key === pillar.pillarKey);
+  completeEntries.forEach(([pillarKey, entry]) => {
+    const pillarMeta = PILLARS.find((p) => p.key === pillarKey);
     const wrap = section(pillarMeta.name);
 
     const fields = [
-      ["Root Cause Analysis", pillar.rootCauseAnalysis],
-      ["Operational Risk", pillar.operationalRisk],
-      ["Cost of Inaction", pillar.costOfInaction],
+      ["Root Cause Analysis", entry.rootCauseAnalysis],
+      ["Operational Risk", entry.operationalRisk],
+      ["Cost of Inaction", entry.costOfInaction],
     ];
     fields.forEach(([label, value]) => {
       if (!value) return;
@@ -265,13 +268,13 @@ function renderDiagnosticSections(review) {
       wrap.append(l, v);
     });
 
-    if (pillar.recommendations.length > 0) {
+    if (entry.recommendations.length > 0) {
       const l = document.createElement("p");
       l.style.fontWeight = "600";
       l.textContent = "Recommendations";
       wrap.append(l);
       const ul = document.createElement("ul");
-      pillar.recommendations.forEach((r) => {
+      entry.recommendations.forEach((r) => {
         const li = document.createElement("li");
         li.className = "text-body-secondary";
         li.textContent = r.text;
@@ -280,13 +283,13 @@ function renderDiagnosticSections(review) {
       wrap.append(ul);
     }
 
-    if (pillar.implementationPlan.length > 0) {
+    if (entry.implementationPlan.length > 0) {
       const l = document.createElement("p");
       l.style.fontWeight = "600";
       l.textContent = "Implementation Plan";
       wrap.append(l);
       const ul = document.createElement("ul");
-      pillar.implementationPlan.forEach((step) => {
+      entry.implementationPlan.forEach((step) => {
         const li = document.createElement("li");
         li.className = "text-body-secondary";
         li.textContent = step.step;
@@ -325,6 +328,17 @@ export function renderAssessmentReport(container, params) {
   }
 
   const reportType = params.reportType === "diagnostic" ? "diagnostic" : "client";
+  const cycle =
+    reportType === "diagnostic" ? review.diagnosticCycles.find((c) => c.id === params.cycleId) : null;
+
+  if (reportType === "diagnostic" && !cycle) {
+    const notFound = document.createElement("p");
+    notFound.className = "text-body-secondary";
+    notFound.textContent = "Diagnostic cycle report not found.";
+    screen.append(notFound);
+    container.append(screen);
+    return;
+  }
 
   // Viewer chrome — never printed, never part of the document itself.
   const toolbar = document.createElement("div");
@@ -338,7 +352,7 @@ export function renderAssessmentReport(container, params) {
   const doc = document.createElement("div");
   doc.className = "report-document";
 
-  doc.append(renderCoverPage(org, review, reportType));
+  doc.append(renderCoverPage(org, review, reportType, cycle));
   doc.append(renderExecutiveSummary(review));
   doc.append(renderOverallHealth(review));
   doc.append(renderStrengths(review));
@@ -348,7 +362,7 @@ export function renderAssessmentReport(container, params) {
   doc.append(renderFurtherConsideration(review));
 
   if (reportType === "diagnostic") {
-    doc.append(renderDiagnosticSections(review));
+    doc.append(renderDiagnosticSections(cycle));
   }
 
   doc.append(renderClosing());

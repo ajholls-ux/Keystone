@@ -14,8 +14,12 @@ import { navigate, replace } from "../router.js";
 /** Derives an organisation's overall status from its reviews. */
 function deriveOrgStatus(org) {
   if (!org.reviews || org.reviews.length === 0) return "not-started";
-  const anyIncomplete = org.reviews.some((r) => !r.diagnosticLocked);
-  return anyIncomplete ? "in-progress" : "complete";
+  // Organisations are never permanently "finished" under the Diagnostic
+  // Cycles model — this marker reflects whether at least one Health
+  // Review baseline (Client Report) has been established, not whether
+  // all possible future work is done.
+  const anyClientReportGenerated = org.reviews.some((r) => r.clientReportGeneratedAt);
+  return anyClientReportGenerated ? "complete" : "in-progress";
 }
 
 function renderOrgCard(org) {

@@ -156,7 +156,7 @@ export const PILLAR_GUIDANCE = PILLARS.reduce((acc, p) => {
 
 // Current schema version. Bump this and add a migration step in store.js
 // if the shape of persisted state ever changes.
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)
@@ -169,14 +169,18 @@ function generateId(prefix) {
 
 /**
  * Creates a new, empty PillarAssessment for a given pillar key.
- * Structure per Assessment Engine v1.0 §Pillar Data Structure.
+ * Health Review layer only (Assessment Engine v1.0). This is the
+ * permanent baseline — it is never overwritten by Diagnostic activity.
+ * Diagnostic-layer data lives separately, per cycle (see
+ * createDiagnosticCycle / createCyclePillarEntry below), so investigating
+ * a pillar in one Diagnostic cycle can never overwrite or block a future
+ * cycle's investigation of the same or a different pillar.
  */
 export function createPillarAssessment(pillarKey) {
   return {
     id: generateId("pillar"),
     pillarKey,
 
-    // Health Review layer
     healthReviewStatus: "not-started", // not-started | in-progress | complete
     observationNotes: "",
     conversationNotes: "",
@@ -188,9 +192,18 @@ export function createPillarAssessment(pillarKey) {
     maturityScore: null,            // 1-4, assessor-entered only
     assessorConfidence: null,        // { level: High|Medium|Low, reason }
     scoreHistory: [],                 // { score, setAt, stage, reason }
+  };
+}
 
-    // Diagnostic layer — populated only once selected
-    diagnosticStatus: "not-selected", // not-selected | selected-not-started | in-progress | complete
+/**
+ * Creates a fresh per-cycle Diagnostic record for a single pillar.
+ * Scoped entirely to one Diagnostic cycle — investigating a pillar in
+ * Cycle 1 and again in a later cycle produces two independent entries,
+ * neither overwriting the other.
+ */
+export function createCyclePillarEntry() {
+  return {
+    status: "selected-not-started", // selected-not-started | in-progress | complete
     rootCauseAnalysis: "",
     operationalRisk: "",
     costOfInaction: "",
@@ -200,8 +213,30 @@ export function createPillarAssessment(pillarKey) {
 }
 
 /**
+ * Creates a new Diagnostic Cycle. A Review may accumulate many cycles
+ * over the organisation's improvement journey — each is a self-contained
+ * historical record once locked. `pillars` starts empty; pillars are
+ * added to it as the assessor selects them for this specific cycle via
+ * Diagnostic Pillar Selection.
+ */
+export function createDiagnosticCycle(cycleNumber) {
+  return {
+    id: generateId("cycle"),
+    cycleNumber,
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    reportGeneratedAt: null,
+    locked: false, // true once this cycle is marked complete — permanent, cycle-scoped only
+    pillars: {}, // keyed by pillarKey -> createCyclePillarEntry()
+  };
+}
+
+/**
  * Creates a new Review, with all ten PillarAssessments pre-created.
- * Governed by Assessment Engine v1.0.
+ * Governed by Assessment Engine v1.0. A Review represents an
+ * organisation's ongoing improvement journey: one Health Review baseline,
+ * followed by zero or more Diagnostic Cycles over time. The Review itself
+ * is never locked — only individual completed Diagnostic Cycles are.
  */
 export function createReview(organisationId) {
   const now = new Date().toISOString();
@@ -212,17 +247,10 @@ export function createReview(organisationId) {
     dateStarted: now,
     lastUpdatedAt: now,
 
-    stage: "health-review", // health-review | diagnostic
-    diagnosticUnlocked: false,
-    diagnosticLocked: false,
     healthReviewCompletedAt: null,
-    diagnosticCompletedAt: null,
-
-    // Client Report must exist before Diagnostic can start (Milestone 3.5
-    // fix — Assessment Engine's lifecycle already required this; it was
-    // not correctly enforced in Milestone 3).
+    // Client Report must exist before any Diagnostic Cycle can start
+    // (Assessment Engine's lifecycle requires this).
     clientReportGeneratedAt: null,
-    diagnosticReportGeneratedAt: null,
 
     // Assessor's consultancy recommendation, set at Health Review
     // completion. Never auto-derived (Assessment Engine v1.0 addendum).
@@ -232,6 +260,12 @@ export function createReview(organisationId) {
     recommendationJustification: "",
 
     pillarAssessments: PILLARS.map((p) => createPillarAssessment(p.key)),
+
+    // The organisation's Diagnostic history. Each entry is an independent,
+    // self-contained investigation cycle. A new cycle may only be started
+    // once any previous cycle is locked (completed) — this keeps "one
+    // active cycle at a time" simple without preventing future cycles.
+    diagnosticCycles: [],
   };
 }
 
