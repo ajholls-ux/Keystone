@@ -60,9 +60,24 @@ export const HEALTH_INDICATOR_THRESHOLDS = {
 };
 
 export const HEALTH_INDICATOR_LEVELS = {
-  green: { emoji: "🟢", label: "Mature Operational Performance" },
-  yellow: { emoji: "🟡", label: "Moderate Operational Opportunity" },
-  red: { emoji: "🔴", label: "Significant Operational Opportunity" },
+  green: {
+    emoji: "🟢",
+    label: "Mature Operational Performance",
+    meaning:
+      "Generally mature and consistent operational practice. Further Diagnostic investigation may not create meaningful additional value.",
+  },
+  yellow: {
+    emoji: "🟡",
+    label: "Moderate Operational Opportunity",
+    meaning:
+      "Identifiable opportunities or areas of inconsistency that may benefit from attention or selective Diagnostic investigation.",
+  },
+  red: {
+    emoji: "🔴",
+    label: "Significant Operational Opportunity",
+    meaning:
+      "Material weaknesses, evidence gaps or operational risks that may justify deeper investigation.",
+  },
 };
 
 // Which assessor recommendations are considered "expected" for a given
@@ -154,9 +169,261 @@ export const PILLAR_GUIDANCE = PILLARS.reduce((acc, p) => {
   return acc;
 }, {});
 
+// ==========================================================================
+// Methodology Questions — Methodology Engine v1.0.
+//
+// Static reference content, not per-Review data. Each question is a
+// structured evidence-gathering instrument that feeds the assessor's
+// judgement — it does NOT produce its own score. There remains exactly
+// one maturityScore and one assessorConfidence per pillar (Health Review
+// layer above). No code path here or elsewhere maps a question response
+// to a number.
+//
+// Site Presentation & Customer Journey is the first gold-standard pillar,
+// fully authored below. The remaining nine pillars are deliberately left
+// as empty arrays — NOT populated with invented methodology — until the
+// gold-standard pattern has been tested and explicitly approved for
+// replication.
+// ==========================================================================
+export const PILLAR_QUESTIONS = {
+  "site-presentation-customer-journey": [
+    {
+      id: "q1-first-impression",
+      question:
+        "If a new customer walked onto the site right now without any prior contact, what would their first impression be?",
+      whyItMatters:
+        "Tests the actual physical and environmental first impression created by the site — whether presentation is deliberately maintained or simply corrected when somebody notices a problem.",
+      assessorPrompt: "Walk me through what a new customer sees and experiences from arrival to being served.",
+      followUpPrompts: [
+        "Is there a defined presentation standard, or does it depend on who's working?",
+        "How would you know if standards had slipped?",
+        "When did someone last deliberately walk the site checking presentation rather than simply working in it?",
+      ],
+      goodExample:
+        "We have a daily open-up checklist covering the entrance, yard and signage. The duty supervisor signs it off and anything identified gets logged with an owner and fix date. I can show you this week's.",
+      poorExample: "It's generally alright. We sort things out when we notice them.",
+      whatToObserve: [
+        "Entrance cleanliness",
+        "Signage condition",
+        "Signage accuracy/currency",
+        "Product display/order",
+        "Obvious clutter",
+        "Customer-facing areas",
+        "Whether the site appears deliberately maintained",
+        "Whether staff are visible and approachable",
+      ],
+      evidenceSuggestions: [
+        "Direct observation",
+        "Presentation/opening checklist",
+        "Site standards/documentation",
+        "Corroborating staff account",
+        "Dated evidence of corrective actions where relevant",
+      ],
+      maturityGuidance: {
+        1: "Reactive — no meaningful presentation standard exists. Problems are generally addressed when noticed.",
+        2: "Informal — there is an expectation that the site should look presentable, but ownership/checking is inconsistent.",
+        3: "Defined — a clear standard exists and is generally followed, with some checking or ownership.",
+        4: "Embedded — presentation standards are clearly defined, routinely checked, owned and maintained consistently rather than depending on individual effort.",
+      },
+      confidenceGuidance: {
+        high: "Direct observation supports what the organisation describes and/or the assessor has corroborating evidence.",
+        medium: "The assessor has some supporting evidence but cannot fully observe the standard over time.",
+        low: "The judgement relies primarily on verbal description or a single limited observation.",
+      },
+      diagnosticRelevance:
+        "A low maturity score alone does not automatically trigger Diagnostic. Diagnostic consideration becomes stronger where evidence identifies a specific operational gap with meaningful consequences, unclear ownership, or repeated failure. Low confidence should normally lead to better evidence gathering, not automatically to Diagnostic.",
+    },
+    {
+      id: "q2-wayfinding-responsiveness",
+      question:
+        "Can a customer find what they need without having to ask — and when they do need to ask, how quickly are they typically helped?",
+      whyItMatters:
+        "Tests whether the physical/customer journey allows customers to navigate effectively and whether staff responsiveness supports the experience.",
+      assessorPrompt: "Show me how a customer would locate a common product without staff help.",
+      followUpPrompts: [
+        "Is there a system for who covers the floor at busy times?",
+        "How do you know if customers are waiting too long?",
+        "What happens when several customers need help at once?",
+      ],
+      goodExample:
+        "Clear category/signage structure, sensible layout, visible staff and a deliberate approach to floor/customer coverage during busy periods.",
+      poorExample: "Customers just ask. Someone always comes eventually.",
+      whatToObserve: [
+        "Signage clarity",
+        "Signage condition",
+        "Product/location visibility",
+        "Staff positioning",
+        "Customer visibility",
+        "Responsiveness if observable",
+        "Congestion or obvious waiting",
+      ],
+      evidenceSuggestions: [
+        "Direct observation",
+        "Customer feedback",
+        "Staff interview",
+        "Customer-service records",
+        "Peak-time staffing/coverage approach",
+      ],
+      maturityGuidance: {
+        1: "No meaningful wayfinding standard and customer response is largely ad hoc.",
+        2: "Some signage/awareness exists but the experience depends heavily on who is available.",
+        3: "Customers can generally navigate effectively and receive a reasonably prompt response.",
+        4: "Wayfinding and responsiveness are deliberately designed, maintained and consistently effective, including during predictable busy periods.",
+      },
+      confidenceGuidance: {
+        high: "Direct observation captures relevant customer activity, ideally during a representative period.",
+        medium: "Multiple evidence sources support the judgement.",
+        low: "The site is quiet or the assessor cannot observe representative demand and must rely mainly on description.",
+      },
+      diagnosticRelevance:
+        "Consider Diagnostic where poor wayfinding/responsiveness compounds another operational issue or creates a meaningful customer/service risk. Do not treat low confidence as proof of poor performance.",
+    },
+    {
+      id: "q3-complaint-issue-handling",
+      question:
+        "What happens when a customer has a complaint or a problem with an order — where does it go, who owns it, and how would you know if the same issue kept recurring?",
+      whyItMatters:
+        "A complaint itself is not necessarily evidence of poor maturity. The maturity signal is whether the organisation can recognise patterns and prevent recurring problems.",
+      assessorPrompt: "Talk me through the last complaint you personally dealt with, start to finish.",
+      followUpPrompts: [
+        "Is that written down anywhere, or does it live in your head?",
+        "Has the same type of complaint come up more than once this year?",
+        "What happens after the immediate customer issue is resolved?",
+      ],
+      goodExample:
+        "A clear owner, some form of record, and evidence that recurring issues are noticed and acted upon.",
+      poorExample: "We deal with it when it comes up. Nothing's really written down.",
+      whatToObserve: [
+        "Specificity of the answer — a detailed, verifiable example is more valuable than a general statement that complaints are handled well.",
+      ],
+      evidenceSuggestions: [
+        "Complaint records",
+        "Issue logs",
+        "Customer feedback",
+        "Interview",
+        "Examples of corrective action",
+      ],
+      maturityGuidance: {
+        1: "No clear owner or mechanism; complaints are dealt with reactively.",
+        2: "Informal ownership exists but issues are rarely captured or reviewed.",
+        3: "Clear ownership exists and issues are tracked sufficiently to understand what is happening.",
+        4: "Complaints/issues are clearly owned, recorded, reviewed for patterns and used to prevent recurrence.",
+      },
+      confidenceGuidance: {
+        high: "A specific example is provided and can be corroborated.",
+        medium: "A credible process exists but supporting evidence is limited.",
+        low: "Answers remain general and cannot be supported by a specific example or evidence.",
+      },
+      diagnosticRelevance:
+        "A recurring, evidenced complaint pattern with unclear ownership or no effective response is a strong Diagnostic candidate.",
+    },
+    {
+      id: "q4-customer-satisfaction-awareness",
+      question: "How does the business know whether customers are satisfied with the experience they receive?",
+      whyItMatters:
+        "Tests whether customer satisfaction is understood through credible evidence rather than assumption. A lack of formal process is not automatically low maturity — judge the reliability and consistency of the organisation's understanding, not whether it comes through a formal mechanism.",
+      assessorPrompt:
+        "What's the most recent indication you've had that customers were happy — or unhappy — with the experience they received?",
+      followUpPrompts: [
+        "How would you know if satisfaction was starting to decline?",
+        "Do customers tell you directly?",
+        "Do you monitor reviews or complaints?",
+        "Do repeat customers give you useful signals?",
+        "How does the team share what customers are telling you?",
+      ],
+      goodExample:
+        "Any credible mechanism may be appropriate: structured surveys, reviews, complaint trends, customer conversations, account-manager feedback, repeat customer behaviour, direct owner/manager relationships, customer interviews, informal feedback that is consistently understood, or a combination of several sources.",
+      poorExample: "We'd hear about it if something was really wrong.",
+      whatToObserve: [
+        "Whether the organisation can give credible, specific examples of how it knows customers are satisfied — regardless of whether that knowledge is formal or informal",
+      ],
+      evidenceSuggestions: [
+        "Customer feedback records",
+        "Reviews",
+        "Complaint trends",
+        "Interview",
+        "Evidence of repeat business",
+        "Direct manager/owner knowledge, where it can be credibly demonstrated",
+      ],
+      maturityGuidance: {
+        1: "Assumed — there is little credible evidence that the organisation knows how customers feel. Satisfaction is largely assumed.",
+        2: "Informal — customer sentiment is picked up occasionally through conversations, complaints or other signals, but understanding is inconsistent.",
+        3: "Reliable awareness — the organisation has a reasonably reliable way of understanding customer satisfaction, even if informal, and can give credible examples of how it knows when things are going well or changing.",
+        4: "Embedded understanding — customer satisfaction is understood consistently through multiple credible signals and is actively used to identify changes, trends or opportunities for improvement.",
+      },
+      confidenceGuidance: {
+        high: "Multiple credible sources support the organisation's understanding, or strong direct evidence exists.",
+        medium: "The organisation provides credible examples but evidence is limited.",
+        low: "The judgement relies mainly on assumption or general statements with little supporting evidence.",
+      },
+      diagnosticRelevance:
+        "Low maturity does not automatically justify Diagnostic. Consider deeper investigation when there is evidence that the organisation may be missing meaningful customer problems, recurring dissatisfaction, or an important service issue that cannot be understood from the available information.",
+    },
+    {
+      id: "q5-consistency-of-interaction",
+      question:
+        "Is the standard of customer interaction — greeting, product knowledge and service — something that's trained and consistent, or does it vary significantly by individual?",
+      whyItMatters:
+        "Tests one of Keystone's central principles: a great individual is not the same thing as an embedded operational standard.",
+      assessorPrompt: "How would a new starter learn what 'good service' looks like here?",
+      followUpPrompts: [
+        "Is there any training on this, or is it picked up by watching others?",
+        "Would customers notice a difference depending on who serves them?",
+        "How do you know the expected standard is actually being followed?",
+      ],
+      goodExample:
+        "A consistent induction/coaching approach, clear expectations and evidence that the standard is observable across staff.",
+      poorExample: "People just pick it up.",
+      whatToObserve: [
+        "Interactions with different staff",
+        "Greeting",
+        "Product knowledge",
+        "Communication",
+        "Consistency",
+        "Willingness to help",
+        "Differences between individuals",
+      ],
+      evidenceSuggestions: [
+        "Staff interviews",
+        "Direct observation",
+        "Induction material",
+        "Training records",
+        "Coaching records",
+        "Examples of service expectations",
+      ],
+      maturityGuidance: {
+        1: "Customer experience is entirely dependent on individuals. No meaningful standard is taught.",
+        2: "Some individuals perform strongly but expectations are inconsistent or largely learned informally.",
+        3: "A basic service standard is communicated and generally followed.",
+        4: "Customer-service expectations are actively taught, reinforced and consistently observable across staff.",
+      },
+      confidenceGuidance: {
+        high: "Multiple staff interactions were observed and/or training evidence corroborates the assessment.",
+        medium: "Some direct evidence exists but the assessor has not observed enough interactions to establish consistency confidently.",
+        low: "Judgement is based mainly on one interaction or management description.",
+      },
+      diagnosticRelevance:
+        "Strong Diagnostic relevance where genuine variation between individuals is evidenced, the issue creates customer/service risk, and/or the organisation is growing, hiring or scaling — inconsistency becomes more significant as the organisation grows.",
+    },
+  ],
+
+  // Deliberately empty — not yet authored. Do not populate with invented
+  // methodology; each will be built and reviewed individually once the
+  // gold-standard pattern above is tested and approved.
+  "stock-effectiveness-inventory-discipline": [],
+  "operational-processes-ways-of-working": [],
+  "leadership-accountability": [],
+  "commercial-discipline-pricing-governance": [],
+  "safety-compliance-risk-culture": [],
+  "team-capability-knowledge-transfer": [],
+  "operational-resilience-scalability": [],
+  "communication-alignment": [],
+  "continuous-improvement-performance-management": [],
+};
+
 // Current schema version. Bump this and add a migration step in store.js
 // if the shape of persisted state ever changes.
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)
@@ -189,9 +456,17 @@ export function createPillarAssessment(pillarKey) {
     opportunities: [],           // string[] — no solution advice (Engine rule)
     professionalObservation: "",  // client-visible
     internalAssessorNotes: "",     // internal only
-    maturityScore: null,            // 1-4, assessor-entered only
-    assessorConfidence: null,        // { level: High|Medium|Low, reason }
+    maturityScore: null,            // 1-4, assessor-entered only, holistic per pillar
+    assessorConfidence: null,        // { level: High|Medium|Low, reason }, holistic per pillar
     scoreHistory: [],                 // { score, setAt, stage, reason }
+
+    // Methodology Engine v1.0: one response per question (see
+    // PILLAR_QUESTIONS above). Keyed by question id. Meaningful assessment
+    // data, not disposable UI notes — persists exactly like every other
+    // field here. These responses inform the assessor's holistic
+    // maturityScore/assessorConfidence above; they never generate a score
+    // of their own.
+    questionResponses: {}, // { [questionId]: { response, capturedAt } }
   };
 }
 

@@ -122,7 +122,11 @@ function renderOverallHealth(review) {
   indicatorRow.className = "health-indicator";
   indicatorRow.innerHTML = `<span class="health-indicator__emoji">${indicator.emoji}</span><span>${indicator.label}</span>`;
 
-  wrap.append(indicatorRow);
+  const meaning = document.createElement("p");
+  meaning.className = "text-body-secondary";
+  meaning.textContent = indicator.meaning || "";
+
+  wrap.append(indicatorRow, meaning);
   return wrap;
 }
 

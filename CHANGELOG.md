@@ -196,3 +196,66 @@ Given the previous release shipped with a broken import, verification this time 
 
 ### Next Milestone
 Physical device verification of the Diagnostic Cycles flow above, then a reconciliation pass against the newly-provided Master Context document (separate from this build — see conversation).
+
+---
+
+## v0.3.8 — Diagnostic Report Lookup Fix
+
+**Release date:** 2026-08-09
+
+Real device testing of v0.3.7 immediately surfaced a genuine bug: completing a Diagnostic Cycle led to "Diagnostic cycle report not found."
+
+### Fixed
+- **Analysis Transition was dropping `cycleId`.** When forwarding to the report screen after the transition animation, it only passed `organisationId`, `reviewId`, and `reportType` — a hand-picked subset that silently excluded `cycleId`. This meant the report screen had no way to identify which Diagnostic Cycle to render, even though Assessment Complete had correctly set it and locked the right cycle. Fixed by forwarding the entire `params` object through untouched, so this screen doesn't need to know in advance which fields any given report type requires.
+
+### What this confirms
+The underlying data was correct — the cycle had genuinely locked with its findings intact; this was purely a navigation/parameter-passing bug, not data loss. Worth stating plainly since "report not found" could otherwise read as a sign your Diagnostic work vanished — it didn't.
+
+### Testing performed
+Traced the full param chain by hand (Assessment Complete → Analysis Transition → Assessment Report) and confirmed `cycleId` now flows through unmodified at every step. This is exactly the class of bug your device test caught that my own checks (syntax + import/export resolution) can't — those verify the code is internally consistent, not that data actually flows correctly between screens across a multi-step navigation sequence. Still needs re-testing on your device to confirm.
+
+### Known Issues
+Unchanged from v0.3.7 — guidance panels empty, Health Indicator thresholds provisional.
+
+### Next Milestone
+Re-run the Diagnostic Cycle test sequence on device. If it passes, the reconciliation with the Master Context document (pillar-naming discrepancy flagged) is the next open item.
+
+---
+
+## v0.4.0 — Methodology Engine v1.0: First Gold-Standard Pillar
+
+**Release date:** 2026-08-09
+
+The first real methodology content lands: Site Presentation & Customer Journey, fully authored as five structured questions with the complete guidance chain, per the approved response model (Option C).
+
+### Added
+- **`PILLAR_QUESTIONS`** static config in `schema.js` — Site Presentation & Customer Journey fully authored (5 questions); the remaining nine pillars deliberately left as empty arrays, not populated with invented content.
+- **`questionResponses{}`** added to `PillarAssessment` — one auto-growing response field per question, keyed by stable question ID, storing `{ response, capturedAt }`. Persists exactly like every other assessment field.
+- **`createQuestionGuidance` component** — renders the full collapsible guidance chain per question (why it matters, how to ask it, follow-up prompts, good example, poor example, what to observe, evidence suggestions, maturity guidance, confidence guidance, Diagnostic relevance), distinct from the existing generic field-level guidance panel, which remains unchanged underneath.
+- **Q1 revised** per review: now tests physical/environmental first impression only; the "consistent regardless of staff/day" concept moved entirely to its follow-up prompts, removing the overlap with Q5.
+- **Q4 revised** per review: no longer implies formal feedback mechanisms are required for maturity. Tests reliable *awareness* of customer satisfaction through any credible means — explicitly protects small operators with strong informal customer relationships from being penalised for lacking bureaucracy.
+- **Health Indicator meaning text** added (`HEALTH_INDICATOR_LEVELS[level].meaning`) — the approved Green/Yellow/Red interpretive copy, now shown consistently on both Assessment Complete and the Assessment Report's Overall Operational Health section.
+- **Recommendation-mismatch justification prompt** updated to the approved wording: "This recommendation appears inconsistent with the current Health Indicator... Please review your evidence and explain why you believe this recommendation remains appropriate."
+
+### Explicitly NOT done (hard rules preserved, verified by direct code search)
+- **No automatic scoring.** Confirmed by search: `questionResponses` appears only in `schema.js` (definition) and `pillarAssessment.js` (read/write) — nowhere near `maturityScore` or `assessorConfidence` calculation. One holistic score, one holistic confidence, per pillar, exactly as before.
+- **No client-facing leak.** Confirmed by search: `assessmentReport.js` contains zero references to `questionResponses`, `PILLAR_QUESTIONS`, or the question guidance component. Question text, prompts, and examples never reach any report.
+- **No automatic Diagnostic selection.** "Diagnostic relevance" guidance is read-only reference text inside each question's collapsible panel — not wired to any selection logic.
+- **Diagnostic Cycles, Client Report gating, navigation, report/toolbar separation, evidence source classification, auto-growing Strengths/Opportunities** — all untouched.
+
+### Data model impact
+Schema version bumped to 6 (additive field only — `questionResponses` defaults to `{}`).
+
+### UI impact
+`pillarAssessment.js` only: the five questions (with response fields and guidance) render as a new section, positioned before the existing Observation/Conversation/Evidence/Strengths/Opportunities fields, which are otherwise unchanged. Renders nothing for the other nine pillars (empty `PILLAR_QUESTIONS` entries) — no regression risk there.
+
+### Testing performed
+Syntax check (all files), cross-file import/export resolution (all files), and three targeted searches: confirming no question data reaches the report, confirming no automatic scoring wiring exists, confirming `questionResponses` doesn't appear anywhere unexpected. All clean.
+
+**Not yet done — genuinely outstanding:** physical device testing per the Section 16/17 requirements (low-maturity case, high-maturity case, ambiguous/medium case, low-confidence case, review of the generated report, review of the assessor experience). This release is mechanically verified, not experientially tested. That distinction matters — please don't treat this as "done" until you've actually walked through an assessment on your device.
+
+### Confirmation
+The other nine pillars were **not** populated with invented methodology — verified directly in `PILLAR_QUESTIONS`, each holds an explicit empty array with a comment stating why.
+
+### Recommended next step (not started automatically)
+Test Site Presentation & Customer Journey on device across the full range of cases in Section 17 of the brief (low/high/ambiguous maturity, low confidence, report review, assessor experience review). Only once that's reviewed and explicitly approved as the gold-standard template should the same *structure* — not the same *content* — be replicated to the remaining nine pillars, authored one at a time.

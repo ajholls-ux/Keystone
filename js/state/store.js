@@ -24,16 +24,12 @@ function loadFromStorage() {
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
-      // v4 -> v5 (Diagnostic Cycles): Diagnostic-layer fields moved off
-      // PillarAssessment into per-cycle records (review.diagnosticCycles).
-      // This is a structural change to how Diagnostic data is stored, but
-      // Health Review data (the baseline) is untouched. Any pre-v5
-      // in-progress Diagnostic data (from schema versions 3-4, which
-      // stored it directly on the pillar) would not carry forward under
-      // the new shape. Given the project's current stage, no destructive
-      // migration is implemented — existing Organisations/Health Review
-      // data remain intact; only incomplete in-progress Diagnostic work
-      // under the old shape would need to be re-entered under a new cycle.
+      // v5 -> v6 (Methodology Engine v1.0): PillarAssessment gained
+      // questionResponses{} (additive, defaults to {} for existing
+      // pillars). PILLAR_QUESTIONS is a static export, not stored
+      // per-Review — no migration needed for it. Existing Organisation/
+      // Review/Diagnostic Cycle data is otherwise untouched and remains
+      // valid. No destructive migration required.
       return parsed && parsed.organisations ? parsed : createEmptyState();
     }
     return parsed;

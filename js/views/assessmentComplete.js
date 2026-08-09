@@ -37,6 +37,10 @@ function renderHealthReviewCompletion(screen, org, review) {
   indicatorRow.className = "health-indicator";
   indicatorRow.innerHTML = `<span class="health-indicator__emoji">${indicator.emoji}</span><span>${indicator.label}</span>`;
 
+  const indicatorMeaning = document.createElement("p");
+  indicatorMeaning.className = "text-body-secondary";
+  indicatorMeaning.textContent = indicator.meaning || "";
+
   const indicatorNote = document.createElement("p");
   indicatorNote.className = "text-caption";
   indicatorNote.textContent =
@@ -84,7 +88,7 @@ function renderHealthReviewCompletion(screen, org, review) {
       if (!isRecommendationAligned(indicator.level, selected)) {
         justification =
           window.prompt(
-            `This recommendation differs from the Operational Health Indicator (${indicator.label}). Please provide a professional justification:`
+            `This recommendation appears inconsistent with the current Health Indicator (${indicator.emoji} ${indicator.label}). Please review your evidence and explain why you believe this recommendation remains appropriate.`
           ) || "";
         if (!justification.trim()) {
           window.alert("A justification is required when the recommendation differs from the indicator.");
@@ -110,7 +114,7 @@ function renderHealthReviewCompletion(screen, org, review) {
     },
   });
 
-  screen.append(heading, subhead, indicatorRow, indicatorNote, recLabel, recRow);
+  screen.append(heading, subhead, indicatorRow, indicatorMeaning, indicatorNote, recLabel, recRow);
 
   const actions = document.createElement("div");
   actions.className = "screen-actions stack-tight";

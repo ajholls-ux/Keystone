@@ -14,12 +14,19 @@
 // ==========================================================================
 
 import { getState, updateState } from "../state/store.js";
-import { PILLARS, EVIDENCE_SOURCE_TYPES, CONFIDENCE_LEVELS, PILLAR_GUIDANCE } from "../state/schema.js";
+import {
+  PILLARS,
+  EVIDENCE_SOURCE_TYPES,
+  CONFIDENCE_LEVELS,
+  PILLAR_GUIDANCE,
+  PILLAR_QUESTIONS,
+} from "../state/schema.js";
 import { createTextField } from "../components/textField.js";
 import { createButton } from "../components/button.js";
 import { createScoreSelector, SCORE_LABELS } from "../components/scoreSelector.js";
 import { createTextListEditor, createEvidenceListEditor } from "../components/listEditor.js";
 import { createGuidancePanel } from "../components/guidancePanel.js";
+import { createQuestionGuidance } from "../components/questionGuidance.js";
 import { back } from "../router.js";
 
 function findPillar(state, organisationId, reviewId, pillarKey) {
@@ -82,8 +89,65 @@ function renderSummaryStrip(pillar, isDiagnosticMode, cycle) {
   return strip;
 }
 
+/**
+ * Renders the pillar's methodology questions (Methodology Engine v1.0).
+ * Each question gets one auto-growing response field plus its full
+ * guidance chain. Empty array for pillars not yet authored — renders
+ * nothing, no regression for the other nine pillars.
+ */
+function renderMethodologyQuestions(container, pillar, review, org) {
+  const questions = PILLAR_QUESTIONS[pillar.pillarKey] || [];
+  if (questions.length === 0) return;
+
+  const sectionHeading = document.createElement("h2");
+  sectionHeading.className = "text-heading-section";
+  sectionHeading.textContent = "Assessment Questions";
+  container.append(sectionHeading);
+
+  questions.forEach((q) => {
+    const questionWrap = document.createElement("div");
+    questionWrap.className = "stack-tight";
+    questionWrap.style.marginBottom = "var(--space-3)";
+
+    const questionText = document.createElement("p");
+    questionText.style.fontWeight = "600";
+    questionText.textContent = q.question;
+
+    const responseField = createTextField({
+      id: `question-${q.id}`,
+      label: "Response",
+      textarea: true,
+    });
+    const existing = pillar.questionResponses?.[q.id];
+    responseField.input.value = existing ? existing.response : "";
+    responseField.input.rows = 3;
+    responseField.input.addEventListener("input", () => {
+      responseField.input.style.height = "auto";
+      responseField.input.style.height = `${responseField.input.scrollHeight}px`;
+    });
+    responseField.input.addEventListener("blur", () => {
+      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+        if (!p.questionResponses) p.questionResponses = {};
+        p.questionResponses[q.id] = {
+          response: responseField.input.value,
+          capturedAt: new Date().toISOString(),
+        };
+      });
+    });
+
+    questionWrap.append(questionText, responseField.element, createQuestionGuidance(q));
+    container.append(questionWrap);
+  });
+
+  const divider = document.createElement("hr");
+  divider.className = "section-divider";
+  container.append(divider);
+}
+
 function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   const guidance = PILLAR_GUIDANCE[pillar.pillarKey];
+
+  renderMethodologyQuestions(container, pillar, review, org);
 
   const obs = createTextField({ id: "observationNotes", label: "Observation notes", textarea: true });
   obs.input.value = pillar.observationNotes;
