@@ -36,11 +36,13 @@ export function renderAnalysisTransition(container, params) {
       // back stack, or pressing Back from the report would re-render this
       // transition, which would immediately auto-forward again — making
       // the report feel like it's being regenerated on every Back press.
-      replace("assessmentReport", {
-        organisationId: params.organisationId,
-        reviewId: params.reviewId,
-        reportType: params.reportType,
-      });
+      //
+      // Forward all params through untouched (not a hand-picked subset) —
+      // this screen has no business knowing which fields the report needs
+      // (e.g. cycleId for a Diagnostic Report). A previous version only
+      // forwarded organisationId/reviewId/reportType and silently dropped
+      // cycleId, which broke Diagnostic Report lookup after this screen.
+      replace("assessmentReport", params);
     }
   }, STEP_MS);
 }
