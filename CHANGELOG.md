@@ -259,3 +259,61 @@ The other nine pillars were **not** populated with invented methodology — veri
 
 ### Recommended next step (not started automatically)
 Test Site Presentation & Customer Journey on device across the full range of cases in Section 17 of the brief (low/high/ambiguous maturity, low confidence, report review, assessor experience review). Only once that's reviewed and explicitly approved as the gold-standard template should the same *structure* — not the same *content* — be replicated to the remaining nine pillars, authored one at a time.
+
+---
+
+## v0.4.1 — Human-Voiced Methodology & Report Bridge
+
+**Release date:** 2026-08-09
+
+Reconciliation pass against the Master Methodology + Assessment Experience Update. Two genuine conflicts identified and deliberately left unresolved pending confirmation — everything else implemented.
+
+### Changed
+- **Site Presentation & Customer Journey questions rewritten** in plainer, more human phrasing — em dashes and formal consultant-speak removed throughout `PILLAR_QUESTIONS`. Same underlying intent, more natural wording an assessor could actually say out loud to a branch manager.
+- **Strengths and Opportunities UI replaced.** The multi-entry Add-button list is gone; both fields are now a single large auto-growing textarea, one point per line. Underlying storage is unchanged — still `string[]`, split/joined on newlines. Diagnostic-layer Recommendations and Implementation Plan keep their existing Add-button list pattern (unaffected — they're discrete action items, not free synthesis).
+- **Generic field guidance populated** for Opportunities, Professional Observation, Maturity Score, and Assessor Confidence — pillar-agnostic content, applied identically across all ten pillars (distinct from `PILLAR_QUESTIONS`, which stays pillar-specific and authored one at a time). Includes the explicit "don't prescribe the solution" guardrail on Opportunities and Professional Observation.
+- **Assessor Confidence field now has a visible guidance panel** — the field existed structurally before but had no attached guidance panel in the UI; fixed as part of populating its content.
+- **Recommendation-mismatch justification wording** updated to match the approved phrasing exactly.
+- **Client/Diagnostic Report — Pillar Overview** now includes an informational bridge note listing pillars where "further Diagnostic investigation may help establish the underlying causes and operational impact" whenever a pillar's score sits below Green. Purely informational text — no button, no automatic selection; starting a Diagnostic Cycle remains exclusively an assessor action on Review Overview.
+- New `calculatePillarIndicatorLevel()` in `schema.js`, reusing the same centralised thresholds as the overall Health Indicator — no new thresholds introduced, nothing scattered.
+
+### Explicitly NOT implemented — genuine conflicts, flagged for confirmation
+- **Evidence/confidence in the free Client Report.** The brief lists "evidence/confidence summary" as client-safe content; the locked Assessment Engine v1.0 explicitly says raw evidence and assessor confidence are never client-visible. Neither has been added to the report. Needs explicit clarification on what "summary" means here before implementing.
+- **Generic maturity/confidence anchor labels.** The brief's wording ("Reactive/Developing/Established/Embedded") differs from the locked score-selector button labels ("Significant opportunity/Developing/Effective/Strong-Mature"). I've used the new wording only as descriptive guidance text under the score fields — the buttons themselves are unchanged. Needs confirmation on whether the buttons were meant to be renamed too.
+
+### Testing performed
+Syntax check (all files), cross-file import/export resolution (all files), and two targeted searches confirming neither flagged conflict was accidentally implemented — both confirmed clean.
+
+**Not yet done:** physical device testing of the new Strengths/Opportunities textarea behaviour (auto-grow, newline splitting on blur, re-population on reopen) and the new report bridge text. Mechanically verified only.
+
+### Recommended next step
+Device-test the Strengths/Opportunities change specifically — confirm typing multiple lines, leaving the field, reopening the pillar, and seeing the same lines reappear correctly joined. Then resolve the two flagged conflicts before any further methodology content is authored.
+
+---
+
+## v0.4.2 — Methodology Clarification & First-Pillar Polish
+
+**Release date:** 2026-08-09
+
+Both conflicts flagged in v0.4.1 are now resolved by explicit founder direction — implemented exactly as specified, nothing left open.
+
+### Resolved (were open conflicts in v0.4.1)
+- **Evidence/confidence report boundary (Priority 1).** Raw evidence and assessor confidence remain fully internal — confirmed unchanged by direct code search. The Executive Summary now adds one qualitative, client-safe sentence ("The findings below are informed by direct observation, conversation and documentation gathered during the review") — shown only when evidence genuinely exists, so the report never claims more rigour than the assessment actually had. No evidence entries, source classifications, or confidence levels/reasoning are exposed anywhere in either report.
+- **Maturity labels.** Confirmed unchanged: `SCORE_LABELS` still reads "Significant opportunity / Developing / Effective / Strong / Mature" — the same locked terminology since the original Assessment Engine v1.0. The alternative framing I'd introduced in v0.4.1 ("Reactive/Developing/Established/Embedded") has been removed from the Maturity Score guidance text entirely and replaced with guidance that leads with the official labels throughout, per explicit instruction not to let alternative framing look like a replacement.
+
+### Changed
+- **Full em-dash sweep across all assessor-facing content** (question text, guidance strings, examples) — the generic Maturity Score and Assessor Confidence guidance I wrote in v0.4.1 still had heavy em-dash construction; that's fixed along with four remaining instances in the Site Presentation questions. Verified by a script that walks every non-comment line in `schema.js` — zero em dashes remain outside developer code comments (which are invisible to the assessor and don't affect how anything reads).
+
+### Explicitly NOT changed (confirmed by direct verification, not just asserted)
+- Ten pillars, Diagnostic Cycles, Health Review → Client Report → Diagnostic lifecycle, question/response model (Option C), Evidence multi-entry with Add button, Strengths/Opportunities single-textarea UI, Health Indicator thresholds and meaning text, warn-don't-force recommendation alignment, report/toolbar separation, cycle-scoped locking — all unchanged.
+
+### Testing performed
+Syntax check (all files), cross-file import/export resolution (all files), a script-based check confirming zero em dashes remain in assessor-facing content, direct grep confirming `SCORE_LABELS` is untouched, and direct grep confirming no raw evidence or confidence data reaches either report (the one `.evidence` reference in the report file only counts array length internally to decide whether to show the qualitative sentence — it never renders evidence content itself).
+
+**Not yet done:** physical device read-through of the new question wording and generic guidance text, to confirm it actually sounds natural when read aloud rather than just mechanically dash-free.
+
+### Files changed
+`schema.js`, `assessmentReport.js`, `CHANGELOG.md`.
+
+### Recommended next step
+Read through Site Presentation & Customer Journey on device, out loud, as if actually asking a branch manager — confirm it sounds like a person, not a checklist. Then proceed to the Section 22 contrasting-business test (strong/weak/deceptively-strong/small-but-effective) before any decision is made about replicating the pattern to the remaining nine pillars.

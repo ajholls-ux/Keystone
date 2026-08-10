@@ -12,7 +12,7 @@
 // ==========================================================================
 
 import { getState } from "../state/store.js";
-import { PILLARS, calculateHealthIndicator } from "../state/schema.js";
+import { PILLARS, calculateHealthIndicator, calculatePillarIndicatorLevel } from "../state/schema.js";
 import { SCORE_LABELS } from "../components/scoreSelector.js";
 import { createButton } from "../components/button.js";
 import { back } from "../router.js";
@@ -101,6 +101,7 @@ function renderExecutiveSummary(review) {
 
   const strengthsCount = review.pillarAssessments.reduce((n, p) => n + p.strengths.length, 0);
   const opportunitiesCount = review.pillarAssessments.reduce((n, p) => n + p.opportunities.length, 0);
+  const totalEvidenceItems = review.pillarAssessments.reduce((n, p) => n + p.evidence.length, 0);
 
   const summary = document.createElement("p");
   summary.className = "text-body-secondary";
@@ -111,6 +112,21 @@ function renderExecutiveSummary(review) {
   } for further consideration across all ten operational pillars.`;
 
   wrap.append(summary);
+
+  // Client-safe, qualitative credibility language only. Never exposes
+  // individual evidence entries, source classifications, or assessor
+  // confidence levels/reasoning — those remain internal (Assessment
+  // Engine v1.0 §Internal vs. Client Behaviour). Only shown when evidence
+  // genuinely exists, so the report never claims more rigour than the
+  // assessment actually had.
+  if (totalEvidenceItems > 0) {
+    const credibility = document.createElement("p");
+    credibility.className = "text-body-secondary";
+    credibility.textContent =
+      "The findings below are informed by direct observation, conversation and documentation gathered during the review.";
+    wrap.append(credibility);
+  }
+
   return wrap;
 }
 
@@ -189,6 +205,8 @@ function renderPillarOverview(review) {
   const dl = document.createElement("dl");
   dl.style.margin = "0";
 
+  const bridgeNotes = [];
+
   review.pillarAssessments.forEach((pillar) => {
     const pillarMeta = PILLARS.find((p) => p.key === pillar.pillarKey);
     const row = document.createElement("div");
@@ -199,9 +217,27 @@ function renderPillarOverview(review) {
     dd.textContent = pillar.maturityScore ? SCORE_LABELS[pillar.maturityScore] : "Not yet scored";
     row.append(dt, dd);
     dl.append(row);
+
+    // Informational only — never selects a pillar for Diagnostic. The
+    // assessor still makes that decision manually in Diagnostic Pillar
+    // Selection. This purely tells the client where deeper investigation
+    // may be worth considering.
+    const level = calculatePillarIndicatorLevel(pillar.maturityScore);
+    if (level && level !== "green") {
+      bridgeNotes.push(pillarMeta.name);
+    }
   });
 
   wrap.append(dl);
+
+  if (bridgeNotes.length > 0) {
+    const bridgeNote = document.createElement("p");
+    bridgeNote.className = "text-body-secondary";
+    bridgeNote.style.marginTop = "var(--space-2)";
+    bridgeNote.textContent = `Further Diagnostic investigation may help establish the underlying causes and operational impact in: ${bridgeNotes.join(", ")}.`;
+    wrap.append(bridgeNote);
+  }
+
   return wrap;
 }
 
