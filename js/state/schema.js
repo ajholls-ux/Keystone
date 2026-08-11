@@ -1,5 +1,5 @@
 // ==========================================================================
-// Keystone Field Kit — Data Schema
+// Keystone Field Kit -- Data Schema
 // Source of truth: Product Specification Part 5 (locked, v1.0).
 // Governed by Assessment Engine v1.0 (Part 3, locked).
 //
@@ -37,7 +37,7 @@ export const EVIDENCE_SOURCE_TYPES = [
 export const CONFIDENCE_LEVELS = ["High", "Medium", "Low"];
 
 // Assessor-selected outcome for whether an Operational Diagnostic is
-// suggested. Never auto-derived from a score threshold alone — this is a
+// suggested. Never auto-derived from a score threshold alone -- this is a
 // deliberate methodology decision (Assessment Engine v1.0 addendum): the
 // assessor stays in control of the consultancy recommendation. The
 // Operational Health Indicator (below) exists purely as decision support.
@@ -47,11 +47,11 @@ export const DIAGNOSTIC_RECOMMENDATION_OPTIONS = [
   { key: "optional", label: "Operational Diagnostic Optional" },
 ];
 
-// Operational Health Indicator — Assessment Engine v1.0 addendum.
+// Operational Health Indicator -- Assessment Engine v1.0 addendum.
 // A calculated traffic-light summary of Health Review maturity. Decision
 // support only; it never replaces or auto-generates the assessor's
 // recommendation. Thresholds are centralised here (not scattered through
-// the UI) so they remain a single configurable point — the specific
+// the UI) so they remain a single configurable point -- the specific
 // numbers below are a provisional default, not yet founder-confirmed.
 export const HEALTH_INDICATOR_THRESHOLDS = {
   green: 3.0,  // average maturity score >= this → Mature Operational Performance
@@ -82,7 +82,7 @@ export const HEALTH_INDICATOR_LEVELS = {
 
 // Which assessor recommendations are considered "expected" for a given
 // indicator level, before a justification is required. Provisional
-// default, extrapolated from the two founder-given examples — not yet
+// default, extrapolated from the two founder-given examples -- not yet
 // founder-confirmed as final.
 const ALIGNED_RECOMMENDATIONS = {
   green: ["not-recommended", "optional"],
@@ -92,7 +92,7 @@ const ALIGNED_RECOMMENDATIONS = {
 
 /**
  * Calculates the Operational Health Indicator from a set of pillar
- * assessments. Derived at render/decision time — never stored, so it can
+ * assessments. Derived at render/decision time -- never stored, so it can
  * never drift out of sync with the underlying scores.
  * @returns {{level: 'green'|'yellow'|'red'|null, avgScore: number|null} & object}
  */
@@ -112,7 +112,7 @@ export function calculateHealthIndicator(pillarAssessments) {
 /**
  * Calculates the indicator level for a single pillar's score, reusing the
  * same centralised thresholds as the overall Health Indicator. Used for
- * per-pillar messaging in the Client Report (informational only — this
+ * per-pillar messaging in the Client Report (informational only -- this
  * never selects a pillar for Diagnostic; that remains a manual assessor
  * decision in Diagnostic Pillar Selection).
  */
@@ -125,20 +125,20 @@ export function calculatePillarIndicatorLevel(maturityScore) {
 
 /**
  * Whether a chosen recommendation is "expected" for the given indicator
- * level — i.e. whether a justification prompt is required.
+ * level -- i.e. whether a justification prompt is required.
  */
 export function isRecommendationAligned(indicatorLevel, recommendationKey) {
   if (!indicatorLevel) return true; // nothing to validate against yet
   return ALIGNED_RECOMMENDATIONS[indicatorLevel]?.includes(recommendationKey) ?? true;
 }
 
-// Assessment Guidance framework. Structure only — content is authored
+// Assessment Guidance framework. Structure only -- content is authored
 // field-by-field, pillar-by-pillar over time, not invented here. Every
 // section starts empty; the UI shows "Not yet added" for anything
 // unpopulated so it's always visible what still needs authoring.
 //
 // Guidance is attached to the individual field it supports (Strengths,
-// Opportunities, Evidence, etc.), not bundled into one block per pillar —
+// Opportunities, Evidence, etc.), not bundled into one block per pillar --
 // the assessor should encounter guidance at the point they need it.
 export const GUIDANCE_SECTIONS = [
   { key: "purpose", label: "Purpose" },
@@ -155,7 +155,7 @@ export const GUIDANCE_SECTIONS = [
 
 // The fields, within each pillar's Health Review layer, that carry their
 // own contextual guidance. Extend this list if a future field should also
-// earn guidance — no restructuring required elsewhere to do so.
+// earn guidance -- no restructuring required elsewhere to do so.
 export const GUIDANCE_FIELDS = [
   "observationNotes",
   "conversationNotes",
@@ -173,7 +173,7 @@ function emptyGuidance() {
   return g;
 }
 
-// Keyed by pillarKey, then by field key. Populate incrementally — this
+// Keyed by pillarKey, then by field key. Populate incrementally -- this
 // framework works correctly with every section empty; it does not block
 // on full content.
 export const PILLAR_GUIDANCE = PILLARS.reduce((acc, p) => {
@@ -207,27 +207,33 @@ const PROFESSIONAL_OBSERVATION_GUIDANCE = {
 // 1 Significant Opportunity, 2 Developing, 3 Effective, 4 Strong / Mature).
 // This guidance explains what each level means in practical terms. It
 // does not introduce alternative terminology as a replacement for the
-// official labels — every anchor below leads with the locked label.
+// official labels -- every anchor below leads with the locked label.
 const MATURITY_SCORE_GUIDANCE = {
-  purpose: "One holistic score for the pillar, based on everything gathered. Not an average of the individual questions.",
+  purpose:
+    "One holistic score for the pillar, based on everything gathered. Not an average of the individual questions.",
   scoringGuidance:
-    "1 (Significant Opportunity): little consistency or defined practice. Outcomes depend heavily on individuals or immediate reaction.\n" +
-    "2 (Developing): some good practice exists but it's inconsistent, informal or dependent on particular people.\n" +
-    "3 (Effective): a defined and generally reliable way of working exists and is normally followed.\n" +
-    "4 (Strong / Mature): the practice is consistent, understood, maintained and resilient regardless of individual circumstances.\n\n" +
-    "These are anchors, not automatic scoring rules. Judge consistency, ownership, repeatability, evidence, and whether the practice survives pressure or someone's absence, then make one professional judgement. " +
-    "A low score doesn't automatically mean the business is bad, and a high score doesn't just mean they do this well. It means the practice is embedded rather than accidental. " +
-    "Don't reward bureaucracy for its own sake: a small business can operate effectively with informal systems, so distinguish simple but effective from informal and fragile.",
+    "1 -- Significant Opportunity\n" +
+    "Little consistency or defined practice. Outcomes depend heavily on individuals or immediate reaction.\n\n" +
+    "2 -- Developing\n" +
+    "Some good practice exists, but it is inconsistent, informal, or dependent on particular people.\n\n" +
+    "3 -- Effective\n" +
+    "A defined and generally reliable way of working exists and is normally followed.\n\n" +
+    "4 -- Strong / Mature\n" +
+    "The practice is consistent, understood, maintained, and resilient regardless of individual circumstances.\n\n" +
+    "These are anchors, not automatic rules. Judge consistency, ownership, repeatability, evidence, and whether the practice survives pressure or someone's absence -- then make one professional judgement. A low score does not automatically mean the business is bad. A high score does not just mean they do this well -- it means the practice is embedded rather than accidental. Don't reward bureaucracy: a small business can operate effectively with informal systems. Distinguish simple-but-effective from informal-and-fragile.",
 };
 
 const ASSESSOR_CONFIDENCE_GUIDANCE = {
   purpose:
-    "Confidence isn't about how confident you feel. It's about how strong the evidence base is for the judgement. It isn't automatically linked to maturity: a pillar can be High maturity with Low confidence, or Low maturity with High confidence, and both are valid, important outcomes.",
+    "Confidence is not about how confident you feel. It is about how strong the evidence base is for the judgement. It is not automatically linked to maturity: a pillar can be High maturity with Low confidence, or Low maturity with High confidence -- both are valid.",
   scoringGuidance:
-    "High: evidence is strong, relevant and corroborated. Directly observed, documented, corroborated by more than one source, or backed by specific recent examples.\n" +
-    "Medium: useful evidence exists but with limitations. One strong source, partial observation, or a credible account with limited corroboration.\n" +
-    "Low: judgement relies heavily on assertion, limited observation, or weak or contradictory evidence. A claim that can't be demonstrated, a visit that prevented observation, no recent example, or conflicting accounts.\n\n" +
-    "Low confidence doesn't mean low maturity. It means there isn't yet enough evidence to be highly confident in the judgement. Don't automatically downgrade a maturity score because confidence is low; instead, gather more evidence or interpret cautiously.",
+    "High\n" +
+    "Evidence is strong, relevant, and corroborated. Directly observed, documented, backed by more than one source, or supported by specific recent examples.\n\n" +
+    "Medium\n" +
+    "Useful evidence exists but with limitations. One strong source, partial observation, or a credible account with limited corroboration.\n\n" +
+    "Low\n" +
+    "Judgement relies heavily on assertion, limited observation, or weak or contradictory evidence. A claim that can't be demonstrated, a visit that prevented observation, no recent example, or conflicting accounts.\n\n" +
+    "Low confidence does not mean low maturity. It means there is not yet enough evidence to be highly confident in the judgement. Do not automatically downgrade a maturity score because confidence is low -- gather more evidence or interpret cautiously.",
 };
 
 PILLARS.forEach((p) => {
@@ -238,18 +244,18 @@ PILLARS.forEach((p) => {
 });
 
 // ==========================================================================
-// Methodology Questions — Methodology Engine v1.0.
+// Methodology Questions -- Methodology Engine v1.0.
 //
 // Static reference content, not per-Review data. Each question is a
 // structured evidence-gathering instrument that feeds the assessor's
-// judgement — it does NOT produce its own score. There remains exactly
+// judgement -- it does NOT produce its own score. There remains exactly
 // one maturityScore and one assessorConfidence per pillar (Health Review
 // layer above). No code path here or elsewhere maps a question response
 // to a number.
 //
 // Site Presentation & Customer Journey is the first gold-standard pillar,
 // fully authored below. The remaining nine pillars are deliberately left
-// as empty arrays — NOT populated with invented methodology — until the
+// as empty arrays -- NOT populated with invented methodology -- until the
 // gold-standard pattern has been tested and explicitly approved for
 // replication.
 // ==========================================================================
@@ -464,7 +470,7 @@ export const PILLAR_QUESTIONS = {
     },
   ],
 
-  // Deliberately empty — not yet authored. Do not populate with invented
+  // Deliberately empty -- not yet authored. Do not populate with invented
   // methodology; each will be built and reviewed individually once the
   // gold-standard pattern above is tested and approved.
   "stock-effectiveness-inventory-discipline": [],
@@ -494,7 +500,7 @@ function generateId(prefix) {
 /**
  * Creates a new, empty PillarAssessment for a given pillar key.
  * Health Review layer only (Assessment Engine v1.0). This is the
- * permanent baseline — it is never overwritten by Diagnostic activity.
+ * permanent baseline -- it is never overwritten by Diagnostic activity.
  * Diagnostic-layer data lives separately, per cycle (see
  * createDiagnosticCycle / createCyclePillarEntry below), so investigating
  * a pillar in one Diagnostic cycle can never overwrite or block a future
@@ -510,7 +516,7 @@ export function createPillarAssessment(pillarKey) {
     conversationNotes: "",
     evidence: [],              // { id, sourceType, content, capturedAt }
     strengths: [],              // string[]
-    opportunities: [],           // string[] — no solution advice (Engine rule)
+    opportunities: [],           // string[] -- no solution advice (Engine rule)
     professionalObservation: "",  // client-visible
     internalAssessorNotes: "",     // internal only
     maturityScore: null,            // 1-4, assessor-entered only, holistic per pillar
@@ -520,12 +526,12 @@ export function createPillarAssessment(pillarKey) {
     // Methodology Engine v1.0: one response per question (see
     // PILLAR_QUESTIONS above), plus a lightweight evidenceNotes breadcrumb
     // captured while investigating that specific question. Keyed by
-    // question id. Meaningful assessment data, not disposable UI notes —
+    // question id. Meaningful assessment data, not disposable UI notes --
     // persists exactly like every other field here. Neither generates a
     // score of its own; both inform the assessor's holistic
     // maturityScore/assessorConfidence above.
     //
-    // evidenceNotes is deliberately NOT the formal evidence record — it's
+    // evidenceNotes is deliberately NOT the formal evidence record -- it's
     // a quick note taken in the moment, distinct from the pillar-level
     // evidence[] array above (which has source classification and is
     // the assessor's considered, consolidated evidence).
@@ -535,7 +541,7 @@ export function createPillarAssessment(pillarKey) {
 
 /**
  * Creates a fresh per-cycle Diagnostic record for a single pillar.
- * Scoped entirely to one Diagnostic cycle — investigating a pillar in
+ * Scoped entirely to one Diagnostic cycle -- investigating a pillar in
  * Cycle 1 and again in a later cycle produces two independent entries,
  * neither overwriting the other.
  */
@@ -545,14 +551,14 @@ export function createCyclePillarEntry() {
     rootCauseAnalysis: "",
     operationalRisk: "",
     costOfInaction: "",
-    recommendations: [],   // { id, text, businessImpact: [] } — businessImpact reserved, unused
+    recommendations: [],   // { id, text, businessImpact: [] } -- businessImpact reserved, unused
     implementationPlan: [], // { id, step, timeframe }
   };
 }
 
 /**
  * Creates a new Diagnostic Cycle. A Review may accumulate many cycles
- * over the organisation's improvement journey — each is a self-contained
+ * over the organisation's improvement journey -- each is a self-contained
  * historical record once locked. `pillars` starts empty; pillars are
  * added to it as the assessor selects them for this specific cycle via
  * Diagnostic Pillar Selection.
@@ -564,7 +570,7 @@ export function createDiagnosticCycle(cycleNumber) {
     startedAt: new Date().toISOString(),
     completedAt: null,
     reportGeneratedAt: null,
-    locked: false, // true once this cycle is marked complete — permanent, cycle-scoped only
+    locked: false, // true once this cycle is marked complete -- permanent, cycle-scoped only
     pillars: {}, // keyed by pillarKey -> createCyclePillarEntry()
   };
 }
@@ -574,7 +580,7 @@ export function createDiagnosticCycle(cycleNumber) {
  * Governed by Assessment Engine v1.0. A Review represents an
  * organisation's ongoing improvement journey: one Health Review baseline,
  * followed by zero or more Diagnostic Cycles over time. The Review itself
- * is never locked — only individual completed Diagnostic Cycles are.
+ * is never locked -- only individual completed Diagnostic Cycles are.
  */
 export function createReview(organisationId) {
   const now = new Date().toISOString();
@@ -601,7 +607,7 @@ export function createReview(organisationId) {
 
     // The organisation's Diagnostic history. Each entry is an independent,
     // self-contained investigation cycle. A new cycle may only be started
-    // once any previous cycle is locked (completed) — this keeps "one
+    // once any previous cycle is locked (completed) -- this keeps "one
     // active cycle at a time" simple without preventing future cycles.
     diagnosticCycles: [],
   };
@@ -642,4 +648,5 @@ export function createEmptyState() {
     organisations: [],
   };
 }
+
 
