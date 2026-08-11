@@ -667,3 +667,33 @@ details[open] > .guidance-panel__summary::before {
 .reason-sheet__actions .btn {
   flex: 1;
 }
+
+
+/* Observe then ask question capture */
+.question-observed .field__input {
+  background: var(--color-bg);
+}
+
+.question-learned .field__input {
+  background: var(--color-surface);
+}
+
+.question-block__look-for {
+  margin: 0 0 var(--space-1) 0;
+}
+
+.question-block__ask-cue {
+  margin: var(--space-1) 0 0 0;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+
+/* Evidence under a question: same list editor, slightly tighter */
+.question-evidence {
+  margin-top: var(--space-1);
+}
+
+.question-evidence .list-editor__add {
+  min-height: 44px;
+}
