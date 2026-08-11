@@ -203,73 +203,144 @@ function renderMethodologyQuestions(container, pillar, review, org) {
     const questionWrap = document.createElement("div");
     questionWrap.className = "question-block stack-tight";
 
-    const questionText = document.createElement("p");
-    questionText.className = "question-block__text";
-    questionText.textContent = q.question;
+    const route = q.investigationRoute || "ASK_THEN_EVIDENCE";
+    const observeFirst = route === "OBSERVE_THEN_ASK" || route === "OBSERVE_ASK_EVIDENCE";
 
-    const existing = pillar.questionResponses?.[q.id];
+    const existing = pillar.questionResponses?.[q.id] || {};
+    const existingObserved = existing.observed || "";
+    const existingLearned = existing.learned || existing.response || "";
 
-    // Merges into the existing entry rather than replacing it outright,
-    // so the response and evidenceNotes fields (saved independently, on
-    // their own blur events) never clobber one another.
     function saveQuestionField(fieldName, value) {
       mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
         if (!p.questionResponses) p.questionResponses = {};
-        const current = p.questionResponses[q.id] || { response: "", evidenceNotes: "", capturedAt: null };
-        p.questionResponses[q.id] = {
+        const current = p.questionResponses[q.id] || {
+          observed: "",
+          learned: "",
+          response: "",
+          evidenceNotes: "",
+          capturedAt: null,
+        };
+        const next = {
           ...current,
           [fieldName]: value,
-          // Set once, on first capture, and preserved on every subsequent
-          // edit. Represents when this question was first investigated,
-          // not when it was last touched -- future Health Check work may
-          // rely on this original capture point longitudinally.
           capturedAt: current.capturedAt || new Date().toISOString(),
         };
+        if (fieldName === "learned") next.response = value;
+        p.questionResponses[q.id] = next;
       });
     }
 
-    const responseField = createTextField({
-      id: `question-${q.id}`,
-      label: "Response",
+    const questionText = document.createElement("p");
+    questionText.className = "question-block__text";
+    questionText.textContent = q.question;
+    questionWrap.append(questionText);
+
+    if (observeFirst) {
+      const observeLabel = document.createElement("p");
+      observeLabel.className = "field__label";
+      observeLabel.textContent = "What I observed";
+
+      const observeHint = document.createElement("p");
+      observeHint.className = "text-caption";
+      observeHint.textContent =
+        "Look first. Short factual notes. A sentence or two is enough. Not the final judgement.";
+
+      questionWrap.append(observeLabel, observeHint);
+
+      if (Array.isArray(q.whatToObserve) && q.whatToObserve.length > 0) {
+        const lookFor = document.createElement("p");
+        lookFor.className = "text-caption question-block__look-for";
+        lookFor.textContent = "Look for: " + q.whatToObserve.join(", ");
+        questionWrap.append(lookFor);
+      }
+
+      const observedField = createTextField({
+        id: `question-observed-${q.id}`,
+        label: "",
+        textarea: true,
+      });
+      const lab = observedField.element.querySelector(".field__label");
+      if (lab) lab.style.display = "none";
+      observedField.input.value = existingObserved;
+      observedField.input.rows = 2;
+      observedField.input.placeholder =
+        "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.";
+      observedField.element.classList.add("question-observed");
+      observedField.input.addEventListener("input", () => {
+        observedField.input.style.height = "auto";
+        observedField.input.style.height = `${observedField.input.scrollHeight}px`;
+      });
+      observedField.input.addEventListener("blur", () => {
+        saveQuestionField("observed", observedField.input.value);
+      });
+      questionWrap.append(observedField.element);
+
+      const askCue = document.createElement("p");
+      askCue.className = "text-caption question-block__ask-cue";
+      askCue.textContent = "Then ask how this is normally maintained or done.";
+      questionWrap.append(askCue);
+    }
+
+    const learnedLabel = document.createElement("p");
+    learnedLabel.className = "field__label";
+    learnedLabel.textContent = "What I learned";
+
+    const learnedHint = document.createElement("p");
+    learnedHint.className = "text-caption";
+    learnedHint.textContent = observeFirst
+      ? "What the manager or staff told you after you looked. Keep it brief."
+      : "What the manager or staff told you, and any example they gave. Keep it brief.";
+
+    const learnedField = createTextField({
+      id: `question-learned-${q.id}`,
+      label: "",
       textarea: true,
     });
-    responseField.input.value = existing ? existing.response : "";
-    responseField.input.rows = 3;
-    responseField.input.addEventListener("input", () => {
-      responseField.input.style.height = "auto";
-      responseField.input.style.height = `${responseField.input.scrollHeight}px`;
+    const learnedLab = learnedField.element.querySelector(".field__label");
+    if (learnedLab) learnedLab.style.display = "none";
+    learnedField.input.value = existingLearned;
+    learnedField.input.rows = 2;
+    learnedField.input.placeholder = observeFirst
+      ? "e.g. Manager says duty supervisor signs a daily check. No checklist seen."
+      : "e.g. Last complaint was last month. Owned by branch manager. Not sure if logged.";
+    learnedField.element.classList.add("question-learned");
+    learnedField.input.addEventListener("input", () => {
+      learnedField.input.style.height = "auto";
+      learnedField.input.style.height = `${learnedField.input.scrollHeight}px`;
     });
-    responseField.input.addEventListener("blur", () => {
-      saveQuestionField("response", responseField.input.value);
+    learnedField.input.addEventListener("blur", () => {
+      saveQuestionField("learned", learnedField.input.value);
     });
+    questionWrap.append(learnedLabel, learnedHint, learnedField.element);
 
-    // Lightweight breadcrumb, not the formal evidence record. The full
-    // multi-entry, source-classified Evidence list stays under Pillar
-    // Assessment at the bottom, untouched -- this is just a quick note
-    // taken in the moment while investigating this specific question.
-    const evidenceNotesField = createTextField({
-      id: `question-evidence-${q.id}`,
-      label: "Evidence / examples from this question",
-      textarea: true,
-    });
-    evidenceNotesField.input.value = existing ? existing.evidenceNotes || "" : "";
-    evidenceNotesField.input.rows = 2;
-    evidenceNotesField.input.placeholder = "e.g. \"Opening checklist seen, entrance signage poor.\"";
-    evidenceNotesField.element.classList.add("question-evidence-notes");
-    evidenceNotesField.input.addEventListener("input", () => {
-      evidenceNotesField.input.style.height = "auto";
-      evidenceNotesField.input.style.height = `${evidenceNotesField.input.scrollHeight}px`;
-    });
-    evidenceNotesField.input.addEventListener("blur", () => {
-      saveQuestionField("evidenceNotes", evidenceNotesField.input.value);
-    });
+    // Lightweight formal evidence for this question only (source + content).
+    // Stored on pillar.evidence with questionId so the pillar still has one register.
+    const evLabel = document.createElement("p");
+    evLabel.className = "field__label";
+    evLabel.textContent = "Evidence";
+    const evHint = document.createElement("p");
+    evHint.className = "text-caption";
+    evHint.textContent = "Optional. Add only what supports this question. Source required.";
 
-    questionWrap.append(
-      questionText,
-      responseField.element,
-      createQuestionGuidance(q),
-      evidenceNotesField.element
-    );
+    const questionEvidence = (pillar.evidence || []).filter((e) => e.questionId === q.id);
+    const evidenceEditor = createEvidenceListEditor({
+      sourceTypes: EVIDENCE_SOURCE_TYPES,
+      items: questionEvidence,
+      onChange: (items) => {
+        mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+          const others = (p.evidence || []).filter((e) => e.questionId !== q.id);
+          const tagged = items.map((entry) => ({
+            ...entry,
+            questionId: q.id,
+          }));
+          p.evidence = others.concat(tagged);
+        });
+      },
+    });
+    evidenceEditor.classList.add("question-evidence");
+
+    questionWrap.append(evLabel, evHint, evidenceEditor);
+    questionWrap.append(createQuestionGuidance(q));
     container.append(questionWrap);
   });
 
@@ -293,17 +364,6 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   // neither field is required for pillar completion, and neither is
   // referenced by any report. Reinstating the UI later needs no schema
   // change if a legitimate future use is found.
-
-  const evidenceLabel = document.createElement("p");
-  evidenceLabel.className = "field__label";
-  evidenceLabel.textContent = "Evidence";
-  const evidenceEditor = createEvidenceListEditor({
-    sourceTypes: EVIDENCE_SOURCE_TYPES,
-    items: pillar.evidence,
-    onChange: (items) => {
-      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.evidence = items));
-    },
-  });
 
   const strengthsLabel = document.createElement("p");
   strengthsLabel.className = "field__label";
@@ -425,10 +485,33 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   pillarAssessmentHeading.className = "text-heading-section";
   pillarAssessmentHeading.textContent = "Your judgement";
 
+  // Evidence without a questionId (from older saves) stays visible so nothing is lost.
+  const orphanEvidence = (pillar.evidence || []).filter((e) => !e.questionId);
+  if (orphanEvidence.length > 0) {
+    const orphanLabel = document.createElement("p");
+    orphanLabel.className = "field__label";
+    orphanLabel.textContent = "Earlier evidence (not linked to a question)";
+    const orphanHint = document.createElement("p");
+    orphanHint.className = "text-caption";
+    orphanHint.textContent = "Captured before evidence was recorded against each question. Still counts toward this pillar.";
+    const orphanEditor = createEvidenceListEditor({
+      sourceTypes: EVIDENCE_SOURCE_TYPES,
+      items: orphanEvidence,
+      onChange: (items) => {
+        mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+          const linked = (p.evidence || []).filter((e) => e.questionId);
+          p.evidence = linked.concat(items.map((entry) => {
+            const { questionId, ...rest } = entry;
+            return rest;
+          }));
+        });
+      },
+    });
+    container.append(orphanLabel, orphanHint, orphanEditor);
+  }
+
   container.append(
     pillarAssessmentHeading,
-    evidenceLabel,
-    evidenceEditor,
     strengthsLabel,
     strengthsEditor,
     oppsLabel,
@@ -657,4 +740,5 @@ export function renderPillarAssessment(container, params) {
 
   container.append(screen);
 }
+
 

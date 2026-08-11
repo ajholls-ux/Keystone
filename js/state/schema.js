@@ -54,26 +54,26 @@ export const DIAGNOSTIC_RECOMMENDATION_OPTIONS = [
 // the UI) so they remain a single configurable point -- the specific
 // numbers below are a provisional default, not yet founder-confirmed.
 export const HEALTH_INDICATOR_THRESHOLDS = {
-  green: 3.0,  // average maturity score >= this → Mature Operational Performance
-  yellow: 2.0, // average maturity score >= this (and < green) → Moderate Opportunity
-  // below yellow → Significant Operational Opportunity
+  green: 3.0,  // average maturity score >= this â Mature Operational Performance
+  yellow: 2.0, // average maturity score >= this (and < green) â Moderate Opportunity
+  // below yellow â Significant Operational Opportunity
 };
 
 export const HEALTH_INDICATOR_LEVELS = {
   green: {
-    emoji: "🟢",
+    emoji: "ð¢",
     label: "Mature Operational Performance",
     meaning:
       "Generally mature and consistent operational practice. Further Diagnostic investigation may not create meaningful additional value.",
   },
   yellow: {
-    emoji: "🟡",
+    emoji: "ð¡",
     label: "Moderate Operational Opportunity",
     meaning:
       "Identifiable opportunities or areas of inconsistency that may benefit from attention or selective Diagnostic investigation.",
   },
   red: {
-    emoji: "🔴",
+    emoji: "ð'",
     label: "Significant Operational Opportunity",
     meaning:
       "Material weaknesses, evidence gaps or operational risks that may justify deeper investigation.",
@@ -263,6 +263,7 @@ export const PILLAR_QUESTIONS = {
   "site-presentation-customer-journey": [
     {
       id: "q1-first-impression",
+      investigationRoute: "OBSERVE_THEN_ASK",
       question:
         "What would a new customer notice first when they arrive here, and what does the site do to make sure that first impression is maintained?",
       whyItMatters:
@@ -308,6 +309,7 @@ export const PILLAR_QUESTIONS = {
     },
     {
       id: "q2-wayfinding-responsiveness",
+      investigationRoute: "OBSERVE_THEN_ASK",
       question:
         "Can customers find what they need without help, and when they do need help, how quickly does someone respond?",
       whyItMatters:
@@ -351,6 +353,7 @@ export const PILLAR_QUESTIONS = {
     },
     {
       id: "q3-complaint-issue-handling",
+      investigationRoute: "ASK_THEN_EVIDENCE",
       question:
         "What happens when a customer has a complaint or a problem with an order, and how does the business know if the same problem keeps happening?",
       whyItMatters:
@@ -392,6 +395,7 @@ export const PILLAR_QUESTIONS = {
     },
     {
       id: "q4-customer-satisfaction-awareness",
+      investigationRoute: "ASK_THEN_EVIDENCE",
       question: "How does the business know whether customers are happy with the service they receive?",
       whyItMatters:
         "Tests whether customer satisfaction is genuinely understood rather than assumed. A small organisation can operate at high maturity through effective informal relationships. It shouldn't score poorly simply for lacking a survey, QR code or formal feedback system. Assess the effectiveness of the awareness, not its sophistication.",
@@ -433,6 +437,7 @@ export const PILLAR_QUESTIONS = {
     },
     {
       id: "q5-consistency-of-interaction",
+      investigationRoute: "OBSERVE_THEN_ASK",
       question:
         "Is good customer service something people are taught and expected to deliver, or does it depend on who happens to be serving?",
       whyItMatters:
@@ -486,7 +491,7 @@ export const PILLAR_QUESTIONS = {
 
 // Current schema version. Bump this and add a migration step in store.js
 // if the shape of persisted state ever changes.
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 9;
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)
@@ -514,7 +519,7 @@ export function createPillarAssessment(pillarKey) {
     healthReviewStatus: "not-started", // not-started | in-progress | complete
     observationNotes: "",
     conversationNotes: "",
-    evidence: [],              // { id, sourceType, content, capturedAt }
+    evidence: [], // { id, sourceType, content, capturedAt, questionId? }
     strengths: [],              // string[]
     opportunities: [],           // string[] -- no solution advice (Engine rule)
     professionalObservation: "",  // client-visible
@@ -535,7 +540,7 @@ export function createPillarAssessment(pillarKey) {
     // a quick note taken in the moment, distinct from the pillar-level
     // evidence[] array above (which has source classification and is
     // the assessor's considered, consolidated evidence).
-    questionResponses: {}, // { [questionId]: { response, evidenceNotes, capturedAt } }
+    questionResponses: {}, // { [questionId]: { observed, learned, response?, evidenceNotes?, capturedAt } }
   };
 }
 
@@ -648,5 +653,6 @@ export function createEmptyState() {
     organisations: [],
   };
 }
+
 
 

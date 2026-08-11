@@ -1,5 +1,5 @@
 // ==========================================================================
-// Keystone Field Kit — Store
+// Keystone Field Kit -- Store
 //
 // The ONLY module permitted to touch localStorage (Part 5 architecture
 // rule). All views/components must go through the functions exported here.
@@ -24,11 +24,10 @@ function loadFromStorage() {
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
-      // v6 -> v7: questionResponses[qId] gained evidenceNotes, alongside
-      // the existing response field. Additive and defensively read (the
-      // UI treats a missing evidenceNotes as an empty string), so no
-      // destructive migration is required. Existing question responses
-      // from v6 remain intact; only evidenceNotes is unset until touched.
+      // v8 -> v9: evidence entries may include questionId when captured on a question.
+      // v7 -> v8: questionResponses gain optional `observed` and `learned`.
+      // Older `response` is still read as learned in the UI. Additive only.
+      // No destructive migration. Accept any save that has organisations.
       return parsed && parsed.organisations ? parsed : createEmptyState();
     }
     return parsed;
@@ -57,7 +56,7 @@ export function initStore() {
   state = loadFromStorage();
 }
 
-/** Returns the current state. Treat as read-only — never mutate directly. */
+/** Returns the current state. Treat as read-only -- never mutate directly. */
 export function getState() {
   return state;
 }
@@ -79,7 +78,7 @@ export function subscribe(listenerFn) {
 }
 
 /**
- * Exports the full state as a downloadable JSON file — the assessor's
+ * Exports the full state as a downloadable JSON file -- the assessor's
  * backup mechanism against data loss (Part 5).
  */
 export function exportBackup() {
@@ -122,3 +121,4 @@ export function importBackup(file) {
     reader.readAsText(file);
   });
 }
+
