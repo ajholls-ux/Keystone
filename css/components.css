@@ -723,3 +723,61 @@ details[open] > .guidance-panel__summary::before {
   color: var(--color-text-primary);
 }
 
+/* Read-only findings next to synthesis */
+.findings-snapshot {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.findings-snapshot__title {
+  margin: 0 0 2px 0;
+  font-size: var(--text-body-secondary-size);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.findings-snapshot__subtitle {
+  margin: 0 0 var(--space-2) 0;
+}
+
+.findings-snapshot__question {
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.findings-snapshot__question:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.findings-snapshot__q-title {
+  margin: 0 0 4px 0;
+  font-size: var(--text-caption-size);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+
+.findings-snapshot__row {
+  margin: 0 0 4px 0;
+  font-size: var(--text-body-secondary-size);
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.findings-snapshot__tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-orange-600);
+  margin-right: 4px;
+}
+
+.findings-snapshot__empty {
+  margin: 0;
+}

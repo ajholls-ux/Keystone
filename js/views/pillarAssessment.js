@@ -375,6 +375,109 @@ function renderMethodologyQuestions(container, pillar, review, org, refresh) {
   container.append(divider);
 }
 
+
+/**
+ * Read-only snapshot of investigation notes and evidence for this pillar.
+ * Shown next to synthesis so the assessor does not scroll back up.
+ * Never written to the client report from this UI.
+ */
+function renderFindingsSnapshot(pillar) {
+  const wrap = document.createElement("div");
+  wrap.className = "findings-snapshot";
+
+  const title = document.createElement("p");
+  title.className = "findings-snapshot__title";
+  title.textContent = "From this pillar";
+
+  const subtitle = document.createElement("p");
+  subtitle.className = "text-caption findings-snapshot__subtitle";
+  subtitle.textContent =
+    "Your investigation notes and evidence. Use these when writing strengths, opportunities and the professional observation. Not shown to the client as written here.";
+
+  wrap.append(title, subtitle);
+
+  const questions = PILLAR_QUESTIONS[pillar.pillarKey] || [];
+  const responses = pillar.questionResponses || {};
+  const evidence = pillar.evidence || [];
+  let any = false;
+
+  questions.forEach((q, index) => {
+    const r = responses[q.id] || {};
+    const observed = (r.observed || "").trim();
+    const learned = (r.learned || r.response || "").trim();
+    const qEvidence = evidence.filter((e) => e.questionId === q.id);
+
+    if (!observed && !learned && qEvidence.length === 0) return;
+    any = true;
+
+    const block = document.createElement("div");
+    block.className = "findings-snapshot__question";
+
+    const qTitle = document.createElement("p");
+    qTitle.className = "findings-snapshot__q-title";
+    const shortQ = q.question.length > 90 ? q.question.slice(0, 87) + "..." : q.question;
+    qTitle.textContent = `Q${index + 1}. ${shortQ}`;
+    block.append(qTitle);
+
+    if (observed) {
+      const row = document.createElement("p");
+      row.className = "findings-snapshot__row";
+      row.innerHTML = `<span class="findings-snapshot__tag">Observed</span> `;
+      row.append(document.createTextNode(observed));
+      block.append(row);
+    }
+    if (learned) {
+      const row = document.createElement("p");
+      row.className = "findings-snapshot__row";
+      row.innerHTML = `<span class="findings-snapshot__tag">Learned</span> `;
+      row.append(document.createTextNode(learned));
+      block.append(row);
+    }
+    qEvidence.forEach((e) => {
+      const row = document.createElement("p");
+      row.className = "findings-snapshot__row";
+      const tag = document.createElement("span");
+      tag.className = "findings-snapshot__tag";
+      tag.textContent = e.sourceType || "Evidence";
+      row.append(tag, document.createTextNode(" " + (e.content || "")));
+      block.append(row);
+    });
+
+    wrap.append(block);
+  });
+
+  // Unlinked or pillar-level evidence (no questions / orphans)
+  const otherEv = evidence.filter((e) => !e.questionId);
+  if (otherEv.length > 0) {
+    any = true;
+    const block = document.createElement("div");
+    block.className = "findings-snapshot__question";
+    const qTitle = document.createElement("p");
+    qTitle.className = "findings-snapshot__q-title";
+    qTitle.textContent = questions.length ? "Other evidence" : "Evidence";
+    block.append(qTitle);
+    otherEv.forEach((e) => {
+      const row = document.createElement("p");
+      row.className = "findings-snapshot__row";
+      const tag = document.createElement("span");
+      tag.className = "findings-snapshot__tag";
+      tag.textContent = e.sourceType || "Evidence";
+      row.append(tag, document.createTextNode(" " + (e.content || "")));
+      block.append(row);
+    });
+    wrap.append(block);
+  }
+
+  if (!any) {
+    const empty = document.createElement("p");
+    empty.className = "text-caption findings-snapshot__empty";
+    empty.textContent = "No investigation notes or evidence on this pillar yet.";
+    wrap.append(empty);
+  }
+
+  return wrap;
+}
+
 function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   const guidance = PILLAR_GUIDANCE[pillar.pillarKey];
 
@@ -568,8 +671,11 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
     container.append(evidenceLabel, evidenceHint, evidenceEditor);
   }
 
+  const findingsSnapshot = renderFindingsSnapshot(pillar);
+
   container.append(
     pillarAssessmentHeading,
+    findingsSnapshot,
     strengthsLabel,
     strengthsEditor,
     oppsLabel,
