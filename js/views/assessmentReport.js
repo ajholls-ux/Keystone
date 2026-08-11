@@ -1,14 +1,14 @@
 // ==========================================================================
-// Keystone Field Kit — Assessment Report View
+// Keystone Field Kit -- Assessment Report View
 //
 // Screen 10 of the locked Screen Map. Two distinct outputs sharing this
 // screen: Client Report (free) and Diagnostic Report (paid, superset).
 // Content strictly filtered per Assessment Engine v1.0 §Internal vs
-// Client Behaviour — internal-only fields never render here.
+// Client Behaviour -- internal-only fields never render here.
 //
 // Milestone 3.6: the viewer chrome (Back / Export PDF) is structurally
 // separate from the report document itself. Only .report-document is
-// visible when printing — see css/print.css.
+// visible when printing -- see css/print.css.
 // ==========================================================================
 
 import { getState } from "../state/store.js";
@@ -24,7 +24,7 @@ function findReview(state, organisationId, reviewId) {
 }
 
 function formatDate(iso) {
-  if (!iso) return "—";
+  if (!iso) return "--";
   return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
 }
 
@@ -72,7 +72,7 @@ function renderCoverPage(org, review, reportType, cycle) {
   title.className = "text-display";
   title.textContent =
     reportType === "diagnostic"
-      ? `Operational Diagnostic Report${cycle ? ` — Cycle ${cycle.cycleNumber}` : ""}`
+      ? `Operational Diagnostic Report${cycle ? ` -- Cycle ${cycle.cycleNumber}` : ""}`
       : "Operational Health Review";
 
   const orgName = document.createElement("p");
@@ -115,7 +115,7 @@ function renderExecutiveSummary(review) {
 
   // Client-safe, qualitative credibility language only. Never exposes
   // individual evidence entries, source classifications, or assessor
-  // confidence levels/reasoning — those remain internal (Assessment
+  // confidence levels/reasoning -- those remain internal (Assessment
   // Engine v1.0 §Internal vs. Client Behaviour). Only shown when evidence
   // genuinely exists, so the report never claims more rigour than the
   // assessment actually had.
@@ -136,7 +136,8 @@ function renderOverallHealth(review) {
 
   const indicatorRow = document.createElement("p");
   indicatorRow.className = "health-indicator";
-  indicatorRow.innerHTML = `<span class="health-indicator__emoji">${indicator.emoji}</span><span>${indicator.label}</span>`;
+  indicatorRow.classList.add(`health-indicator--${indicator.level || "none"}`);
+  indicatorRow.innerHTML = `<span class="health-indicator__dot" aria-hidden="true"></span><span class="health-indicator__label">${indicator.label}</span>`;
 
   const meaning = document.createElement("p");
   meaning.className = "text-body-secondary";
@@ -218,7 +219,7 @@ function renderPillarOverview(review) {
     row.append(dt, dd);
     dl.append(row);
 
-    // Informational only — never selects a pillar for Diagnostic. The
+    // Informational only -- never selects a pillar for Diagnostic. The
     // assessor still makes that decision manually in Diagnostic Pillar
     // Selection. This purely tells the client where deeper investigation
     // may be worth considering.
@@ -380,7 +381,7 @@ export function renderAssessmentReport(container, params) {
     return;
   }
 
-  // Viewer chrome — never printed, never part of the document itself.
+  // Viewer chrome -- never printed, never part of the document itself.
   const toolbar = document.createElement("div");
   toolbar.className = "report-toolbar";
   toolbar.append(
@@ -388,7 +389,7 @@ export function renderAssessmentReport(container, params) {
     createButton({ label: "Export PDF", variant: "primary", onClick: () => window.print() })
   );
 
-  // The report document — this, and only this, is what prints.
+  // The report document -- this, and only this, is what prints.
   const doc = document.createElement("div");
   doc.className = "report-document";
 
@@ -410,3 +411,4 @@ export function renderAssessmentReport(container, params) {
   screen.append(toolbar, doc);
   container.append(screen);
 }
+

@@ -697,3 +697,29 @@ details[open] > .guidance-panel__summary::before {
 .question-evidence .list-editor__add {
   min-height: 44px;
 }
+
+
+.health-indicator__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-border);
+}
+
+.health-indicator--green .health-indicator__dot {
+  background: var(--color-status-complete);
+}
+
+.health-indicator--yellow .health-indicator__dot {
+  background: var(--color-status-in-progress);
+}
+
+.health-indicator--red .health-indicator__dot {
+  background: #C45C4A;
+}
+
+.health-indicator__label {
+  color: var(--color-text-primary);
+}
+

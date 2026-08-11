@@ -1,5 +1,5 @@
 // ==========================================================================
-// Keystone Field Kit — Assessment Complete View
+// Keystone Field Kit -- Assessment Complete View
 //
 // Screen 8 of the locked Screen Map. Handles two distinct completion
 // moments: Health Review (generates Client Report) and Diagnostic
@@ -35,7 +35,8 @@ function renderHealthReviewCompletion(screen, org, review) {
 
   const indicatorRow = document.createElement("div");
   indicatorRow.className = "health-indicator";
-  indicatorRow.innerHTML = `<span class="health-indicator__emoji">${indicator.emoji}</span><span>${indicator.label}</span>`;
+  indicatorRow.classList.add(`health-indicator--${indicator.level || "none"}`);
+  indicatorRow.innerHTML = `<span class="health-indicator__dot" aria-hidden="true"></span><span class="health-indicator__label">${indicator.label}</span>`;
 
   const indicatorMeaning = document.createElement("p");
   indicatorMeaning.className = "text-body-secondary";
@@ -139,7 +140,7 @@ function renderDiagnosticCompletion(screen, org, review, cycleId) {
 
   const subhead = document.createElement("p");
   subhead.className = "text-body-secondary";
-  subhead.textContent = `Diagnostic Cycle ${cycle.cycleNumber} is ready to be marked complete. This action is final for this cycle — its findings become a permanent historical record. The organisation remains open to future Diagnostic Cycles.`;
+  subhead.textContent = `Diagnostic Cycle ${cycle.cycleNumber} is ready to be marked complete. This action is final for this cycle -- its findings become a permanent historical record. The organisation remains open to future Diagnostic Cycles.`;
 
   const confirmBtn = createButton({
     label: `Complete Diagnostic Cycle ${cycle.cycleNumber}`,
@@ -201,3 +202,4 @@ export function renderAssessmentComplete(container, params) {
 
   container.append(screen);
 }
+

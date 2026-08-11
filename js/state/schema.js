@@ -61,19 +61,19 @@ export const HEALTH_INDICATOR_THRESHOLDS = {
 
 export const HEALTH_INDICATOR_LEVELS = {
   green: {
-    emoji: "ð¢",
+    emoji: "\uD83D\uDFE2",
     label: "Mature Operational Performance",
     meaning:
       "Generally mature and consistent operational practice. Further Diagnostic investigation may not create meaningful additional value.",
   },
   yellow: {
-    emoji: "ð¡",
+    emoji: "\uD83D\uDFE1",
     label: "Moderate Operational Opportunity",
     meaning:
       "Identifiable opportunities or areas of inconsistency that may benefit from attention or selective Diagnostic investigation.",
   },
   red: {
-    emoji: "ð'",
+    emoji: "\uD83D\uDD34",
     label: "Significant Operational Opportunity",
     meaning:
       "Material weaknesses, evidence gaps or operational risks that may justify deeper investigation.",
@@ -653,6 +653,3 @@ export function createEmptyState() {
     organisations: [],
   };
 }
-
-
-
