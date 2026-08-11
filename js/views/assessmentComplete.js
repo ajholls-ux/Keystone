@@ -88,7 +88,7 @@ function renderHealthReviewCompletion(screen, org, review) {
       if (!isRecommendationAligned(indicator.level, selected)) {
         justification =
           window.prompt(
-            `This recommendation appears inconsistent with the current Health Indicator (${indicator.emoji} ${indicator.label}). Please review your evidence and explain why you believe this recommendation remains appropriate.`
+            `This recommendation appears inconsistent with the current Health Indicator. Please explain the evidence or circumstances that support your judgement.`
           ) || "";
         if (!justification.trim()) {
           window.alert("A justification is required when the recommendation differs from the indicator.");

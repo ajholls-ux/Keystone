@@ -24,12 +24,11 @@ function loadFromStorage() {
     if (!raw) return createEmptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
-      // v5 -> v6 (Methodology Engine v1.0): PillarAssessment gained
-      // questionResponses{} (additive, defaults to {} for existing
-      // pillars). PILLAR_QUESTIONS is a static export, not stored
-      // per-Review — no migration needed for it. Existing Organisation/
-      // Review/Diagnostic Cycle data is otherwise untouched and remains
-      // valid. No destructive migration required.
+      // v6 -> v7: questionResponses[qId] gained evidenceNotes, alongside
+      // the existing response field. Additive and defensively read (the
+      // UI treats a missing evidenceNotes as an empty string), so no
+      // destructive migration is required. Existing question responses
+      // from v6 remain intact; only evidenceNotes is unset until touched.
       return parsed && parsed.organisations ? parsed : createEmptyState();
     }
     return parsed;

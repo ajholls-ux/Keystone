@@ -480,7 +480,7 @@ export const PILLAR_QUESTIONS = {
 
 // Current schema version. Bump this and add a migration step in store.js
 // if the shape of persisted state ever changes.
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)
@@ -518,12 +518,18 @@ export function createPillarAssessment(pillarKey) {
     scoreHistory: [],                 // { score, setAt, stage, reason }
 
     // Methodology Engine v1.0: one response per question (see
-    // PILLAR_QUESTIONS above). Keyed by question id. Meaningful assessment
-    // data, not disposable UI notes — persists exactly like every other
-    // field here. These responses inform the assessor's holistic
-    // maturityScore/assessorConfidence above; they never generate a score
-    // of their own.
-    questionResponses: {}, // { [questionId]: { response, capturedAt } }
+    // PILLAR_QUESTIONS above), plus a lightweight evidenceNotes breadcrumb
+    // captured while investigating that specific question. Keyed by
+    // question id. Meaningful assessment data, not disposable UI notes —
+    // persists exactly like every other field here. Neither generates a
+    // score of its own; both inform the assessor's holistic
+    // maturityScore/assessorConfidence above.
+    //
+    // evidenceNotes is deliberately NOT the formal evidence record — it's
+    // a quick note taken in the moment, distinct from the pillar-level
+    // evidence[] array above (which has source classification and is
+    // the assessor's considered, consolidated evidence).
+    questionResponses: {}, // { [questionId]: { response, evidenceNotes, capturedAt } }
   };
 }
 

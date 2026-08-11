@@ -24,7 +24,7 @@ import {
 import { createTextField } from "../components/textField.js";
 import { createButton } from "../components/button.js";
 import { createScoreSelector, SCORE_LABELS } from "../components/scoreSelector.js";
-import { createTextListEditor, createEvidenceListEditor } from "../components/listEditor.js";
+import { createTextListEditor, createEvidenceListEditor, createFreeTextAreaField } from "../components/listEditor.js";
 import { createGuidancePanel } from "../components/guidancePanel.js";
 import { createQuestionGuidance } from "../components/questionGuidance.js";
 import { back } from "../router.js";
@@ -67,10 +67,10 @@ function renderSummaryStrip(pillar, isDiagnosticMode, cycle) {
   strip.className = "summary-strip";
 
   const items = [
-    ["Maturity score", pillar.maturityScore ? `${pillar.maturityScore} — ${SCORE_LABELS[pillar.maturityScore]}` : "Not yet scored"],
+    ["Maturity score", pillar.maturityScore ? `${pillar.maturityScore} (${SCORE_LABELS[pillar.maturityScore]})` : "Not yet scored"],
     ["Assessor confidence", pillar.assessorConfidence ? pillar.assessorConfidence.level : "Not set"],
     ["Evidence collected", `${pillar.evidence.length} item${pillar.evidence.length === 1 ? "" : "s"}`],
-    ["Stage", isDiagnosticMode ? `Operational Diagnostic — Cycle ${cycle.cycleNumber}` : "Operational Health Review"],
+    ["Stage", isDiagnosticMode ? `Operational Diagnostic, Cycle ${cycle.cycleNumber}` : "Operational Health Review"],
   ];
 
   items.forEach(([label, value]) => {
@@ -113,12 +113,32 @@ function renderMethodologyQuestions(container, pillar, review, org) {
     questionText.style.fontWeight = "600";
     questionText.textContent = q.question;
 
+    const existing = pillar.questionResponses?.[q.id];
+
+    // Merges into the existing entry rather than replacing it outright,
+    // so the response and evidenceNotes fields (saved independently, on
+    // their own blur events) never clobber one another.
+    function saveQuestionField(fieldName, value) {
+      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+        if (!p.questionResponses) p.questionResponses = {};
+        const current = p.questionResponses[q.id] || { response: "", evidenceNotes: "", capturedAt: null };
+        p.questionResponses[q.id] = {
+          ...current,
+          [fieldName]: value,
+          // Set once, on first capture, and preserved on every subsequent
+          // edit. Represents when this question was first investigated,
+          // not when it was last touched — future Health Check work may
+          // rely on this original capture point longitudinally.
+          capturedAt: current.capturedAt || new Date().toISOString(),
+        };
+      });
+    }
+
     const responseField = createTextField({
       id: `question-${q.id}`,
       label: "Response",
       textarea: true,
     });
-    const existing = pillar.questionResponses?.[q.id];
     responseField.input.value = existing ? existing.response : "";
     responseField.input.rows = 3;
     responseField.input.addEventListener("input", () => {
@@ -126,16 +146,36 @@ function renderMethodologyQuestions(container, pillar, review, org) {
       responseField.input.style.height = `${responseField.input.scrollHeight}px`;
     });
     responseField.input.addEventListener("blur", () => {
-      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
-        if (!p.questionResponses) p.questionResponses = {};
-        p.questionResponses[q.id] = {
-          response: responseField.input.value,
-          capturedAt: new Date().toISOString(),
-        };
-      });
+      saveQuestionField("response", responseField.input.value);
     });
 
-    questionWrap.append(questionText, responseField.element, createQuestionGuidance(q));
+    // Lightweight breadcrumb, not the formal evidence record. The full
+    // multi-entry, source-classified Evidence list stays under Pillar
+    // Assessment at the bottom, untouched — this is just a quick note
+    // taken in the moment while investigating this specific question.
+    const evidenceNotesField = createTextField({
+      id: `question-evidence-${q.id}`,
+      label: "Evidence / examples from this question",
+      textarea: true,
+    });
+    evidenceNotesField.input.value = existing ? existing.evidenceNotes || "" : "";
+    evidenceNotesField.input.rows = 2;
+    evidenceNotesField.input.placeholder = "e.g. \"Opening checklist seen, entrance signage poor.\"";
+    evidenceNotesField.element.classList.add("question-evidence-notes");
+    evidenceNotesField.input.addEventListener("input", () => {
+      evidenceNotesField.input.style.height = "auto";
+      evidenceNotesField.input.style.height = `${evidenceNotesField.input.scrollHeight}px`;
+    });
+    evidenceNotesField.input.addEventListener("blur", () => {
+      saveQuestionField("evidenceNotes", evidenceNotesField.input.value);
+    });
+
+    questionWrap.append(
+      questionText,
+      responseField.element,
+      createQuestionGuidance(q),
+      evidenceNotesField.element
+    );
     container.append(questionWrap);
   });
 
@@ -149,17 +189,16 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
 
   renderMethodologyQuestions(container, pillar, review, org);
 
-  const obs = createTextField({ id: "observationNotes", label: "Observation notes", textarea: true });
-  obs.input.value = pillar.observationNotes;
-  obs.input.addEventListener("blur", () => {
-    mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.observationNotes = obs.input.value));
-  });
-
-  const conv = createTextField({ id: "conversationNotes", label: "Conversation notes", textarea: true });
-  conv.input.value = pillar.conversationNotes;
-  conv.input.addEventListener("blur", () => {
-    mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.conversationNotes = conv.input.value));
-  });
+  // Observation Notes and Conversation Notes are deliberately hidden from
+  // the active Health Review UI (not deleted). Their purpose is now
+  // fully covered by the question layer above (response + evidence
+  // breadcrumb, per question) — keeping them visible risked duplicate
+  // entry or assessor confusion about which box to use. The underlying
+  // schema fields (pillar.observationNotes / pillar.conversationNotes)
+  // are untouched: existing Reviews with data in them are preserved,
+  // neither field is required for pillar completion, and neither is
+  // referenced by any report. Reinstating the UI later needs no schema
+  // change if a legitimate future use is found.
 
   const evidenceLabel = document.createElement("p");
   evidenceLabel.className = "field__label";
@@ -175,8 +214,8 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   const strengthsLabel = document.createElement("p");
   strengthsLabel.className = "field__label";
   strengthsLabel.textContent = "Strengths";
-  const strengthsEditor = createTextListEditor({
-    placeholder: "What is working well?",
+  const strengthsEditor = createFreeTextAreaField({
+    placeholder: "What is working well? One point per line.",
     items: pillar.strengths,
     onChange: (items) => {
       mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.strengths = items));
@@ -188,8 +227,8 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   oppsLabel.textContent = "Opportunities";
   const oppsHint = document.createElement("p");
   oppsHint.className = "text-caption";
-  oppsHint.textContent = "Identify the opportunity without describing the solution.";
-  const oppsEditor = createTextListEditor({
+  oppsHint.textContent = "Identify the opportunity without describing the solution. One point per line.";
+  const oppsEditor = createFreeTextAreaField({
     placeholder: "Where could operational maturity improve?",
     items: pillar.opportunities,
     onChange: (items) => {
@@ -254,19 +293,26 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
     confidenceRow.append(btn);
   });
 
-  // Guidance is attached directly under the field it supports, not
-  // bundled into one block at the top of the pillar.
+  // Guidance is attached directly under the field it supports. The four
+  // panels below (Observation, Conversation, Evidence, Strengths) are
+  // hidden here, not deleted — their PILLAR_GUIDANCE entries in schema.js
+  // are untouched and still empty placeholders, ready to be populated and
+  // re-shown later. They're hidden because they currently render nothing
+  // but "Not yet added" ten times each: pure clutter, independent of any
+  // redundancy question. Opportunities, Professional Observation,
+  // Maturity Score and Assessor Confidence guidance remain visible — each
+  // has genuinely populated, non-duplicated content the question-level
+  // guidance doesn't cover.
+  const pillarAssessmentHeading = document.createElement("h2");
+  pillarAssessmentHeading.className = "text-heading-section";
+  pillarAssessmentHeading.textContent = "Pillar Assessment";
+
   container.append(
-    obs.element,
-    createGuidancePanel(guidance.observationNotes),
-    conv.element,
-    createGuidancePanel(guidance.conversationNotes),
+    pillarAssessmentHeading,
     evidenceLabel,
     evidenceEditor,
-    createGuidancePanel(guidance.evidence),
     strengthsLabel,
     strengthsEditor,
-    createGuidancePanel(guidance.strengths),
     oppsLabel,
     oppsHint,
     oppsEditor,
@@ -278,7 +324,8 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
     scoreSelector,
     createGuidancePanel(guidance.maturityScore),
     confidenceLabel,
-    confidenceRow
+    confidenceRow,
+    createGuidancePanel(guidance.assessorConfidence)
   );
 }
 
@@ -329,7 +376,7 @@ function renderDiagnosticLayer(container, pillarKey, cycleEntry, review, org, cy
   planLabel.className = "field__label";
   planLabel.textContent = "Implementation plan (client-visible, paid tier)";
   const planEditor = createTextListEditor({
-    placeholder: "e.g. Week 1 — Develop briefing template",
+    placeholder: "e.g. Week 1: Develop briefing template",
     items: cycleEntry.implementationPlan.map((s) => s.step),
     onChange: (steps) => {
       mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {

@@ -12,6 +12,41 @@
  * @param {string[]} opts.items
  * @param {(items: string[]) => void} opts.onChange
  */
+/**
+ * Creates a single large auto-growing textarea bound to a string[] array,
+ * one point per line. Used for Strengths/Opportunities — these are
+ * assessor conclusions/synthesis, not multi-source evidence, so they
+ * don't need the Add-button list pattern that createTextListEditor uses.
+ * The underlying storage remains a string[] array (schema unchanged);
+ * only the input affordance differs.
+ * @param {Object} opts
+ * @param {string} opts.placeholder
+ * @param {string[]} opts.items
+ * @param {(items: string[]) => void} opts.onChange
+ */
+export function createFreeTextAreaField({ placeholder, items, onChange }) {
+  const textarea = document.createElement("textarea");
+  textarea.className = "field__input list-editor__textarea";
+  textarea.placeholder = placeholder;
+  textarea.rows = 4;
+  textarea.value = items.join("\n");
+
+  textarea.addEventListener("input", () => {
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  });
+
+  textarea.addEventListener("blur", () => {
+    const lines = textarea.value
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    onChange(lines);
+  });
+
+  return textarea;
+}
+
 export function createTextListEditor({ placeholder, items, onChange }) {
   const wrap = document.createElement("div");
   wrap.className = "list-editor";
@@ -134,6 +169,14 @@ export function createEvidenceListEditor({ sourceTypes, items, onChange }) {
 
   const select = document.createElement("select");
   select.className = "field__input";
+
+  const placeholderOpt = document.createElement("option");
+  placeholderOpt.value = "";
+  placeholderOpt.textContent = "Select source...";
+  placeholderOpt.disabled = true;
+  placeholderOpt.selected = true;
+  select.append(placeholderOpt);
+
   sourceTypes.forEach((type) => {
     const opt = document.createElement("option");
     opt.value = type;
@@ -154,6 +197,11 @@ export function createEvidenceListEditor({ sourceTypes, items, onChange }) {
   addBtn.addEventListener("click", () => {
     const content = textarea.value.trim();
     if (!content) return;
+    if (!select.value) {
+      window.alert("Please select a source before adding evidence.");
+      select.focus();
+      return;
+    }
     items.push({
       id: `ev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
       sourceType: select.value,
@@ -164,6 +212,7 @@ export function createEvidenceListEditor({ sourceTypes, items, onChange }) {
     });
     onChange(items);
     textarea.value = "";
+    select.value = "";
     renderList();
   });
 
