@@ -1,4 +1,4 @@
-/ ==========================================================================
+// ==========================================================================
 // Keystone Field Kit -- Pillar Assessment View
 //
 // Screen 6 of the locked Screen Map (Part 2 v1.0). Governed by Assessment
@@ -740,5 +740,3 @@ export function renderPillarAssessment(container, params) {
 
   container.append(screen);
 }
-
-
