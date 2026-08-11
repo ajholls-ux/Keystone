@@ -182,7 +182,7 @@ function renderSummaryStrip(pillar, isDiagnosticMode, cycle) {
  * guidance chain. Empty array for pillars not yet authored -- renders
  * nothing, no regression for the other nine pillars.
  */
-function renderMethodologyQuestions(container, pillar, review, org) {
+function renderMethodologyQuestions(container, pillar, review, org, refresh) {
   const questions = PILLAR_QUESTIONS[pillar.pillarKey] || [];
 
   const sectionHeading = document.createElement("h2");
@@ -194,7 +194,7 @@ function renderMethodologyQuestions(container, pillar, review, org) {
     const empty = document.createElement("p");
     empty.className = "text-body-secondary pillar-questions-empty";
     empty.textContent =
-      "Assessment questions for this pillar are not authored yet. Use evidence and professional judgement below.";
+      "Assessment questions for this pillar are not authored yet. Capture evidence under Your judgement below, then score the pillar.";
     container.append(empty);
     return;
   }
@@ -335,6 +335,7 @@ function renderMethodologyQuestions(container, pillar, review, org) {
           }));
           p.evidence = others.concat(tagged);
         });
+        refresh();
       },
     });
     evidenceEditor.classList.add("question-evidence");
@@ -352,7 +353,7 @@ function renderMethodologyQuestions(container, pillar, review, org) {
 function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   const guidance = PILLAR_GUIDANCE[pillar.pillarKey];
 
-  renderMethodologyQuestions(container, pillar, review, org);
+  renderMethodologyQuestions(container, pillar, review, org, refresh);
 
   // Observation Notes and Conversation Notes are deliberately hidden from
   // the active Health Review UI (not deleted). Their purpose is now
@@ -485,9 +486,11 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   pillarAssessmentHeading.className = "text-heading-section";
   pillarAssessmentHeading.textContent = "Your judgement";
 
+  const authoredQuestions = (PILLAR_QUESTIONS[pillar.pillarKey] || []).length > 0;
+
   // Evidence without a questionId (from older saves) stays visible so nothing is lost.
   const orphanEvidence = (pillar.evidence || []).filter((e) => !e.questionId);
-  if (orphanEvidence.length > 0) {
+  if (authoredQuestions && orphanEvidence.length > 0) {
     const orphanLabel = document.createElement("p");
     orphanLabel.className = "field__label";
     orphanLabel.textContent = "Earlier evidence (not linked to a question)";
@@ -505,9 +508,33 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
             return rest;
           }));
         });
+        refresh();
       },
     });
     container.append(orphanLabel, orphanHint, orphanEditor);
+  }
+
+  // Pillars without authored questions have no per-question evidence UI.
+  // Provide pillar-level evidence here so the complete rule is still reachable.
+  if (!authoredQuestions) {
+    const evidenceLabel = document.createElement("p");
+    evidenceLabel.className = "field__label";
+    evidenceLabel.textContent = "Evidence";
+    const evidenceHint = document.createElement("p");
+    evidenceHint.className = "text-caption";
+    evidenceHint.textContent =
+      "No assessment questions for this pillar yet. Capture at least one evidence item here before marking complete.";
+    const evidenceEditor = createEvidenceListEditor({
+      sourceTypes: EVIDENCE_SOURCE_TYPES,
+      items: pillar.evidence || [],
+      onChange: (items) => {
+        mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+          p.evidence = items;
+        });
+        refresh();
+      },
+    });
+    container.append(evidenceLabel, evidenceHint, evidenceEditor);
   }
 
   container.append(
@@ -721,7 +748,7 @@ export function renderPillarAssessment(container, params) {
         onClick: () => {
           if (!canComplete) {
             window.alert(
-              "Add at least one piece of evidence and a maturity score before marking this pillar complete."
+              "Add at least one piece of evidence on this pillar (under any question) and a maturity score before marking complete."
             );
             return;
           }
@@ -740,3 +767,4 @@ export function renderPillarAssessment(container, params) {
 
   container.append(screen);
 }
+
