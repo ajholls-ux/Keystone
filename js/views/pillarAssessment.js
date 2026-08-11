@@ -210,6 +210,34 @@ function renderMethodologyQuestions(container, pillar, review, org, refresh) {
     const existingObserved = existing.observed || "";
     const existingLearned = existing.learned || existing.response || "";
 
+    // Per-question placeholders so examples match the investigation, not a generic Q1/Q3 line.
+    const PLACEHOLDERS = {
+      "q1-first-impression": {
+        observed: "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
+        learned: "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
+      },
+      "q2-wayfinding-responsiveness": {
+        observed: "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
+        learned: "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
+      },
+      "q3-complaint-issue-handling": {
+        observed: "",
+        learned: "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
+      },
+      "q4-customer-satisfaction-awareness": {
+        observed: "",
+        learned: "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
+      },
+      "q5-consistency-of-interaction": {
+        observed: "e.g. One colleague greeted well and knew the product; another barely looked up.",
+        learned: "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
+      },
+    };
+    const ph = PLACEHOLDERS[q.id] || {
+      observed: "Short factual notes on what you saw. A sentence or two is enough.",
+      learned: "What the manager or staff told you. Keep it brief.",
+    };
+
     function saveQuestionField(fieldName, value) {
       mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
         if (!p.questionResponses) p.questionResponses = {};
@@ -263,8 +291,7 @@ function renderMethodologyQuestions(container, pillar, review, org, refresh) {
       if (lab) lab.style.display = "none";
       observedField.input.value = existingObserved;
       observedField.input.rows = 2;
-      observedField.input.placeholder =
-        "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.";
+      observedField.input.placeholder = ph.observed;
       observedField.element.classList.add("question-observed");
       observedField.input.addEventListener("input", () => {
         observedField.input.style.height = "auto";
@@ -300,9 +327,7 @@ function renderMethodologyQuestions(container, pillar, review, org, refresh) {
     if (learnedLab) learnedLab.style.display = "none";
     learnedField.input.value = existingLearned;
     learnedField.input.rows = 2;
-    learnedField.input.placeholder = observeFirst
-      ? "e.g. Manager says duty supervisor signs a daily check. No checklist seen."
-      : "e.g. Last complaint was last month. Owned by branch manager. Not sure if logged.";
+    learnedField.input.placeholder = ph.learned;
     learnedField.element.classList.add("question-learned");
     learnedField.input.addEventListener("input", () => {
       learnedField.input.style.height = "auto";
@@ -393,6 +418,12 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
 
   const profObs = createTextField({ id: "professionalObservation", label: "Professional observation (client-visible)", textarea: true });
   profObs.input.value = pillar.professionalObservation;
+  profObs.input.placeholder =
+    "Clear, balanced summary for the client. Factual and professional. No internal confidence. No full action plan.";
+  const profObsHint = document.createElement("p");
+  profObsHint.className = "text-caption";
+  profObsHint.textContent =
+    "This appears in the client report. Write as you would to the business owner: tight, neutral, useful.";
   profObs.input.addEventListener("blur", () => {
     mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.professionalObservation = profObs.input.value));
   });
@@ -546,6 +577,7 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
     oppsEditor,
     createGuidancePanel(guidance.opportunities),
     profObs.element,
+    profObsHint,
     createGuidancePanel(guidance.professionalObservation),
     internalNotes.element,
     scoreLabel,
