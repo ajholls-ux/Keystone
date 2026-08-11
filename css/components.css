@@ -255,11 +255,16 @@ textarea.field__input {
   background: none;
   border: none;
   color: var(--color-text-secondary);
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  padding: 0 var(--space-1);
+  padding: var(--space-1);
+  min-width: 44px;
+  min-height: 44px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .list-editor__input-row {
@@ -552,4 +557,113 @@ details[open] > .guidance-panel__summary::before {
 
 .report-document {
   background: var(--color-surface);
-} 
+}
+
+
+/* Question blocks on Pillar Assessment */
+.question-block {
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.question-block:last-of-type {
+  border-bottom: none;
+}
+
+.question-block__text {
+  font-weight: 600;
+  font-size: var(--text-body-size);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.pillar-questions-empty {
+  margin: 0 0 var(--space-2) 0;
+}
+
+/* Pillar readiness line under summary strip */
+.pillar-ready {
+  margin: 0;
+}
+
+.pillar-ready--ok {
+  color: var(--color-status-complete);
+  font-weight: 600;
+}
+
+/* Confidence controls: quieter unselected, clear selected */
+.confidence-row {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.confidence-row .btn {
+  flex: 1;
+  width: auto;
+  min-height: 44px;
+  font-size: var(--text-body-secondary-size);
+}
+
+.confidence-row .btn-secondary {
+  border-color: var(--color-border);
+}
+
+.confidence-row__selected,
+.confidence-row .btn-primary {
+  box-shadow: inset 0 0 0 1px var(--color-orange-600);
+}
+
+/* Internal notes: slightly distinct surface */
+.field--internal .field__input {
+  background: var(--color-bg);
+}
+
+/* Reason sheet (replaces window.prompt) */
+.reason-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(33, 30, 27, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-2);
+  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+}
+
+.reason-sheet__panel {
+  width: 100%;
+  max-width: 640px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.reason-sheet__title {
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--text-heading-section-size);
+  font-weight: 600;
+}
+
+.reason-sheet__message {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-body-secondary-size);
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.reason-sheet__input {
+  margin-bottom: var(--space-2);
+}
+
+.reason-sheet__actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.reason-sheet__actions .btn {
+  flex: 1;
+}

@@ -1,5 +1,5 @@
 // ==========================================================================
-// Keystone Field Kit — List Editor Component
+// Keystone Field Kit -- List Editor Component
 // Reusable add/display list for simple text entries (strengths,
 // opportunities) or structured entries (evidence). Used across the Pillar
 // Assessment screen rather than building three near-identical UIs.
@@ -14,7 +14,7 @@
  */
 /**
  * Creates a single large auto-growing textarea bound to a string[] array,
- * one point per line. Used for Strengths/Opportunities — these are
+ * one point per line. Used for Strengths/Opportunities -- these are
  * assessor conclusions/synthesis, not multi-source evidence, so they
  * don't need the Add-button list pattern that createTextListEditor uses.
  * The underlying storage remains a string[] array (schema unchanged);
@@ -112,7 +112,7 @@ export function createTextListEditor({ placeholder, items, onChange }) {
 
   addBtn.addEventListener("click", commit);
   // Enter now inserts a newline (textarea, multi-line professional
-  // writing) rather than submitting — submission is the explicit Add
+  // writing) rather than submitting -- submission is the explicit Add
   // button only.
 
   inputRow.append(input, addBtn);
@@ -154,7 +154,7 @@ export function createEvidenceListEditor({ sourceTypes, items, onChange }) {
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "list-editor__remove";
-      removeBtn.setAttribute("aria-label", "Remove");
+      removeBtn.setAttribute("aria-label", "Remove evidence");
       removeBtn.textContent = "×";
       removeBtn.addEventListener("click", () => {
         items.splice(index, 1);
@@ -214,9 +214,12 @@ export function createEvidenceListEditor({ sourceTypes, items, onChange }) {
     textarea.value = "";
     select.value = "";
     renderList();
+    // Keep the assessor in the capture loop for the next item
+    select.focus();
   });
 
   renderList();
   wrap.append(list, select, textarea, addBtn);
   return wrap;
 }
+

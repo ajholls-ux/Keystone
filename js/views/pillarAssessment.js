@@ -1,14 +1,14 @@
-// ==========================================================================
-// Keystone Field Kit — Pillar Assessment View
+/ ==========================================================================
+// Keystone Field Kit -- Pillar Assessment View
 //
 // Screen 6 of the locked Screen Map (Part 2 v1.0). Governed by Assessment
 // Engine v1.0 plus the Diagnostic Cycles architectural clarification.
 //
-// Health Review layer (params.pillarKey only) is the permanent baseline —
+// Health Review layer (params.pillarKey only) is the permanent baseline --
 // always editable, never touched by Diagnostic activity.
 //
 // Diagnostic layer (params.pillarKey + params.cycleId) operates on that
-// specific cycle's entry for this pillar — separate storage per cycle, so
+// specific cycle's entry for this pillar -- separate storage per cycle, so
 // investigating a pillar in one cycle never overwrites another cycle's
 // findings on the same or a different pillar.
 // ==========================================================================
@@ -62,7 +62,69 @@ function mutateCyclePillar(organisationId, reviewId, cycleId, pillarKey, mutator
   });
 }
 
+
+/**
+ * In-page reason sheet. Replaces window.prompt on iPhone so the assessor
+ * stays in context. Optional reason; empty is allowed.
+ */
+function askReason({ title, message, confirmLabel, onConfirm, onCancel }) {
+  const existing = document.querySelector(".reason-sheet");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.className = "reason-sheet";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+
+  const panel = document.createElement("div");
+  panel.className = "reason-sheet__panel";
+
+  const heading = document.createElement("p");
+  heading.className = "reason-sheet__title";
+  heading.textContent = title;
+
+  const body = document.createElement("p");
+  body.className = "reason-sheet__message";
+  body.textContent = message;
+
+  const input = document.createElement("textarea");
+  input.className = "field__input reason-sheet__input";
+  input.rows = 3;
+  input.placeholder = "Optional note";
+
+  const row = document.createElement("div");
+  row.className = "reason-sheet__actions";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "btn btn-secondary";
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.addEventListener("click", () => {
+    overlay.remove();
+    if (onCancel) onCancel();
+  });
+
+  const okBtn = document.createElement("button");
+  okBtn.type = "button";
+  okBtn.className = "btn btn-primary";
+  okBtn.textContent = confirmLabel || "Save";
+  okBtn.addEventListener("click", () => {
+    const value = input.value.trim();
+    overlay.remove();
+    onConfirm(value);
+  });
+
+  row.append(cancelBtn, okBtn);
+  panel.append(heading, body, input, row);
+  overlay.append(panel);
+  document.body.append(overlay);
+  input.focus();
+}
+
 function renderSummaryStrip(pillar, isDiagnosticMode, cycle) {
+  const wrap = document.createElement("div");
+  wrap.className = "stack-tight";
+
   const strip = document.createElement("div");
   strip.className = "summary-strip";
 
@@ -86,31 +148,63 @@ function renderSummaryStrip(pillar, isDiagnosticMode, cycle) {
     strip.append(item);
   });
 
-  return strip;
+  wrap.append(strip);
+
+  // Health Review only: quiet readiness based on the same rules as Mark complete
+  // (evidence + maturity score). Confidence is shown as a soft note if missing.
+  if (!isDiagnosticMode) {
+    const ready = document.createElement("p");
+    ready.className = "pillar-ready text-caption";
+    const hasEvidence = pillar.evidence.length > 0;
+    const hasScore = pillar.maturityScore != null;
+    const hasConfidence = Boolean(pillar.assessorConfidence?.level);
+
+    if (hasEvidence && hasScore) {
+      ready.textContent = hasConfidence
+        ? "Ready to mark this pillar complete"
+        : "Ready to mark complete. Confidence still optional but useful.";
+      ready.classList.add("pillar-ready--ok");
+    } else {
+      const missing = [];
+      if (!hasEvidence) missing.push("evidence");
+      if (!hasScore) missing.push("maturity score");
+      ready.textContent = "Still needed: " + missing.join(" and ");
+    }
+    wrap.append(ready);
+  }
+
+  return wrap;
 }
 
 /**
  * Renders the pillar's methodology questions (Methodology Engine v1.0).
  * Each question gets one auto-growing response field plus its full
- * guidance chain. Empty array for pillars not yet authored — renders
+ * guidance chain. Empty array for pillars not yet authored -- renders
  * nothing, no regression for the other nine pillars.
  */
 function renderMethodologyQuestions(container, pillar, review, org) {
   const questions = PILLAR_QUESTIONS[pillar.pillarKey] || [];
-  if (questions.length === 0) return;
 
   const sectionHeading = document.createElement("h2");
   sectionHeading.className = "text-heading-section";
-  sectionHeading.textContent = "Assessment Questions";
+  sectionHeading.textContent = "Questions";
   container.append(sectionHeading);
+
+  if (questions.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "text-body-secondary pillar-questions-empty";
+    empty.textContent =
+      "Assessment questions for this pillar are not authored yet. Use evidence and professional judgement below.";
+    container.append(empty);
+    return;
+  }
 
   questions.forEach((q) => {
     const questionWrap = document.createElement("div");
-    questionWrap.className = "stack-tight";
-    questionWrap.style.marginBottom = "var(--space-3)";
+    questionWrap.className = "question-block stack-tight";
 
     const questionText = document.createElement("p");
-    questionText.style.fontWeight = "600";
+    questionText.className = "question-block__text";
     questionText.textContent = q.question;
 
     const existing = pillar.questionResponses?.[q.id];
@@ -127,7 +221,7 @@ function renderMethodologyQuestions(container, pillar, review, org) {
           [fieldName]: value,
           // Set once, on first capture, and preserved on every subsequent
           // edit. Represents when this question was first investigated,
-          // not when it was last touched — future Health Check work may
+          // not when it was last touched -- future Health Check work may
           // rely on this original capture point longitudinally.
           capturedAt: current.capturedAt || new Date().toISOString(),
         };
@@ -151,7 +245,7 @@ function renderMethodologyQuestions(container, pillar, review, org) {
 
     // Lightweight breadcrumb, not the formal evidence record. The full
     // multi-entry, source-classified Evidence list stays under Pillar
-    // Assessment at the bottom, untouched — this is just a quick note
+    // Assessment at the bottom, untouched -- this is just a quick note
     // taken in the moment while investigating this specific question.
     const evidenceNotesField = createTextField({
       id: `question-evidence-${q.id}`,
@@ -192,7 +286,7 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   // Observation Notes and Conversation Notes are deliberately hidden from
   // the active Health Review UI (not deleted). Their purpose is now
   // fully covered by the question layer above (response + evidence
-  // breadcrumb, per question) — keeping them visible risked duplicate
+  // breadcrumb, per question) -- keeping them visible risked duplicate
   // entry or assessor confusion about which box to use. The underlying
   // schema fields (pillar.observationNotes / pillar.conversationNotes)
   // are untouched: existing Reviews with data in them are preserved,
@@ -227,7 +321,7 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   oppsLabel.textContent = "Opportunities";
   const oppsHint = document.createElement("p");
   oppsHint.className = "text-caption";
-  oppsHint.textContent = "Identify the opportunity without describing the solution. One point per line.";
+  oppsHint.textContent = "Name the gap or inconsistency, not the fix. One point per line.";
   const oppsEditor = createFreeTextAreaField({
     placeholder: "Where could operational maturity improve?",
     items: pillar.opportunities,
@@ -243,6 +337,7 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   });
 
   const internalNotes = createTextField({ id: "internalAssessorNotes", label: "Internal assessor notes (never client-visible)", textarea: true });
+  internalNotes.element.classList.add("field--internal");
   internalNotes.input.value = pillar.internalAssessorNotes;
   internalNotes.input.addEventListener("blur", () => {
     mutatePillar(org.id, review.id, pillar.pillarKey, (p) => (p.internalAssessorNotes = internalNotes.input.value));
@@ -255,21 +350,29 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
     value: pillar.maturityScore,
     onChange: (score) => {
       const previousScore = pillar.maturityScore;
-      let reason = "";
-      if (previousScore != null && previousScore !== score) {
-        reason = window.prompt(
-          `Revising score from ${previousScore} to ${score}. Please note the reason for this revision:`
-        ) || "";
-      }
-      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
-        p.maturityScore = score;
-        p.scoreHistory.push({
-          score,
-          setAt: new Date().toISOString(),
-          reason: reason || (previousScore == null ? "Initial score" : ""),
+
+      function commit(reason) {
+        mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+          p.maturityScore = score;
+          p.scoreHistory.push({
+            score,
+            setAt: new Date().toISOString(),
+            reason: reason || (previousScore == null ? "Initial score" : ""),
+          });
         });
-      });
-      refresh();
+        refresh();
+      }
+
+      if (previousScore != null && previousScore !== score) {
+        askReason({
+          title: "Score revision",
+          message: `Changing from ${previousScore} to ${score}. A short note helps if you revisit this later.`,
+          confirmLabel: "Save score",
+          onConfirm: commit,
+        });
+        return;
+      }
+      commit("");
     },
   });
 
@@ -277,35 +380,50 @@ function renderHealthReviewLayer(container, pillar, review, org, refresh) {
   confidenceLabel.className = "field__label";
   confidenceLabel.textContent = "Assessor confidence (internal only)";
   const confidenceRow = document.createElement("div");
-  confidenceRow.className = "action-row";
+  confidenceRow.className = "confidence-row";
   CONFIDENCE_LEVELS.forEach((level) => {
+    const selected = pillar.assessorConfidence?.level === level;
     const btn = createButton({
       label: level,
-      variant: pillar.assessorConfidence?.level === level ? "primary" : "secondary",
+      variant: selected ? "primary" : "secondary",
       onClick: () => {
-        const reason = window.prompt(`Reason for ${level} confidence (optional):`) || "";
-        mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
-          p.assessorConfidence = { level, reason };
-        });
-        refresh();
+        // First selection: save immediately. Changing level: optional note.
+        const previous = pillar.assessorConfidence?.level;
+        function commit(reason) {
+          mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+            p.assessorConfidence = { level, reason: reason || "" };
+          });
+          refresh();
+        }
+        if (previous && previous !== level) {
+          askReason({
+            title: "Confidence change",
+            message: `Changing from ${previous} to ${level}. Optional note for your own reference.`,
+            confirmLabel: "Save",
+            onConfirm: commit,
+          });
+          return;
+        }
+        commit(pillar.assessorConfidence?.reason || "");
       },
     });
+    if (selected) btn.classList.add("confidence-row__selected");
     confidenceRow.append(btn);
   });
 
   // Guidance is attached directly under the field it supports. The four
   // panels below (Observation, Conversation, Evidence, Strengths) are
-  // hidden here, not deleted — their PILLAR_GUIDANCE entries in schema.js
+  // hidden here, not deleted -- their PILLAR_GUIDANCE entries in schema.js
   // are untouched and still empty placeholders, ready to be populated and
   // re-shown later. They're hidden because they currently render nothing
   // but "Not yet added" ten times each: pure clutter, independent of any
   // redundancy question. Opportunities, Professional Observation,
-  // Maturity Score and Assessor Confidence guidance remain visible — each
+  // Maturity Score and Assessor Confidence guidance remain visible -- each
   // has genuinely populated, non-duplicated content the question-level
   // guidance doesn't cover.
   const pillarAssessmentHeading = document.createElement("h2");
   pillarAssessmentHeading.className = "text-heading-section";
-  pillarAssessmentHeading.textContent = "Pillar Assessment";
+  pillarAssessmentHeading.textContent = "Your judgement";
 
   container.append(
     pillarAssessmentHeading,
@@ -475,7 +593,7 @@ export function renderPillarAssessment(container, params) {
       renderDiagnosticLayer(form, pillar.pillarKey, cycleEntry, review, org, cycle.id, refresh);
     }
   } else {
-    // Health Review layer — always editable, the permanent baseline.
+    // Health Review layer -- always editable, the permanent baseline.
     renderHealthReviewLayer(form, pillar, review, org, refresh);
   }
 
@@ -520,7 +638,7 @@ export function renderPillarAssessment(container, params) {
         onClick: () => {
           if (!canComplete) {
             window.alert(
-              "A pillar cannot be marked complete until at least one piece of evidence and a maturity score are recorded."
+              "Add at least one piece of evidence and a maturity score before marking this pillar complete."
             );
             return;
           }
@@ -539,3 +657,4 @@ export function renderPillarAssessment(container, params) {
 
   container.append(screen);
 }
+
