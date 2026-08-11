@@ -1,8 +1,8 @@
 // ==========================================================================
-// Keystone Field Kit — Router
+// Keystone Field Kit -- Router
 //
 // Minimal stack-based navigation controller (Part 2: stack-based, not
-// tab-based). No framework, no URL-based routing needed for MVP — this is
+// tab-based). No framework, no URL-based routing needed for MVP -- this is
 // a single-session field tool, not a shareable-link web app.
 // ==========================================================================
 
@@ -38,7 +38,11 @@ export function navigate(name, params = {}) {
 
 /** Replaces the current view without growing the stack (e.g. initial mount). */
 export function replace(name, params = {}) {
-  stack[stack.length - 1] = { name, params };
+  if (stack.length === 0) {
+    stack.push({ name, params });
+  } else {
+    stack[stack.length - 1] = { name, params };
+  }
   render(name, params);
 }
 
