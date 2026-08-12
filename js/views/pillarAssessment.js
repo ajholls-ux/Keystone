@@ -224,6 +224,7 @@ function askReason({
     document.createElement("button");
 
   cancelBtn.type = "button";
+
   cancelBtn.className =
     "btn btn-secondary";
 
@@ -1369,20 +1370,21 @@ function createFromPillarPanel(
 //
 // LOCKED BEHAVIOUR:
 //
-// The contextual panel is attached to THIS judgement field.
-//
-// It starts hidden.
+// Only ONE contextual "From this pillar" panel may be open at a time.
 //
 // When the input is focused:
+//
 //   From this pillar
-//   Strengths / Opportunities / Professional Observation
+//   Section title
 //   Hint
 //   Input
 //
-// When focus leaves the input/section:
-//   From this pillar disappears.
+// The section heading NEVER moves above the contextual panel.
 //
-// The section heading never moves above the contextual panel.
+// Selecting another judgement field automatically closes any
+// previously-open contextual panel.
+//
+// Clicking/tapping away closes the active contextual panel.
 // ==========================================================================
 
 function createJudgementSection({
@@ -1405,13 +1407,6 @@ function createJudgementSection({
   // --------------------------------------------------------
   // CONTEXT PANEL
   // --------------------------------------------------------
-  //
-  // IMPORTANT:
-  // This is appended FIRST.
-  // The section title is appended AFTER it.
-  // This prevents the title being rendered above
-  // "From this pillar".
-  // --------------------------------------------------------
 
   const sourcePanel =
     createFromPillarPanel(
@@ -1423,7 +1418,6 @@ function createJudgementSection({
     "from-pillar--contextual"
   );
 
-  // Hidden until the associated input is selected.
   sourcePanel.hidden =
     true;
 
@@ -1497,13 +1491,63 @@ function createJudgementSection({
   // CONTEXTUAL VISIBILITY
   // --------------------------------------------------------
   //
-  // Only this field controls this panel.
-  // Selecting Strengths cannot display the
-  // Opportunities or Professional Observation panel.
+  // IMPORTANT:
+  // There must only ever be ONE contextual panel
+  // visible inside the current assessment screen.
+  //
+  // We therefore close all other contextual panels
+  // before opening this one.
   // --------------------------------------------------------
+
+  const closeOtherContextPanels =
+    () => {
+      const currentForm =
+        section.closest(
+          ".screen"
+        ) ||
+        section.parentElement;
+
+      if (!currentForm) {
+        return;
+      }
+
+      const otherPanels =
+        currentForm.querySelectorAll(
+          ".from-pillar--contextual"
+        );
+
+      otherPanels.forEach(
+        (panel) => {
+          if (
+            panel !==
+            sourcePanel
+          ) {
+            panel.hidden =
+              true;
+
+            const owningSection =
+              panel.closest(
+                ".judgement-section"
+              );
+
+            if (
+              owningSection
+            ) {
+              owningSection.classList.remove(
+                "judgement-section--active"
+              );
+            }
+          }
+        }
+      );
+    };
 
   const showContext =
     () => {
+      // Close every other contextual
+      // panel BEFORE opening this one.
+      closeOtherContextPanels();
+
       sourcePanel.hidden =
         false;
 
@@ -1521,6 +1565,10 @@ function createJudgementSection({
         "judgement-section--active"
       );
     };
+
+  // --------------------------------------------------------
+  // WRAPPER FOCUS EVENTS
+  // --------------------------------------------------------
 
   if (field) {
     field.addEventListener?.(
@@ -1548,10 +1596,18 @@ function createJudgementSection({
     );
   }
 
-  // createFreeTextAreaField may return the
-  // wrapper rather than a native input.
-  // Therefore also listen directly to
-  // the actual textarea/input elements.
+  // --------------------------------------------------------
+  // ACTUAL EDITABLE ELEMENTS
+  // --------------------------------------------------------
+  //
+  // createFreeTextAreaField may return a wrapper
+  // rather than the native textarea/input.
+  //
+  // Listen directly to every editable element as
+  // well so the behaviour remains reliable on
+  // iPhone/iPad and desktop.
+  // --------------------------------------------------------
+
   const editableElements =
     section.querySelectorAll(
       "textarea, input, [contenteditable='true']"
@@ -1745,13 +1801,6 @@ function renderHealthReviewLayer(
   // --------------------------------------------------------
   // FROM THIS PILLAR
   // --------------------------------------------------------
-  //
-  // This is deliberately created BEFORE the
-  // Professional Observation title.
-  //
-  // It is hidden until the observation input
-  // is selected.
-  // --------------------------------------------------------
 
   const professionalSource =
     createFromPillarPanel(
@@ -1791,9 +1840,6 @@ function renderHealthReviewLayer(
 
   // --------------------------------------------------------
   // ASSESSOR'S STRENGTHS / OPPORTUNITIES
-  //
-  // These are part of the contextual information.
-  // They do NOT become separate visible fields.
   // --------------------------------------------------------
 
   const judgementSummary =
@@ -1957,8 +2003,55 @@ function renderHealthReviewLayer(
   // PROFESSIONAL CONTEXT VISIBILITY
   // --------------------------------------------------------
 
+  const closeOtherProfessionalPanels =
+    () => {
+      const currentScreen =
+        professionalSection.closest(
+          ".screen"
+        ) ||
+        professionalSection.parentElement;
+
+      if (!currentScreen) {
+        return;
+      }
+
+      const otherPanels =
+        currentScreen.querySelectorAll(
+          ".from-pillar--contextual"
+        );
+
+      otherPanels.forEach(
+        (panel) => {
+          if (
+            panel !==
+            professionalSource
+          ) {
+            panel.hidden =
+              true;
+
+            const owningSection =
+              panel.closest(
+                ".judgement-section"
+              );
+
+            if (
+              owningSection
+            ) {
+              owningSection.classList.remove(
+                "judgement-section--active"
+              );
+            }
+          }
+        }
+      );
+    };
+
   const showProfessionalContext =
     () => {
+      // Close every other contextual
+      // panel before opening this one.
+      closeOtherProfessionalPanels();
+
       professionalSource.hidden =
         false;
 
