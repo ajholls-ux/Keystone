@@ -23,7 +23,10 @@ import {
 } from "../state/schema.js";
 import { createTextField } from "../components/textField.js";
 import { createButton } from "../components/button.js";
-import { createScoreSelector, SCORE_LABELS } from "../components/scoreSelector.js";
+import {
+  createScoreSelector,
+  SCORE_LABELS,
+} from "../components/scoreSelector.js";
 import {
   createTextListEditor,
   createEvidenceListEditor,
@@ -33,36 +36,98 @@ import { createGuidancePanel } from "../components/guidancePanel.js";
 import { createQuestionGuidance } from "../components/questionGuidance.js";
 import { back } from "../router.js";
 
-function findPillar(state, organisationId, reviewId, pillarKey) {
-  const org = state.organisations.find((o) => o.id === organisationId);
-  const review = org?.reviews.find((r) => r.id === reviewId);
-  const pillar = review?.pillarAssessments.find(
-    (p) => p.pillarKey === pillarKey
+
+// ==========================================================================
+// FIND PILLAR
+// ==========================================================================
+
+function findPillar(
+  state,
+  organisationId,
+  reviewId,
+  pillarKey
+) {
+  const org =
+    state.organisations.find(
+      (o) => o.id === organisationId
+    );
+
+  const review =
+    org?.reviews.find(
+      (r) => r.id === reviewId
+    );
+
+  const pillar =
+    review?.pillarAssessments.find(
+      (p) => p.pillarKey === pillarKey
+    );
+
+  return {
+    org,
+    review,
+    pillar,
+  };
+}
+
+
+// ==========================================================================
+// FIND DIAGNOSTIC CYCLE
+// ==========================================================================
+
+function findCycle(
+  review,
+  cycleId
+) {
+  return (
+    review?.diagnosticCycles.find(
+      (c) => c.id === cycleId
+    ) || null
   );
-  return { org, review, pillar };
 }
 
-function findCycle(review, cycleId) {
-  return review?.diagnosticCycles.find((c) => c.id === cycleId) || null;
-}
 
-function mutatePillar(organisationId, reviewId, pillarKey, mutator) {
+// ==========================================================================
+// MUTATE HEALTH REVIEW PILLAR
+// ==========================================================================
+
+function mutatePillar(
+  organisationId,
+  reviewId,
+  pillarKey,
+  mutator
+) {
   updateState((state) => {
-    const { review, pillar } = findPillar(
+
+    const {
+      review,
+      pillar,
+    } = findPillar(
       state,
       organisationId,
       reviewId,
       pillarKey
     );
 
-    if (!pillar) return state;
+    if (!pillar) {
+      return state;
+    }
 
-    mutator(pillar, review);
-    review.lastUpdatedAt = new Date().toISOString();
+    mutator(
+      pillar,
+      review
+    );
+
+    review.lastUpdatedAt =
+      new Date().toISOString();
 
     return state;
   });
 }
+
+
+// ==========================================================================
+// MUTATE DIAGNOSTIC CYCLE PILLAR
+// ==========================================================================
 
 function mutateCyclePillar(
   organisationId,
@@ -72,24 +137,42 @@ function mutateCyclePillar(
   mutator
 ) {
   updateState((state) => {
-    const { review } = findPillar(
+
+    const {
+      review,
+    } = findPillar(
       state,
       organisationId,
       reviewId,
       pillarKey
     );
 
-    const cycle = findCycle(review, cycleId);
-    const entry = cycle?.pillars[pillarKey];
+    const cycle =
+      findCycle(
+        review,
+        cycleId
+      );
 
-    if (!entry) return state;
+    const entry =
+      cycle?.pillars[pillarKey];
+
+    if (!entry) {
+      return state;
+    }
 
     mutator(entry);
-    review.lastUpdatedAt = new Date().toISOString();
+
+    review.lastUpdatedAt =
+      new Date().toISOString();
 
     return state;
   });
 }
+
+
+// ==========================================================================
+// REASON SHEET
+// ==========================================================================
 
 /**
  * In-page reason sheet. Replaces window.prompt on iPhone so the assessor
@@ -102,144 +185,340 @@ function askReason({
   onConfirm,
   onCancel,
 }) {
-  const existing = document.querySelector(".reason-sheet");
-  if (existing) existing.remove();
+  const existing =
+    document.querySelector(
+      ".reason-sheet"
+    );
 
-  const overlay = document.createElement("div");
-  overlay.className = "reason-sheet";
-  overlay.setAttribute("role", "dialog");
-  overlay.setAttribute("aria-modal", "true");
+  if (existing) {
+    existing.remove();
+  }
 
-  const panel = document.createElement("div");
-  panel.className = "reason-sheet__panel";
 
-  const heading = document.createElement("p");
-  heading.className = "reason-sheet__title";
-  heading.textContent = title;
+  const overlay =
+    document.createElement("div");
 
-  const body = document.createElement("p");
-  body.className = "reason-sheet__message";
-  body.textContent = message;
+  overlay.className =
+    "reason-sheet";
 
-  const input = document.createElement("textarea");
-  input.className = "field__input reason-sheet__input";
+  overlay.setAttribute(
+    "role",
+    "dialog"
+  );
+
+  overlay.setAttribute(
+    "aria-modal",
+    "true"
+  );
+
+
+  const panel =
+    document.createElement("div");
+
+  panel.className =
+    "reason-sheet__panel";
+
+
+  const heading =
+    document.createElement("p");
+
+  heading.className =
+    "reason-sheet__title";
+
+  heading.textContent =
+    title;
+
+
+  const body =
+    document.createElement("p");
+
+  body.className =
+    "reason-sheet__message";
+
+  body.textContent =
+    message;
+
+
+  const input =
+    document.createElement("textarea");
+
+  input.className =
+    "field__input reason-sheet__input";
+
   input.rows = 3;
-  input.placeholder = "Optional note";
 
-  const row = document.createElement("div");
-  row.className = "reason-sheet__actions";
+  input.placeholder =
+    "Optional note";
 
-  const cancelBtn = document.createElement("button");
-  cancelBtn.type = "button";
-  cancelBtn.className = "btn btn-secondary";
-  cancelBtn.textContent = "Cancel";
 
-  cancelBtn.addEventListener("click", () => {
-    overlay.remove();
-    if (onCancel) onCancel();
-  });
+  const row =
+    document.createElement("div");
 
-  const okBtn = document.createElement("button");
-  okBtn.type = "button";
-  okBtn.className = "btn btn-primary";
-  okBtn.textContent = confirmLabel || "Save";
+  row.className =
+    "reason-sheet__actions";
 
-  okBtn.addEventListener("click", () => {
-    const value = input.value.trim();
-    overlay.remove();
-    onConfirm(value);
-  });
 
-  row.append(cancelBtn, okBtn);
-  panel.append(heading, body, input, row);
-  overlay.append(panel);
-  document.body.append(overlay);
+  const cancelBtn =
+    document.createElement("button");
+
+  cancelBtn.type =
+    "button";
+
+  cancelBtn.className =
+    "btn btn-secondary";
+
+  cancelBtn.textContent =
+    "Cancel";
+
+
+  cancelBtn.addEventListener(
+    "click",
+    () => {
+
+      overlay.remove();
+
+      if (onCancel) {
+        onCancel();
+      }
+
+    }
+  );
+
+
+  const okBtn =
+    document.createElement("button");
+
+  okBtn.type =
+    "button";
+
+  okBtn.className =
+    "btn btn-primary";
+
+  okBtn.textContent =
+    confirmLabel || "Save";
+
+
+  okBtn.addEventListener(
+    "click",
+    () => {
+
+      const value =
+        input.value.trim();
+
+      overlay.remove();
+
+      onConfirm(value);
+
+    }
+  );
+
+
+  row.append(
+    cancelBtn,
+    okBtn
+  );
+
+  panel.append(
+    heading,
+    body,
+    input,
+    row
+  );
+
+  overlay.append(
+    panel
+  );
+
+  document.body.append(
+    overlay
+  );
 
   input.focus();
 }
 
-function renderSummaryStrip(pillar, isDiagnosticMode, cycle) {
-  const wrap = document.createElement("div");
-  wrap.className = "stack-tight";
 
-  const strip = document.createElement("div");
-  strip.className = "summary-strip";
+// ==========================================================================
+// SUMMARY STRIP
+// ==========================================================================
+
+function renderSummaryStrip(
+  pillar,
+  isDiagnosticMode,
+  cycle
+) {
+  const wrap =
+    document.createElement("div");
+
+  wrap.className =
+    "stack-tight";
+
+
+  const strip =
+    document.createElement("div");
+
+  strip.className =
+    "summary-strip";
+
 
   const items = [
+
     [
       "Maturity score",
+
       pillar.maturityScore
         ? `${pillar.maturityScore} (${SCORE_LABELS[pillar.maturityScore]})`
         : "Not yet scored",
     ],
+
     [
       "Assessor confidence",
+
       pillar.assessorConfidence
         ? pillar.assessorConfidence.level
         : "Not set",
     ],
+
     [
       "Evidence collected",
+
       `${pillar.evidence.length} item${
-        pillar.evidence.length === 1 ? "" : "s"
+        pillar.evidence.length === 1
+          ? ""
+          : "s"
       }`,
     ],
+
     [
       "Stage",
+
       isDiagnosticMode
         ? `Operational Diagnostic, Cycle ${cycle.cycleNumber}`
         : "Operational Health Review",
     ],
+
   ];
 
-  items.forEach(([label, value]) => {
-    const item = document.createElement("div");
-    item.className = "summary-strip__item";
 
-    const l = document.createElement("span");
-    l.className = "summary-strip__label";
-    l.textContent = label;
+  items.forEach(
+    ([label, value]) => {
 
-    const v = document.createElement("span");
-    v.className = "summary-strip__value";
-    v.textContent = value;
+      const item =
+        document.createElement("div");
 
-    item.append(l, v);
-    strip.append(item);
-  });
+      item.className =
+        "summary-strip__item";
 
-  wrap.append(strip);
+
+      const l =
+        document.createElement("span");
+
+      l.className =
+        "summary-strip__label";
+
+      l.textContent =
+        label;
+
+
+      const v =
+        document.createElement("span");
+
+      v.className =
+        "summary-strip__value";
+
+      v.textContent =
+        value;
+
+
+      item.append(
+        l,
+        v
+      );
+
+      strip.append(
+        item
+      );
+
+    }
+  );
+
+
+  wrap.append(
+    strip
+  );
+
 
   if (!isDiagnosticMode) {
-    const ready = document.createElement("p");
-    ready.className = "pillar-ready text-caption";
 
-    const hasEvidence = pillar.evidence.length > 0;
-    const hasScore = pillar.maturityScore != null;
-    const hasConfidence = Boolean(
-      pillar.assessorConfidence?.level
-    );
+    const ready =
+      document.createElement("p");
 
-    if (hasEvidence && hasScore) {
-      ready.textContent = hasConfidence
-        ? "Ready to mark this pillar complete"
-        : "Ready to mark complete. Confidence still optional but useful.";
+    ready.className =
+      "pillar-ready text-caption";
 
-      ready.classList.add("pillar-ready--ok");
+
+    const hasEvidence =
+      pillar.evidence.length > 0;
+
+    const hasScore =
+      pillar.maturityScore != null;
+
+    const hasConfidence =
+      Boolean(
+        pillar.assessorConfidence?.level
+      );
+
+
+    if (
+      hasEvidence &&
+      hasScore
+    ) {
+
+      ready.textContent =
+        hasConfidence
+          ? "Ready to mark this pillar complete"
+          : "Ready to mark complete. Confidence still optional but useful.";
+
+      ready.classList.add(
+        "pillar-ready--ok"
+      );
+
     } else {
+
       const missing = [];
 
-      if (!hasEvidence) missing.push("evidence");
-      if (!hasScore) missing.push("maturity score");
+      if (!hasEvidence) {
+        missing.push(
+          "evidence"
+        );
+      }
 
-      ready.textContent = "Still needed: " + missing.join(" and ");
+      if (!hasScore) {
+        missing.push(
+          "maturity score"
+        );
+      }
+
+      ready.textContent =
+        "Still needed: " +
+        missing.join(
+          " and "
+        );
     }
 
-    wrap.append(ready);
+
+    wrap.append(
+      ready
+    );
   }
+
 
   return wrap;
 }
+
+
+// ==========================================================================
+// METHODOLOGY QUESTIONS
+// ==========================================================================
 
 function renderMethodologyQuestions(
   container,
@@ -248,518 +527,872 @@ function renderMethodologyQuestions(
   org,
   refresh
 ) {
-  const questions = PILLAR_QUESTIONS[pillar.pillarKey] || [];
+  const questions =
+    PILLAR_QUESTIONS[
+      pillar.pillarKey
+    ] || [];
 
-  const sectionHeading = document.createElement("h2");
-  sectionHeading.className = "text-heading-section";
-  sectionHeading.textContent = "Questions";
 
-  container.append(sectionHeading);
+  const sectionHeading =
+    document.createElement("h2");
+
+  sectionHeading.className =
+    "text-heading-section";
+
+  sectionHeading.textContent =
+    "Questions";
+
+
+  container.append(
+    sectionHeading
+  );
+
 
   if (questions.length === 0) {
-    const empty = document.createElement("p");
+
+    const empty =
+      document.createElement("p");
+
     empty.className =
       "text-body-secondary pillar-questions-empty";
 
     empty.textContent =
       "Assessment questions for this pillar are not authored yet. Capture evidence under Your judgement below, then score the pillar.";
 
-    container.append(empty);
+    container.append(
+      empty
+    );
+
     return;
   }
 
-  questions.forEach((q) => {
-    const questionWrap = document.createElement("div");
-    questionWrap.className = "question-block stack-tight";
 
-    const route =
-      q.investigationRoute || "ASK_THEN_EVIDENCE";
+  questions.forEach(
+    (q) => {
 
-    const observeFirst =
-      route === "OBSERVE_THEN_ASK" ||
-      route === "OBSERVE_ASK_EVIDENCE";
+      const questionWrap =
+        document.createElement("div");
 
-    const existing =
-      pillar.questionResponses?.[q.id] || {};
+      questionWrap.className =
+        "question-block stack-tight";
 
-    const existingObserved =
-      existing.observed || "";
 
-    const existingLearned =
-      existing.learned ||
-      existing.response ||
-      "";
+      const route =
+        q.investigationRoute ||
+        "ASK_THEN_EVIDENCE";
 
-    const PLACEHOLDERS = {
-      "q1-first-impression": {
-        observed:
-          "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
-        learned:
-          "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
-      },
 
-      "q2-wayfinding-responsiveness": {
-        observed:
-          "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
-        learned:
-          "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
-      },
+      const observeFirst =
+        route ===
+          "OBSERVE_THEN_ASK" ||
+        route ===
+          "OBSERVE_ASK_EVIDENCE";
 
-      "q3-complaint-issue-handling": {
-        observed: "",
-        learned:
-          "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
-      },
 
-      "q4-customer-satisfaction-awareness": {
-        observed: "",
-        learned:
-          "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
-      },
+      const existing =
+        pillar.questionResponses?.[
+          q.id
+        ] || {};
 
-      "q5-consistency-of-interaction": {
-        observed:
-          "e.g. One colleague greeted well and knew the product; another barely looked up.",
-        learned:
-          "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
-      },
-    };
 
-    const ph = PLACEHOLDERS[q.id] || {
-      observed:
-        "Short factual notes on what you saw. A sentence or two is enough.",
-      learned:
-        "What the manager or staff told you. Keep it brief.",
-    };
+      const existingObserved =
+        existing.observed ||
+        "";
 
-    function saveQuestionField(fieldName, value) {
-      mutatePillar(
-        org.id,
-        review.id,
-        pillar.pillarKey,
-        (p) => {
-          if (!p.questionResponses) {
-            p.questionResponses = {};
-          }
 
-          const current =
-            p.questionResponses[q.id] || {
-              observed: "",
-              learned: "",
-              response: "",
-              evidenceNotes: "",
-              capturedAt: null,
+      const existingLearned =
+        existing.learned ||
+        existing.response ||
+        "";
+
+
+      const PLACEHOLDERS = {
+
+        "q1-first-impression": {
+
+          observed:
+            "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
+
+          learned:
+            "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
+        },
+
+        "q2-wayfinding-responsiveness": {
+
+          observed:
+            "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
+
+          learned:
+            "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
+        },
+
+        "q3-complaint-issue-handling": {
+
+          observed:
+            "",
+
+          learned:
+            "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
+        },
+
+        "q4-customer-satisfaction-awareness": {
+
+          observed:
+            "",
+
+          learned:
+            "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
+        },
+
+        "q5-consistency-of-interaction": {
+
+          observed:
+            "e.g. One colleague greeted well and knew the product; another barely looked up.",
+
+          learned:
+            "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
+        },
+
+      };
+
+
+      const ph =
+        PLACEHOLDERS[q.id] || {
+
+          observed:
+            "Short factual notes on what you saw. A sentence or two is enough.",
+
+          learned:
+            "What the manager or staff told you. Keep it brief.",
+        };
+
+
+      function saveQuestionField(
+        fieldName,
+        value
+      ) {
+
+        mutatePillar(
+          org.id,
+          review.id,
+          pillar.pillarKey,
+          (p) => {
+
+            if (
+              !p.questionResponses
+            ) {
+              p.questionResponses =
+                {};
+            }
+
+
+            const current =
+              p.questionResponses[
+                q.id
+              ] || {
+
+                observed:
+                  "",
+
+                learned:
+                  "",
+
+                response:
+                  "",
+
+                evidenceNotes:
+                  "",
+
+                capturedAt:
+                  null,
+              };
+
+
+            const next = {
+
+              ...current,
+
+              [fieldName]:
+                value,
+
+              capturedAt:
+                current.capturedAt ||
+                new Date().toISOString(),
             };
 
-          const next = {
-            ...current,
-            [fieldName]: value,
-            capturedAt:
-              current.capturedAt ||
-              new Date().toISOString(),
-          };
 
-          if (fieldName === "learned") {
-            next.response = value;
+            if (
+              fieldName ===
+              "learned"
+            ) {
+
+              next.response =
+                value;
+            }
+
+
+            p.questionResponses[
+              q.id
+            ] = next;
+
           }
-
-          p.questionResponses[q.id] = next;
-        }
-      );
-    }
-
-    const questionText = document.createElement("p");
-    questionText.className = "question-block__text";
-    questionText.textContent = q.question;
-
-    questionWrap.append(questionText);
-
-    if (observeFirst) {
-      const observeLabel = document.createElement("p");
-      observeLabel.className = "field__label";
-      observeLabel.textContent = "What I observed";
-
-      const observeHint = document.createElement("p");
-      observeHint.className = "text-caption";
-      observeHint.textContent =
-        "Look first. Short factual notes. A sentence or two is enough. Not the final judgement.";
-
-      questionWrap.append(
-        observeLabel,
-        observeHint
-      );
-
-      if (
-        Array.isArray(q.whatToObserve) &&
-        q.whatToObserve.length > 0
-      ) {
-        const lookFor = document.createElement("p");
-        lookFor.className =
-          "text-caption question-block__look-for";
-
-        lookFor.textContent =
-          "Look for: " +
-          q.whatToObserve.join(", ");
-
-        questionWrap.append(lookFor);
+        );
       }
 
-      const observedField = createTextField({
-        id: `question-observed-${q.id}`,
-        label: "",
-        textarea: true,
-      });
 
-      const lab =
-        observedField.element.querySelector(
+      const questionText =
+        document.createElement("p");
+
+      questionText.className =
+        "question-block__text";
+
+      questionText.textContent =
+        q.question;
+
+
+      questionWrap.append(
+        questionText
+      );
+
+
+      if (observeFirst) {
+
+        const observeLabel =
+          document.createElement("p");
+
+        observeLabel.className =
+          "field__label";
+
+        observeLabel.textContent =
+          "What I observed";
+
+
+        const observeHint =
+          document.createElement("p");
+
+        observeHint.className =
+          "text-caption";
+
+        observeHint.textContent =
+          "Look first. Short factual notes. A sentence or two is enough. Not the final judgement.";
+
+
+        questionWrap.append(
+          observeLabel,
+          observeHint
+        );
+
+
+        if (
+          Array.isArray(
+            q.whatToObserve
+          ) &&
+          q.whatToObserve.length > 0
+        ) {
+
+          const lookFor =
+            document.createElement("p");
+
+          lookFor.className =
+            "text-caption question-block__look-for";
+
+          lookFor.textContent =
+            "Look for: " +
+            q.whatToObserve.join(
+              ", "
+            );
+
+          questionWrap.append(
+            lookFor
+          );
+        }
+
+
+        const observedField =
+          createTextField({
+
+            id:
+              `question-observed-${q.id}`,
+
+            label:
+              "",
+
+            textarea:
+              true,
+          });
+
+
+        const lab =
+          observedField.element.querySelector(
+            ".field__label"
+          );
+
+
+        if (lab) {
+          lab.style.display =
+            "none";
+        }
+
+
+        observedField.input.value =
+          existingObserved;
+
+
+        observedField.input.rows =
+          2;
+
+        observedField.input.placeholder =
+          ph.observed;
+
+
+        observedField.element.classList.add(
+          "question-observed"
+        );
+
+
+        observedField.input.addEventListener(
+          "input",
+          () => {
+
+            observedField.input.style.height =
+              "auto";
+
+            observedField.input.style.height =
+              `${observedField.input.scrollHeight}px`;
+
+          }
+        );
+
+
+        observedField.input.addEventListener(
+          "blur",
+          () => {
+
+            saveQuestionField(
+              "observed",
+              observedField.input.value
+            );
+
+          }
+        );
+
+
+        questionWrap.append(
+          observedField.element
+        );
+
+
+        const askCue =
+          document.createElement("p");
+
+        askCue.className =
+          "text-caption question-block__ask-cue";
+
+        askCue.textContent =
+          "Then ask how this is normally maintained or done.";
+
+
+        questionWrap.append(
+          askCue
+        );
+      }
+
+
+      const learnedLabel =
+        document.createElement("p");
+
+      learnedLabel.className =
+        "field__label";
+
+      learnedLabel.textContent =
+        "What I learned";
+
+
+      const learnedHint =
+        document.createElement("p");
+
+      learnedHint.className =
+        "text-caption";
+
+      learnedHint.textContent =
+        observeFirst
+          ? "What the manager or staff told you after you looked. Keep it brief."
+          : "What the manager or staff told you, and any example they gave. Keep it brief.";
+
+
+      const learnedField =
+        createTextField({
+
+          id:
+            `question-learned-${q.id}`,
+
+          label:
+            "",
+
+          textarea:
+            true,
+        });
+
+
+      const learnedLab =
+        learnedField.element.querySelector(
           ".field__label"
         );
 
-      if (lab) lab.style.display = "none";
 
-      observedField.input.value =
-        existingObserved;
+      if (learnedLab) {
+        learnedLab.style.display =
+          "none";
+      }
 
-      observedField.input.rows = 2;
-      observedField.input.placeholder =
-        ph.observed;
 
-      observedField.element.classList.add(
-        "question-observed"
+      learnedField.input.value =
+        existingLearned;
+
+
+      learnedField.input.rows =
+        2;
+
+      learnedField.input.placeholder =
+        ph.learned;
+
+
+      learnedField.element.classList.add(
+        "question-learned"
       );
 
-      observedField.input.addEventListener(
+
+      learnedField.input.addEventListener(
         "input",
         () => {
-          observedField.input.style.height = "auto";
-          observedField.input.style.height =
-            `${observedField.input.scrollHeight}px`;
+
+          learnedField.input.style.height =
+            "auto";
+
+          learnedField.input.style.height =
+            `${learnedField.input.scrollHeight}px`;
+
         }
       );
 
-      observedField.input.addEventListener(
+
+      learnedField.input.addEventListener(
         "blur",
         () => {
+
           saveQuestionField(
-            "observed",
-            observedField.input.value
+            "learned",
+            learnedField.input.value
           );
+
         }
       );
 
+
       questionWrap.append(
-        observedField.element
+        learnedLabel,
+        learnedHint,
+        learnedField.element
       );
 
-      const askCue = document.createElement("p");
-      askCue.className =
-        "text-caption question-block__ask-cue";
 
-      askCue.textContent =
-        "Then ask how this is normally maintained or done.";
+      const evLabel =
+        document.createElement("p");
 
-      questionWrap.append(askCue);
-    }
+      evLabel.className =
+        "field__label";
 
-    const learnedLabel = document.createElement("p");
-    learnedLabel.className = "field__label";
-    learnedLabel.textContent = "What I learned";
+      evLabel.textContent =
+        "Evidence";
 
-    const learnedHint = document.createElement("p");
-    learnedHint.className = "text-caption";
 
-    learnedHint.textContent = observeFirst
-      ? "What the manager or staff told you after you looked. Keep it brief."
-      : "What the manager or staff told you, and any example they gave. Keep it brief.";
+      const evHint =
+        document.createElement("p");
 
-    const learnedField = createTextField({
-      id: `question-learned-${q.id}`,
-      label: "",
-      textarea: true,
-    });
+      evHint.className =
+        "text-caption";
 
-    const learnedLab =
-      learnedField.element.querySelector(
-        ".field__label"
-      );
+      evHint.textContent =
+        "Optional. Add only what supports this question. Source required.";
 
-    if (learnedLab) {
-      learnedLab.style.display = "none";
-    }
 
-    learnedField.input.value =
-      existingLearned;
-
-    learnedField.input.rows = 2;
-    learnedField.input.placeholder =
-      ph.learned;
-
-    learnedField.element.classList.add(
-      "question-learned"
-    );
-
-    learnedField.input.addEventListener(
-      "input",
-      () => {
-        learnedField.input.style.height = "auto";
-        learnedField.input.style.height =
-          `${learnedField.input.scrollHeight}px`;
-      }
-    );
-
-    learnedField.input.addEventListener(
-      "blur",
-      () => {
-        saveQuestionField(
-          "learned",
-          learnedField.input.value
+      const questionEvidence =
+        (
+          pillar.evidence ||
+          []
+        ).filter(
+          (e) =>
+            e.questionId ===
+            q.id
         );
-      }
-    );
 
-    questionWrap.append(
-      learnedLabel,
-      learnedHint,
-      learnedField.element
-    );
 
-    const evLabel = document.createElement("p");
-    evLabel.className = "field__label";
-    evLabel.textContent = "Evidence";
+      const evidenceEditor =
+        createEvidenceListEditor({
 
-    const evHint = document.createElement("p");
-    evHint.className = "text-caption";
-    evHint.textContent =
-      "Optional. Add only what supports this question. Source required.";
+          sourceTypes:
+            EVIDENCE_SOURCE_TYPES,
 
-    const questionEvidence =
-      (pillar.evidence || []).filter(
-        (e) => e.questionId === q.id
-      );
+          items:
+            questionEvidence,
 
-    const evidenceEditor =
-      createEvidenceListEditor({
-        sourceTypes: EVIDENCE_SOURCE_TYPES,
-        items: questionEvidence,
+          onChange:
+            (items) => {
 
-        onChange: (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              const others =
-                (p.evidence || []).filter(
-                  (e) => e.questionId !== q.id
-                );
+              mutatePillar(
+                org.id,
+                review.id,
+                pillar.pillarKey,
+                (p) => {
 
-              const tagged = items.map(
-                (entry) => ({
-                  ...entry,
-                  questionId: q.id,
-                })
+                  const others =
+                    (
+                      p.evidence ||
+                      []
+                    ).filter(
+                      (e) =>
+                        e.questionId !==
+                        q.id
+                    );
+
+
+                  const tagged =
+                    items.map(
+                      (entry) => ({
+                        ...entry,
+                        questionId:
+                          q.id,
+                      })
+                    );
+
+
+                  p.evidence =
+                    others.concat(
+                      tagged
+                    );
+
+                }
               );
 
-              p.evidence =
-                others.concat(tagged);
-            }
-          );
+              refresh();
+            },
+        });
 
-          refresh();
-        },
-      });
 
-    evidenceEditor.classList.add(
-      "question-evidence"
-    );
+      evidenceEditor.classList.add(
+        "question-evidence"
+      );
 
-    questionWrap.append(
-      evLabel,
-      evHint,
-      evidenceEditor
-    );
 
-    questionWrap.append(
-      createQuestionGuidance(q)
-    );
+      questionWrap.append(
+        evLabel,
+        evHint,
+        evidenceEditor
+      );
 
-    container.append(questionWrap);
-  });
 
-  const divider = document.createElement("hr");
-  divider.className = "section-divider";
+      questionWrap.append(
+        createQuestionGuidance(
+          q
+        )
+      );
 
-  container.append(divider);
+
+      container.append(
+        questionWrap
+      );
+
+    }
+  );
+
+
+  const divider =
+    document.createElement("hr");
+
+  divider.className =
+    "section-divider";
+
+
+  container.append(
+    divider
+  );
 }
 
-function renderFindingsSnapshot(pillar) {
-  const wrap = document.createElement("div");
-  wrap.className = "findings-snapshot";
 
-  const title = document.createElement("p");
-  title.className = "findings-snapshot__title";
-  title.textContent = "From this pillar";
+// ==========================================================================
+// FINDINGS SNAPSHOT
+// ==========================================================================
 
-  const subtitle = document.createElement("p");
+function renderFindingsSnapshot(
+  pillar
+) {
+  const wrap =
+    document.createElement("div");
+
+  wrap.className =
+    "findings-snapshot";
+
+
+  const title =
+    document.createElement("p");
+
+  title.className =
+    "findings-snapshot__title";
+
+  title.textContent =
+    "From this pillar";
+
+
+  const subtitle =
+    document.createElement("p");
+
   subtitle.className =
     "text-caption findings-snapshot__subtitle";
 
   subtitle.textContent =
-    "Your investigation notes and evidence. Use these when writing strengths, opportunities and the professional observation. Not shown to the client as written here.";
+    "Information captured from your questions and evidence. Use this as the basis for your judgement.";
 
-  wrap.append(title, subtitle);
+
+  wrap.append(
+    title,
+    subtitle
+  );
+
 
   const questions =
-    PILLAR_QUESTIONS[pillar.pillarKey] || [];
+    PILLAR_QUESTIONS[
+      pillar.pillarKey
+    ] || [];
+
 
   const responses =
-    pillar.questionResponses || {};
+    pillar.questionResponses ||
+    {};
+
 
   const evidence =
-    pillar.evidence || [];
+    pillar.evidence ||
+    [];
 
-  let any = false;
 
-  questions.forEach((q, index) => {
-    const r = responses[q.id] || {};
+  let any =
+    false;
 
-    const observed =
-      (r.observed || "").trim();
 
-    const learned =
-      (r.learned ||
-        r.response ||
-        "").trim();
+  questions.forEach(
+    (q, index) => {
 
-    const qEvidence =
-      evidence.filter(
-        (e) => e.questionId === q.id
-      );
+      const r =
+        responses[q.id] ||
+        {};
 
-    if (
-      !observed &&
-      !learned &&
-      qEvidence.length === 0
-    ) {
-      return;
-    }
 
-    any = true;
+      const observed =
+        (
+          r.observed ||
+          ""
+        ).trim();
 
-    const block =
-      document.createElement("div");
 
-    block.className =
-      "findings-snapshot__question";
+      const learned =
+        (
+          r.learned ||
+          r.response ||
+          ""
+        ).trim();
 
-    const qTitle =
-      document.createElement("p");
 
-    qTitle.className =
-      "findings-snapshot__q-title";
+      const qEvidence =
+        evidence.filter(
+          (e) =>
+            e.questionId ===
+            q.id
+        );
 
-    const shortQ =
-      q.question.length > 90
-        ? q.question.slice(0, 87) + "..."
-        : q.question;
 
-    qTitle.textContent =
-      `Q${index + 1}. ${shortQ}`;
+      if (
+        !observed &&
+        !learned &&
+        qEvidence.length ===
+          0
+      ) {
+        return;
+      }
 
-    block.append(qTitle);
 
-    if (observed) {
-      const row =
+      any =
+        true;
+
+
+      const block =
+        document.createElement("div");
+
+      block.className =
+        "findings-snapshot__question";
+
+
+      const qTitle =
         document.createElement("p");
 
-      row.className =
-        "findings-snapshot__row";
+      qTitle.className =
+        "findings-snapshot__q-title";
 
-      const tag =
-        document.createElement("span");
 
-      tag.className =
-        "findings-snapshot__tag";
+      const shortQ =
+        q.question.length > 90
+          ? q.question.slice(
+              0,
+              87
+            ) + "..."
+          : q.question;
 
-      tag.textContent = "Observed";
 
-      row.append(
-        tag,
-        document.createTextNode(
-          " " + observed
-        )
+      qTitle.textContent =
+        `Q${index + 1}. ${shortQ}`;
+
+
+      block.append(
+        qTitle
       );
 
-      block.append(row);
+
+      if (observed) {
+
+        const row =
+          document.createElement("p");
+
+        row.className =
+          "findings-snapshot__row";
+
+
+        const tag =
+          document.createElement("span");
+
+        tag.className =
+          "findings-snapshot__tag";
+
+        tag.textContent =
+          "Observed";
+
+
+        row.append(
+          tag,
+          document.createTextNode(
+            " " + observed
+          )
+        );
+
+
+        block.append(
+          row
+        );
+      }
+
+
+      if (learned) {
+
+        const row =
+          document.createElement("p");
+
+        row.className =
+          "findings-snapshot__row";
+
+
+        const tag =
+          document.createElement("span");
+
+        tag.className =
+          "findings-snapshot__tag";
+
+        tag.textContent =
+          "Learned";
+
+
+        row.append(
+          tag,
+          document.createTextNode(
+            " " + learned
+          )
+        );
+
+
+        block.append(
+          row
+        );
+      }
+
+
+      qEvidence.forEach(
+        (e) => {
+
+          if (!e.content) {
+            return;
+          }
+
+
+          const row =
+            document.createElement("p");
+
+          row.className =
+            "findings-snapshot__row";
+
+
+          const tag =
+            document.createElement("span");
+
+          tag.className =
+            "findings-snapshot__tag";
+
+          tag.textContent =
+            e.sourceType ||
+            "Evidence";
+
+
+          row.append(
+            tag,
+            document.createTextNode(
+              " " + e.content
+            )
+          );
+
+
+          block.append(
+            row
+          );
+
+        }
+      );
+
+
+      wrap.append(
+        block
+      );
+
     }
+  );
 
-    if (learned) {
-      const row =
-        document.createElement("p");
-
-      row.className =
-        "findings-snapshot__row";
-
-      const tag =
-        document.createElement("span");
-
-      tag.className =
-        "findings-snapshot__tag";
-
-      tag.textContent = "Learned";
-
-      row.append(
-        tag,
-        document.createTextNode(
-          " " + learned
-        )
-      );
-
-      block.append(row);
-    }
-
-    qEvidence.forEach((e) => {
-      const row =
-        document.createElement("p");
-
-      row.className =
-        "findings-snapshot__row";
-
-      const tag =
-        document.createElement("span");
-
-      tag.className =
-        "findings-snapshot__tag";
-
-      tag.textContent =
-        e.sourceType || "Evidence";
-
-      row.append(
-        tag,
-        document.createTextNode(
-          " " + (e.content || "")
-        )
-      );
-
-      block.append(row);
-    });
-
-    wrap.append(block);
-  });
 
   const otherEv =
     evidence.filter(
-      (e) => !e.questionId
+      (e) =>
+        !e.questionId
     );
 
-  if (otherEv.length > 0) {
-    any = true;
+
+  if (
+    otherEv.length > 0
+  ) {
+
+    any =
+      true;
+
 
     const block =
       document.createElement("div");
 
     block.className =
       "findings-snapshot__question";
+
 
     const qTitle =
       document.createElement("p");
@@ -772,38 +1405,62 @@ function renderFindingsSnapshot(pillar) {
         ? "Other evidence"
         : "Evidence";
 
-    block.append(qTitle);
 
-    otherEv.forEach((e) => {
-      const row =
-        document.createElement("p");
+    block.append(
+      qTitle
+    );
 
-      row.className =
-        "findings-snapshot__row";
 
-      const tag =
-        document.createElement("span");
+    otherEv.forEach(
+      (e) => {
 
-      tag.className =
-        "findings-snapshot__tag";
+        if (!e.content) {
+          return;
+        }
 
-      tag.textContent =
-        e.sourceType || "Evidence";
 
-      row.append(
-        tag,
-        document.createTextNode(
-          " " + (e.content || "")
-        )
-      );
+        const row =
+          document.createElement("p");
 
-      block.append(row);
-    });
+        row.className =
+          "findings-snapshot__row";
 
-    wrap.append(block);
+
+        const tag =
+          document.createElement("span");
+
+        tag.className =
+          "findings-snapshot__tag";
+
+        tag.textContent =
+          e.sourceType ||
+          "Evidence";
+
+
+        row.append(
+          tag,
+          document.createTextNode(
+            " " + e.content
+          )
+        );
+
+
+        block.append(
+          row
+        );
+
+      }
+    );
+
+
+    wrap.append(
+      block
+    );
   }
 
+
   if (!any) {
+
     const empty =
       document.createElement("p");
 
@@ -811,13 +1468,356 @@ function renderFindingsSnapshot(pillar) {
       "text-caption findings-snapshot__empty";
 
     empty.textContent =
-      "No investigation notes or evidence on this pillar yet.";
+      "Nothing has been captured from the questions yet. Complete some of the investigation notes above and this section will populate.";
 
-    wrap.append(empty);
+
+    wrap.append(
+      empty
+    );
   }
+
 
   return wrap;
 }
+
+
+// ==========================================================================
+// PILLAR JUDGEMENT TABS
+//
+// Strengths -> From this pillar -> Strengths box
+// Opportunities -> From this pillar -> Opportunities box
+// Professional Observation -> From this pillar -> Observation box
+//
+// Only one judgement is visible at any time.
+// ==========================================================================
+
+function createPillarJudgementTabs({
+  pillar,
+  guidance,
+  strengthsEditor,
+  oppsEditor,
+  profObs,
+  profObsHint,
+}) {
+  const section =
+    document.createElement("div");
+
+  section.className =
+    "pillar-judgement-section";
+
+
+  // ------------------------------------------------------------------------
+  // Tabs
+  // ------------------------------------------------------------------------
+
+  const tabs =
+    document.createElement("div");
+
+  tabs.className =
+    "pillar-judgement-tabs";
+
+  tabs.setAttribute(
+    "role",
+    "tablist"
+  );
+
+
+  const content =
+    document.createElement("div");
+
+  content.className =
+    "pillar-judgement-content";
+
+
+  // ------------------------------------------------------------------------
+  // Panels
+  // ------------------------------------------------------------------------
+
+  const panels = {
+
+    strengths: {
+
+      label:
+        "Strengths",
+
+      editor:
+        strengthsEditor,
+
+      guidance:
+        guidance?.strengths ||
+        null,
+    },
+
+
+    opportunities: {
+
+      label:
+        "Opportunities",
+
+      editor:
+        oppsEditor,
+
+      guidance:
+        guidance?.opportunities ||
+        null,
+    },
+
+
+    observation: {
+
+      label:
+        "Professional Observation",
+
+      editor:
+        profObs.element,
+
+      hint:
+        profObsHint,
+
+      guidance:
+        guidance?.professionalObservation ||
+        null,
+    },
+
+  };
+
+
+  // ------------------------------------------------------------------------
+  // Create tab buttons
+  // ------------------------------------------------------------------------
+
+  Object.entries(
+    panels
+  ).forEach(
+    ([key, panel]) => {
+
+      const button =
+        document.createElement("button");
+
+      button.type =
+        "button";
+
+      button.className =
+        "pillar-judgement-tab";
+
+      button.textContent =
+        panel.label;
+
+      button.dataset.judgement =
+        key;
+
+      button.setAttribute(
+        "role",
+        "tab"
+      );
+
+      button.setAttribute(
+        "aria-selected",
+        "false"
+      );
+
+
+      tabs.append(
+        button
+      );
+
+    }
+  );
+
+
+  // ------------------------------------------------------------------------
+  // Show selected panel
+  // ------------------------------------------------------------------------
+
+  function showPanel(
+    key
+  ) {
+
+    const selected =
+      panels[key];
+
+    if (!selected) {
+      return;
+    }
+
+
+    // Remove the previous panel completely.
+    content.innerHTML =
+      "";
+
+
+    // ----------------------------------------------------------------------
+    // FROM THIS PILLAR
+    // ----------------------------------------------------------------------
+
+    const fromPillar =
+      renderFindingsSnapshot(
+        pillar
+      );
+
+
+    content.append(
+      fromPillar
+    );
+
+
+    // ----------------------------------------------------------------------
+    // Space
+    // ----------------------------------------------------------------------
+
+    const spacer =
+      document.createElement("div");
+
+    spacer.className =
+      "pillar-judgement-spacer";
+
+
+    content.append(
+      spacer
+    );
+
+
+    // ----------------------------------------------------------------------
+    // Selected judgement heading
+    // ----------------------------------------------------------------------
+
+    const heading =
+      document.createElement("p");
+
+    heading.className =
+      "field__label pillar-judgement-label";
+
+    heading.textContent =
+      selected.label;
+
+
+    content.append(
+      heading
+    );
+
+
+    // ----------------------------------------------------------------------
+    // Optional hint
+    // ----------------------------------------------------------------------
+
+    if (selected.hint) {
+
+      content.append(
+        selected.hint
+      );
+
+    }
+
+
+    // ----------------------------------------------------------------------
+    // Existing Keystone editor
+    // ----------------------------------------------------------------------
+
+    content.append(
+      selected.editor
+    );
+
+
+    // ----------------------------------------------------------------------
+    // Existing methodology guidance
+    // ----------------------------------------------------------------------
+
+    if (
+      selected.guidance
+    ) {
+
+      content.append(
+        createGuidancePanel(
+          selected.guidance
+        )
+      );
+
+    }
+
+
+    // ----------------------------------------------------------------------
+    // Update selected tab
+    // ----------------------------------------------------------------------
+
+    tabs
+      .querySelectorAll(
+        ".pillar-judgement-tab"
+      )
+      .forEach(
+        (button) => {
+
+          const isSelected =
+            button.dataset.judgement ===
+            key;
+
+
+          button.classList.toggle(
+            "active",
+            isSelected
+          );
+
+
+          button.setAttribute(
+            "aria-selected",
+            isSelected
+              ? "true"
+              : "false"
+          );
+
+        }
+      );
+
+  }
+
+
+  // ------------------------------------------------------------------------
+  // Tab events
+  // ------------------------------------------------------------------------
+
+  tabs
+    .querySelectorAll(
+      ".pillar-judgement-tab"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            showPanel(
+              button.dataset.judgement
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  // ------------------------------------------------------------------------
+  // Start with Strengths
+  // ------------------------------------------------------------------------
+
+  showPanel(
+    "strengths"
+  );
+
+
+  section.append(
+    tabs,
+    content
+  );
+
+
+  return section;
+}
+
+
+// ==========================================================================
+// HEALTH REVIEW LAYER
+// ==========================================================================
 
 function renderHealthReviewLayer(
   container,
@@ -827,7 +1827,14 @@ function renderHealthReviewLayer(
   refresh
 ) {
   const guidance =
-    PILLAR_GUIDANCE[pillar.pillarKey];
+    PILLAR_GUIDANCE[
+      pillar.pillarKey
+    ];
+
+
+  // ------------------------------------------------------------------------
+  // Questions
+  // ------------------------------------------------------------------------
 
   renderMethodologyQuestions(
     container,
@@ -837,82 +1844,96 @@ function renderHealthReviewLayer(
     refresh
   );
 
-  const strengthsLabel =
-    document.createElement("p");
 
-  strengthsLabel.className =
-    "field__label";
-
-  strengthsLabel.textContent =
-    "Strengths";
+  // ------------------------------------------------------------------------
+  // Strengths
+  // ------------------------------------------------------------------------
 
   const strengthsEditor =
     createFreeTextAreaField({
+
       placeholder:
         "What is working well? One point per line.",
-      items: pillar.strengths,
 
-      onChange: (items) => {
-        mutatePillar(
-          org.id,
-          review.id,
-          pillar.pillarKey,
-          (p) => {
-            p.strengths = items;
-          }
-        );
-      },
+      items:
+        pillar.strengths,
+
+      onChange:
+        (items) => {
+
+          mutatePillar(
+            org.id,
+            review.id,
+            pillar.pillarKey,
+            (p) => {
+
+              p.strengths =
+                items;
+
+            }
+          );
+
+        },
     });
 
-  const oppsLabel =
-    document.createElement("p");
 
-  oppsLabel.className =
-    "field__label";
-
-  oppsLabel.textContent =
-    "Opportunities";
-
-  const oppsHint =
-    document.createElement("p");
-
-  oppsHint.className =
-    "text-caption";
-
-  oppsHint.textContent =
-    "Name the gap or inconsistency, not the fix. One point per line.";
+  // ------------------------------------------------------------------------
+  // Opportunities
+  // ------------------------------------------------------------------------
 
   const oppsEditor =
     createFreeTextAreaField({
+
       placeholder:
         "Where could operational maturity improve?",
-      items: pillar.opportunities,
 
-      onChange: (items) => {
-        mutatePillar(
-          org.id,
-          review.id,
-          pillar.pillarKey,
-          (p) => {
-            p.opportunities = items;
-          }
-        );
-      },
+      items:
+        pillar.opportunities,
+
+      onChange:
+        (items) => {
+
+          mutatePillar(
+            org.id,
+            review.id,
+            pillar.pillarKey,
+            (p) => {
+
+              p.opportunities =
+                items;
+
+            }
+          );
+
+        },
     });
+
+
+  // ------------------------------------------------------------------------
+  // Professional Observation
+  // ------------------------------------------------------------------------
 
   const profObs =
     createTextField({
-      id: "professionalObservation",
+
+      id:
+        "professionalObservation",
+
       label:
         "Professional observation (client-visible)",
-      textarea: true,
+
+      textarea:
+        true,
     });
+
 
   profObs.input.value =
     pillar.professionalObservation;
 
+
   profObs.input.placeholder =
     "Clear, balanced summary for the client. Factual and professional. No internal confidence. No full action plan.";
+
 
   const profObsHint =
     document.createElement("p");
@@ -923,50 +1944,99 @@ function renderHealthReviewLayer(
   profObsHint.textContent =
     "This appears in the client report. Write as you would to the business owner: tight, neutral, useful.";
 
+
   profObs.input.addEventListener(
     "blur",
     () => {
+
       mutatePillar(
         org.id,
         review.id,
         pillar.pillarKey,
         (p) => {
+
           p.professionalObservation =
             profObs.input.value;
+
         }
       );
+
     }
   );
 
+
+  // ------------------------------------------------------------------------
+  // Internal assessor notes
+  // ------------------------------------------------------------------------
+
   const internalNotes =
     createTextField({
-      id: "internalAssessorNotes",
+
+      id:
+        "internalAssessorNotes",
+
       label:
         "Internal assessor notes (never client-visible)",
-      textarea: true,
+
+      textarea:
+        true,
     });
+
 
   internalNotes.element.classList.add(
     "field--internal"
   );
 
+
   internalNotes.input.value =
     pillar.internalAssessorNotes;
+
 
   internalNotes.input.addEventListener(
     "blur",
     () => {
+
       mutatePillar(
         org.id,
         review.id,
         pillar.pillarKey,
         (p) => {
+
           p.internalAssessorNotes =
             internalNotes.input.value;
+
         }
       );
+
     }
   );
+
+
+  // ------------------------------------------------------------------------
+  // Judgement tabs
+  // ------------------------------------------------------------------------
+
+  const judgementTabs =
+    createPillarJudgementTabs({
+
+      pillar,
+
+      guidance,
+
+      strengthsEditor,
+
+      oppsEditor,
+
+      profObs,
+
+      profObsHint,
+
+    });
+
+
+  // ------------------------------------------------------------------------
+  // Maturity score
+  // ------------------------------------------------------------------------
 
   const scoreLabel =
     document.createElement("p");
@@ -977,57 +2047,98 @@ function renderHealthReviewLayer(
   scoreLabel.textContent =
     "Maturity score";
 
+
   const scoreSelector =
     createScoreSelector({
-      value: pillar.maturityScore,
 
-      onChange: (score) => {
-        const previousScore =
-          pillar.maturityScore;
+      value:
+        pillar.maturityScore,
 
-        function commit(reason) {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              p.maturityScore = score;
+      onChange:
+        (score) => {
 
-              p.scoreHistory.push({
-                score,
-                setAt:
-                  new Date().toISOString(),
-                reason:
-                  reason ||
-                  (previousScore == null
-                    ? "Initial score"
-                    : ""),
-              });
-            }
+          const previousScore =
+            pillar.maturityScore;
+
+
+          function commit(
+            reason
+          ) {
+
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
+
+                p.maturityScore =
+                  score;
+
+
+                p.scoreHistory.push({
+
+                  score,
+
+                  setAt:
+                    new Date().toISOString(),
+
+                  reason:
+                    reason ||
+                    (
+                      previousScore ==
+                      null
+                        ? "Initial score"
+                        : ""
+                    ),
+
+                });
+
+              }
+            );
+
+
+            refresh();
+          }
+
+
+          if (
+            previousScore != null &&
+            previousScore !== score
+          ) {
+
+            askReason({
+
+              title:
+                "Score revision",
+
+              message:
+                `Changing from ${previousScore} to ${score}. A short note helps if you revisit this later.`,
+
+              confirmLabel:
+                "Save score",
+
+              onConfirm:
+                commit,
+
+            });
+
+
+            return;
+          }
+
+
+          commit(
+            ""
           );
 
-          refresh();
-        }
+        },
 
-        if (
-          previousScore != null &&
-          previousScore !== score
-        ) {
-          askReason({
-            title: "Score revision",
-            message:
-              `Changing from ${previousScore} to ${score}. A short note helps if you revisit this later.`,
-            confirmLabel:
-              "Save score",
-            onConfirm: commit,
-          });
-
-          return;
-        }
-
-        commit("");
-      },
     });
+
+
+  // ------------------------------------------------------------------------
+  // Assessor confidence
+  // ------------------------------------------------------------------------
 
   const confidenceLabel =
     document.createElement("p");
@@ -1038,80 +2149,126 @@ function renderHealthReviewLayer(
   confidenceLabel.textContent =
     "Assessor confidence (internal only)";
 
+
   const confidenceRow =
     document.createElement("div");
 
   confidenceRow.className =
     "confidence-row";
 
+
   CONFIDENCE_LEVELS.forEach(
     (level) => {
+
       const selected =
         pillar.assessorConfidence?.level ===
         level;
 
+
       const btn =
         createButton({
-          label: level,
+
+          label:
+            level,
 
           variant:
             selected
               ? "primary"
               : "secondary",
 
-          onClick: () => {
-            const previous =
-              pillar.assessorConfidence?.level;
+          onClick:
+            () => {
 
-            function commit(reason) {
-              mutatePillar(
-                org.id,
-                review.id,
-                pillar.pillarKey,
-                (p) => {
-                  p.assessorConfidence = {
-                    level,
-                    reason:
-                      reason || "",
-                  };
-                }
+              const previous =
+                pillar.assessorConfidence?.level;
+
+
+              function commit(
+                reason
+              ) {
+
+                mutatePillar(
+                  org.id,
+                  review.id,
+                  pillar.pillarKey,
+                  (p) => {
+
+                    p.assessorConfidence = {
+
+                      level,
+
+                      reason:
+                        reason ||
+                        "",
+
+                    };
+
+                  }
+                );
+
+
+                refresh();
+
+              }
+
+
+              if (
+                previous &&
+                previous !== level
+              ) {
+
+                askReason({
+
+                  title:
+                    "Confidence change",
+
+                  message:
+                    `Changing from ${previous} to ${level}. Optional note for your own reference.`,
+
+                  confirmLabel:
+                    "Save",
+
+                  onConfirm:
+                    commit,
+
+                });
+
+
+                return;
+              }
+
+
+              commit(
+                pillar.assessorConfidence
+                  ?.reason ||
+                  ""
               );
 
-              refresh();
-            }
+            },
 
-            if (
-              previous &&
-              previous !== level
-            ) {
-              askReason({
-                title:
-                  "Confidence change",
-                message:
-                  `Changing from ${previous} to ${level}. Optional note for your own reference.`,
-                confirmLabel: "Save",
-                onConfirm: commit,
-              });
-
-              return;
-            }
-
-            commit(
-              pillar.assessorConfidence
-                ?.reason || ""
-            );
-          },
         });
 
+
       if (selected) {
+
         btn.classList.add(
           "confidence-row__selected"
         );
+
       }
 
-      confidenceRow.append(btn);
+
+      confidenceRow.append(
+        btn
+      );
+
     }
   );
+
+
+  // ------------------------------------------------------------------------
+  // Your judgement heading
+  // ------------------------------------------------------------------------
 
   const pillarAssessmentHeading =
     document.createElement("h2");
@@ -1122,6 +2279,11 @@ function renderHealthReviewLayer(
   pillarAssessmentHeading.textContent =
     "Your judgement";
 
+
+  // ------------------------------------------------------------------------
+  // Authored questions
+  // ------------------------------------------------------------------------
+
   const authoredQuestions =
     (
       PILLAR_QUESTIONS[
@@ -1129,15 +2291,26 @@ function renderHealthReviewLayer(
       ] || []
     ).length > 0;
 
+
+  // ------------------------------------------------------------------------
+  // Orphan evidence
+  // ------------------------------------------------------------------------
+
   const orphanEvidence =
-    (pillar.evidence || []).filter(
-      (e) => !e.questionId
+    (
+      pillar.evidence ||
+      []
+    ).filter(
+      (e) =>
+        !e.questionId
     );
+
 
   if (
     authoredQuestions &&
     orphanEvidence.length > 0
   ) {
+
     const orphanLabel =
       document.createElement("p");
 
@@ -1146,6 +2319,7 @@ function renderHealthReviewLayer(
 
     orphanLabel.textContent =
       "Earlier evidence (not linked to a question)";
+
 
     const orphanHint =
       document.createElement("p");
@@ -1156,53 +2330,78 @@ function renderHealthReviewLayer(
     orphanHint.textContent =
       "Captured before evidence was recorded against each question. Still counts toward this pillar.";
 
+
     const orphanEditor =
       createEvidenceListEditor({
+
         sourceTypes:
           EVIDENCE_SOURCE_TYPES,
 
         items:
           orphanEvidence,
 
-        onChange: (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              const linked =
-                (p.evidence || []).filter(
-                  (e) => e.questionId
-                );
+        onChange:
+          (items) => {
 
-              p.evidence =
-                linked.concat(
-                  items.map(
-                    (entry) => {
-                      const {
-                        questionId,
-                        ...rest
-                      } = entry;
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
 
-                      return rest;
-                    }
-                  )
-                );
-            }
-          );
+                const linked =
+                  (
+                    p.evidence ||
+                    []
+                  ).filter(
+                    (e) =>
+                      e.questionId
+                  );
 
-          refresh();
-        },
+
+                p.evidence =
+                  linked.concat(
+                    items.map(
+                      (entry) => {
+
+                        const {
+                          questionId,
+                          ...rest
+                        } = entry;
+
+
+                        return rest;
+
+                      }
+                    )
+                  );
+
+              }
+            );
+
+
+            refresh();
+
+          },
+
       });
+
 
     container.append(
       orphanLabel,
       orphanHint,
       orphanEditor
     );
+
   }
 
+
+  // ------------------------------------------------------------------------
+  // Evidence for pillars without authored questions
+  // ------------------------------------------------------------------------
+
   if (!authoredQuestions) {
+
     const evidenceLabel =
       document.createElement("p");
 
@@ -1211,6 +2410,7 @@ function renderHealthReviewLayer(
 
     evidenceLabel.textContent =
       "Evidence";
+
 
     const evidenceHint =
       document.createElement("p");
@@ -1221,65 +2421,63 @@ function renderHealthReviewLayer(
     evidenceHint.textContent =
       "No assessment questions for this pillar yet. Capture at least one evidence item here before marking complete.";
 
+
     const evidenceEditor =
       createEvidenceListEditor({
+
         sourceTypes:
           EVIDENCE_SOURCE_TYPES,
 
         items:
-          pillar.evidence || [],
+          pillar.evidence ||
+          [],
 
-        onChange: (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              p.evidence = items;
-            }
-          );
+        onChange:
+          (items) => {
 
-          refresh();
-        },
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
+
+                p.evidence =
+                  items;
+
+              }
+            );
+
+
+            refresh();
+
+          },
+
       });
+
 
     container.append(
       evidenceLabel,
       evidenceHint,
       evidenceEditor
     );
+
   }
 
-  const findingsSnapshot =
-    renderFindingsSnapshot(
-      pillar
-    );
+
+  // ------------------------------------------------------------------------
+  // Final health review order
+  // ------------------------------------------------------------------------
 
   container.append(
+
     pillarAssessmentHeading,
-    findingsSnapshot,
 
-    strengthsLabel,
-    strengthsEditor,
-
-    oppsLabel,
-    oppsHint,
-    oppsEditor,
-
-    createGuidancePanel(
-      guidance.opportunities
-    ),
-
-    profObs.element,
-    profObsHint,
-
-    createGuidancePanel(
-      guidance.professionalObservation
-    ),
+    judgementTabs,
 
     internalNotes.element,
 
     scoreLabel,
+
     scoreSelector,
 
     createGuidancePanel(
@@ -1287,13 +2485,20 @@ function renderHealthReviewLayer(
     ),
 
     confidenceLabel,
+
     confidenceRow,
 
     createGuidancePanel(
       guidance.assessorConfidence
     )
+
   );
 }
+
+
+// ==========================================================================
+// DIAGNOSTIC LAYER
+// ==========================================================================
 
 function renderDiagnosticLayer(
   container,
@@ -1310,6 +2515,7 @@ function renderDiagnosticLayer(
   divider.className =
     "section-divider";
 
+
   const heading =
     document.createElement("h2");
 
@@ -1319,86 +2525,126 @@ function renderDiagnosticLayer(
   heading.textContent =
     "Operational Diagnostic";
 
+
   const rootCause =
     createTextField({
-      id: "rootCauseAnalysis",
+
+      id:
+        "rootCauseAnalysis",
+
       label:
         "Root cause analysis",
-      textarea: true,
+
+      textarea:
+        true,
+
     });
+
 
   rootCause.input.value =
     cycleEntry.rootCauseAnalysis;
 
+
   rootCause.input.addEventListener(
     "blur",
     () => {
+
       mutateCyclePillar(
         org.id,
         review.id,
         cycleId,
         pillarKey,
         (e) => {
+
           e.rootCauseAnalysis =
             rootCause.input.value;
+
         }
       );
+
     }
   );
 
+
   const risk =
     createTextField({
-      id: "operationalRisk",
+
+      id:
+        "operationalRisk",
+
       label:
         "Operational risk",
-      textarea: true,
+
+      textarea:
+        true,
+
     });
+
 
   risk.input.value =
     cycleEntry.operationalRisk;
 
+
   risk.input.addEventListener(
     "blur",
     () => {
+
       mutateCyclePillar(
         org.id,
         review.id,
         cycleId,
         pillarKey,
         (e) => {
+
           e.operationalRisk =
             risk.input.value;
+
         }
       );
+
     }
   );
 
+
   const cost =
     createTextField({
-      id: "costOfInaction",
+
+      id:
+        "costOfInaction",
+
       label:
         "Cost of inaction",
-      textarea: true,
+
+      textarea:
+        true,
+
     });
+
 
   cost.input.value =
     cycleEntry.costOfInaction;
 
+
   cost.input.addEventListener(
     "blur",
     () => {
+
       mutateCyclePillar(
         org.id,
         review.id,
         cycleId,
         pillarKey,
         (e) => {
+
           e.costOfInaction =
             cost.input.value;
+
         }
       );
+
     }
   );
+
 
   const recLabel =
     document.createElement("p");
@@ -1409,43 +2655,56 @@ function renderDiagnosticLayer(
   recLabel.textContent =
     "Recommendations (client-visible, paid tier)";
 
+
   const recEditor =
     createTextListEditor({
+
       placeholder:
         "What should change?",
 
       items:
         cycleEntry.recommendations.map(
-          (r) => r.text
+          (r) =>
+            r.text
         ),
 
-      onChange: (texts) => {
-        mutateCyclePillar(
-          org.id,
-          review.id,
-          cycleId,
-          pillarKey,
-          (e) => {
-            e.recommendations =
-              texts.map(
-                (text, i) => ({
-                  id:
-                    e.recommendations[
-                      i
-                    ]?.id ||
-                    `rec_${Date.now().toString(
-                      36
-                    )}_${i}`,
+      onChange:
+        (texts) => {
 
-                  text,
+          mutateCyclePillar(
+            org.id,
+            review.id,
+            cycleId,
+            pillarKey,
+            (e) => {
 
-                  businessImpact: [],
-                })
-              );
-          }
-        );
-      },
+              e.recommendations =
+                texts.map(
+                  (text, i) => ({
+
+                    id:
+                      e.recommendations[
+                        i
+                      ]?.id ||
+                      `rec_${Date.now().toString(
+                        36
+                      )}_${i}`,
+
+                    text,
+
+                    businessImpact:
+                      [],
+
+                  })
+                );
+
+            }
+          );
+
+        },
+
     });
+
 
   const planLabel =
     document.createElement("p");
@@ -1456,77 +2715,108 @@ function renderDiagnosticLayer(
   planLabel.textContent =
     "Implementation plan (client-visible, paid tier)";
 
+
   const planEditor =
     createTextListEditor({
+
       placeholder:
         "e.g. Week 1: Develop briefing template",
 
       items:
         cycleEntry.implementationPlan.map(
-          (s) => s.step
+          (s) =>
+            s.step
         ),
 
-      onChange: (steps) => {
-        mutateCyclePillar(
-          org.id,
-          review.id,
-          cycleId,
-          pillarKey,
-          (e) => {
-            e.implementationPlan =
-              steps.map(
-                (step, i) => ({
-                  id:
-                    e.implementationPlan[
-                      i
-                    ]?.id ||
-                    `plan_${Date.now().toString(
-                      36
-                    )}_${i}`,
+      onChange:
+        (steps) => {
 
-                  step,
+          mutateCyclePillar(
+            org.id,
+            review.id,
+            cycleId,
+            pillarKey,
+            (e) => {
 
-                  timeframe:
-                    e.implementationPlan[
-                      i
-                    ]?.timeframe ||
-                    "",
-                })
-              );
-          }
-        );
-      },
+              e.implementationPlan =
+                steps.map(
+                  (step, i) => ({
+
+                    id:
+                      e.implementationPlan[
+                        i
+                      ]?.id ||
+                      `plan_${Date.now().toString(
+                        36
+                      )}_${i}`,
+
+                    step,
+
+                    timeframe:
+                      e.implementationPlan[
+                        i
+                      ]?.timeframe ||
+                      "",
+
+                  })
+                );
+
+            }
+          );
+
+        },
+
     });
 
+
   container.append(
+
     divider,
+
     heading,
+
     rootCause.element,
+
     risk.element,
+
     cost.element,
+
     recLabel,
+
     recEditor,
+
     planLabel,
+
     planEditor
+
   );
 }
+
+
+// ==========================================================================
+// MAIN PILLAR ASSESSMENT VIEW
+// ==========================================================================
 
 export function renderPillarAssessment(
   container,
   params
 ) {
-  const state = getState();
+  const state =
+    getState();
+
 
   const {
     org,
     review,
     pillar,
-  } = findPillar(
-    state,
-    params.organisationId,
-    params.reviewId,
-    params.pillarKey
-  );
+  } =
+    findPillar(
+      state,
+      params.organisationId,
+      params.reviewId,
+      params.pillarKey
+    );
+
 
   const screen =
     document.createElement("div");
@@ -1534,11 +2824,17 @@ export function renderPillarAssessment(
   screen.className =
     "screen stack";
 
+
+  // ------------------------------------------------------------------------
+  // Not found
+  // ------------------------------------------------------------------------
+
   if (
     !org ||
     !review ||
     !pillar
   ) {
+
     const notFound =
       document.createElement("p");
 
@@ -1548,14 +2844,28 @@ export function renderPillarAssessment(
     notFound.textContent =
       "Pillar assessment not found.";
 
-    screen.append(notFound);
-    container.append(screen);
+
+    screen.append(
+      notFound
+    );
+
+    container.append(
+      screen
+    );
 
     return;
   }
 
+
+  // ------------------------------------------------------------------------
+  // Diagnostic mode
+  // ------------------------------------------------------------------------
+
   const isDiagnosticMode =
-    Boolean(params.cycleId);
+    Boolean(
+      params.cycleId
+    );
+
 
   const cycle =
     isDiagnosticMode
@@ -1565,10 +2875,12 @@ export function renderPillarAssessment(
         )
       : null;
 
+
   if (
     isDiagnosticMode &&
     !cycle
   ) {
+
     const notFound =
       document.createElement("p");
 
@@ -1578,11 +2890,18 @@ export function renderPillarAssessment(
     notFound.textContent =
       "Diagnostic cycle not found.";
 
-    screen.append(notFound);
-    container.append(screen);
+
+    screen.append(
+      notFound
+    );
+
+    container.append(
+      screen
+    );
 
     return;
   }
+
 
   const cycleEntry =
     isDiagnosticMode
@@ -1591,10 +2910,12 @@ export function renderPillarAssessment(
         ]
       : null;
 
+
   if (
     isDiagnosticMode &&
     !cycleEntry
   ) {
+
     const notFound =
       document.createElement("p");
 
@@ -1604,11 +2925,22 @@ export function renderPillarAssessment(
     notFound.textContent =
       "This pillar is not selected for this Diagnostic cycle.";
 
-    screen.append(notFound);
-    container.append(screen);
+
+    screen.append(
+      notFound
+    );
+
+    container.append(
+      screen
+    );
 
     return;
   }
+
+
+  // ------------------------------------------------------------------------
+  // Pillar heading
+  // ------------------------------------------------------------------------
 
   const pillarMeta =
     PILLARS.find(
@@ -1616,6 +2948,7 @@ export function renderPillarAssessment(
         p.key ===
         pillar.pillarKey
     );
+
 
   const heading =
     document.createElement("h1");
@@ -1626,18 +2959,28 @@ export function renderPillarAssessment(
   heading.textContent =
     pillarMeta.name;
 
+
   screen.append(
+
     heading,
+
     renderSummaryStrip(
       pillar,
       isDiagnosticMode,
       cycle
     )
+
   );
+
+
+  // ------------------------------------------------------------------------
+  // Diagnostic lock
+  // ------------------------------------------------------------------------
 
   const diagnosticLocked =
     isDiagnosticMode &&
     cycle.locked;
+
 
   const form =
     document.createElement("div");
@@ -1645,16 +2988,32 @@ export function renderPillarAssessment(
   form.className =
     "stack";
 
+
+  // ------------------------------------------------------------------------
+  // Refresh
+  // ------------------------------------------------------------------------
+
   function refresh() {
-    container.innerHTML = "";
+
+    container.innerHTML =
+      "";
+
     renderPillarAssessment(
       container,
       params
     );
+
   }
 
+
+  // ------------------------------------------------------------------------
+  // Render appropriate layer
+  // ------------------------------------------------------------------------
+
   if (isDiagnosticMode) {
+
     if (diagnosticLocked) {
+
       const lockedNotice =
         document.createElement("p");
 
@@ -1664,10 +3023,13 @@ export function renderPillarAssessment(
       lockedNotice.textContent =
         `Diagnostic Cycle ${cycle.cycleNumber} is complete and locked. This cycle's findings are a permanent historical record.`;
 
+
       form.append(
         lockedNotice
       );
+
     } else {
+
       renderDiagnosticLayer(
         form,
         pillar.pillarKey,
@@ -1677,8 +3039,11 @@ export function renderPillarAssessment(
         cycle.id,
         refresh
       );
+
     }
+
   } else {
+
     renderHealthReviewLayer(
       form,
       pillar,
@@ -1686,44 +3051,68 @@ export function renderPillarAssessment(
       org,
       refresh
     );
+
   }
 
-  screen.append(form);
+
+  screen.append(
+    form
+  );
+
+
+  // ------------------------------------------------------------------------
+  // Automatically move status to in-progress
+  // ------------------------------------------------------------------------
 
   if (
     isDiagnosticMode &&
     !diagnosticLocked
   ) {
+
     if (
       cycleEntry.status ===
       "selected-not-started"
     ) {
+
       mutateCyclePillar(
         org.id,
         review.id,
         cycle.id,
         pillar.pillarKey,
         (e) => {
+
           e.status =
             "in-progress";
+
         }
       );
+
     }
+
   } else if (
     !isDiagnosticMode &&
     pillar.healthReviewStatus ===
       "not-started"
   ) {
+
     mutatePillar(
       org.id,
       review.id,
       pillar.pillarKey,
       (p) => {
+
         p.healthReviewStatus =
           "in-progress";
+
       }
     );
+
   }
+
+
+  // ------------------------------------------------------------------------
+  // Screen actions
+  // ------------------------------------------------------------------------
 
   const actions =
     document.createElement("div");
@@ -1731,98 +3120,150 @@ export function renderPillarAssessment(
   actions.className =
     "screen-actions stack-tight";
 
+
   if (!diagnosticLocked) {
+
     if (isDiagnosticMode) {
+
       const currentStatus =
         cycleEntry.status;
 
+
       const completeBtn =
         createButton({
+
           label:
             currentStatus ===
             "complete"
+
               ? "Marked complete"
+
               : "Mark pillar complete",
 
-          variant: "primary",
+          variant:
+            "primary",
 
-          onClick: () => {
-            mutateCyclePillar(
-              org.id,
-              review.id,
-              cycle.id,
-              pillar.pillarKey,
-              (e) => {
-                e.status =
-                  "complete";
-              }
-            );
+          onClick:
+            () => {
 
-            back();
-          },
+              mutateCyclePillar(
+                org.id,
+                review.id,
+                cycle.id,
+                pillar.pillarKey,
+                (e) => {
+
+                  e.status =
+                    "complete";
+
+                }
+              );
+
+
+              back();
+
+            },
+
         });
+
 
       actions.append(
         completeBtn
       );
+
     } else {
+
       const currentStatus =
         pillar.healthReviewStatus;
+
 
       const canComplete =
         pillar.evidence.length > 0 &&
         pillar.maturityScore !=
           null;
 
+
       const completeBtn =
         createButton({
+
           label:
             currentStatus ===
             "complete"
+
               ? "Marked complete"
+
               : "Mark pillar complete",
 
-          variant: "primary",
+          variant:
+            "primary",
 
-          onClick: () => {
-            if (!canComplete) {
-              window.alert(
-                "Add at least one piece of evidence on this pillar (under any question) and a maturity score before marking complete."
+          onClick:
+            () => {
+
+              if (!canComplete) {
+
+                window.alert(
+                  "Add at least one piece of evidence on this pillar (under any question) and a maturity score before marking complete."
+                );
+
+                return;
+              }
+
+
+              mutatePillar(
+                org.id,
+                review.id,
+                pillar.pillarKey,
+                (p) => {
+
+                  p.healthReviewStatus =
+                    "complete";
+
+                }
               );
 
-              return;
-            }
 
-            mutatePillar(
-              org.id,
-              review.id,
-              pillar.pillarKey,
-              (p) => {
-                p.healthReviewStatus =
-                  "complete";
-              }
-            );
+              back();
 
-            back();
-          },
+            },
+
         });
+
 
       actions.append(
         completeBtn
       );
+
     }
+
   }
 
+
   actions.append(
+
     createButton({
-      label: "Back",
-      variant: "secondary",
-      onClick: () =>
-        back(),
+
+      label:
+        "Back",
+
+      variant:
+        "secondary",
+
+      onClick:
+        () =>
+          back(),
+
     })
+
   );
 
-  screen.append(actions);
 
-  container.append(screen);
+  screen.append(
+    actions
+  );
+
+
+  container.append(
+    screen
+  );
 }
