@@ -1,16 +1,18 @@
 // ==========================================================================
 // Keystone Field Kit -- Pillar Assessment View
 //
-// Screen 6 of the locked Screen Map (Part 2 v1.0). Governed by Assessment
-// Engine v1.0 plus the Diagnostic Cycles architectural clarification.
+// Screen 6 of the locked Screen Map (Part 2 v1.0).
 //
-// Health Review layer (params.pillarKey only) is the permanent baseline --
-// always editable, never touched by Diagnostic activity.
+// UX PRINCIPLE
+// --------------------------------------------------------------------------
+// Investigation captures the facts.
+// Your judgement interprets those facts.
 //
-// Diagnostic layer (params.pillarKey + params.cycleId) operates on that
-// specific cycle's entry for this pillar -- separate storage per cycle, so
-// investigating a pillar in one cycle never overwrites another cycle's
-// findings on the same or a different pillar.
+// The "From this pillar" briefing is contextual. It appears immediately
+// above the judgement field currently being worked on.
+//
+// It is deliberately NOT a copy/paste system.
+// The assessor must make their own professional judgement.
 // ==========================================================================
 
 import { getState, updateState } from "../state/store.js";
@@ -39,6 +41,9 @@ import { createGuidancePanel } from "../components/guidancePanel.js";
 import { createQuestionGuidance } from "../components/questionGuidance.js";
 import { back } from "../router.js";
 
+// ==========================================================================
+// DATA HELPERS
+// ==========================================================================
 
 function findPillar(
   state,
@@ -65,7 +70,6 @@ function findPillar(
   };
 }
 
-
 function findCycle(review, cycleId) {
   return (
     review?.diagnosticCycles.find(
@@ -73,7 +77,6 @@ function findCycle(review, cycleId) {
     ) || null
   );
 }
-
 
 function mutatePillar(
   organisationId,
@@ -102,7 +105,6 @@ function mutatePillar(
     return state;
   });
 }
-
 
 function mutateCyclePillar(
   organisationId,
@@ -141,10 +143,10 @@ function mutateCyclePillar(
   });
 }
 
+// ==========================================================================
+// REASON SHEET
+// ==========================================================================
 
-/**
- * In-page reason sheet.
- */
 function askReason({
   title,
   message,
@@ -162,9 +164,7 @@ function askReason({
   }
 
   const overlay =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   overlay.className =
     "reason-sheet";
@@ -180,17 +180,13 @@ function askReason({
   );
 
   const panel =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   panel.className =
     "reason-sheet__panel";
 
   const heading =
-    document.createElement(
-      "p"
-    );
+    document.createElement("p");
 
   heading.className =
     "reason-sheet__title";
@@ -199,9 +195,7 @@ function askReason({
     title;
 
   const body =
-    document.createElement(
-      "p"
-    );
+    document.createElement("p");
 
   body.className =
     "reason-sheet__message";
@@ -210,9 +204,7 @@ function askReason({
     message;
 
   const input =
-    document.createElement(
-      "textarea"
-    );
+    document.createElement("textarea");
 
   input.className =
     "field__input reason-sheet__input";
@@ -223,21 +215,15 @@ function askReason({
     "Optional note";
 
   const row =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   row.className =
     "reason-sheet__actions";
 
   const cancelBtn =
-    document.createElement(
-      "button"
-    );
+    document.createElement("button");
 
-  cancelBtn.type =
-    "button";
-
+  cancelBtn.type = "button";
   cancelBtn.className =
     "btn btn-secondary";
 
@@ -256,19 +242,14 @@ function askReason({
   );
 
   const okBtn =
-    document.createElement(
-      "button"
-    );
+    document.createElement("button");
 
-  okBtn.type =
-    "button";
-
+  okBtn.type = "button";
   okBtn.className =
     "btn btn-primary";
 
   okBtn.textContent =
-    confirmLabel ||
-    "Save";
+    confirmLabel || "Save";
 
   okBtn.addEventListener(
     "click",
@@ -294,9 +275,7 @@ function askReason({
     row
   );
 
-  overlay.append(
-    panel
-  );
+  overlay.append(panel);
 
   document.body.append(
     overlay
@@ -305,10 +284,9 @@ function askReason({
   input.focus();
 }
 
-
-/* ==========================================================================
-   Summary strip
-   ========================================================================== */
+// ==========================================================================
+// SUMMARY STRIP
+// ==========================================================================
 
 function renderSummaryStrip(
   pillar,
@@ -316,17 +294,13 @@ function renderSummaryStrip(
   cycle
 ) {
   const wrap =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   wrap.className =
     "stack-tight";
 
   const strip =
-    document.createElement(
-      "div"
-    );
+    document.createElement("div");
 
   strip.className =
     "summary-strip";
@@ -427,7 +401,8 @@ function renderSummaryStrip(
 
     const hasConfidence =
       Boolean(
-        pillar.assessorConfidence?.level
+        pillar.assessorConfidence
+          ?.level
       );
 
     if (
@@ -472,10 +447,9 @@ function renderSummaryStrip(
   return wrap;
 }
 
-
-/* ==========================================================================
-   Methodology questions
-   ========================================================================== */
+// ==========================================================================
+// METHODOLOGY QUESTIONS
+// ==========================================================================
 
 function renderMethodologyQuestions(
   container,
@@ -602,8 +576,7 @@ function renderMethodologyQuestions(
       };
 
       const ph =
-        PLACEHOLDERS[q.id] ||
-        {
+        PLACEHOLDERS[q.id] || {
           observed:
             "Short factual notes on what you saw. A sentence or two is enough.",
 
@@ -631,21 +604,15 @@ function renderMethodologyQuestions(
               p.questionResponses[
                 q.id
               ] || {
-                observed:
-                  "",
-                learned:
-                  "",
-                response:
-                  "",
-                evidenceNotes:
-                  "",
-                capturedAt:
-                  null,
+                observed: "",
+                learned: "",
+                response: "",
+                evidenceNotes: "",
+                capturedAt: null,
               };
 
             const next = {
               ...current,
-
               [fieldName]:
                 value,
 
@@ -684,9 +651,7 @@ function renderMethodologyQuestions(
         questionText
       );
 
-      if (
-        observeFirst
-      ) {
+      if (observeFirst) {
         const observeLabel =
           document.createElement(
             "p"
@@ -847,9 +812,7 @@ function renderMethodologyQuestions(
           ".field__label"
         );
 
-      if (
-        learnedLab
-      ) {
+      if (learnedLab) {
         learnedLab.style.display =
           "none";
       }
@@ -917,14 +880,12 @@ function renderMethodologyQuestions(
         "Optional. Add only what supports this question. Source required.";
 
       const questionEvidence =
-        (
-          pillar.evidence ||
-          []
-        ).filter(
-          (e) =>
-            e.questionId ===
-            q.id
-        );
+        (pillar.evidence || [])
+          .filter(
+            (e) =>
+              e.questionId ===
+              q.id
+          );
 
       const evidenceEditor =
         createEvidenceListEditor({
@@ -942,14 +903,12 @@ function renderMethodologyQuestions(
                 pillar.pillarKey,
                 (p) => {
                   const others =
-                    (
-                      p.evidence ||
-                      []
-                    ).filter(
-                      (e) =>
-                        e.questionId !==
-                        q.id
-                    );
+                    (p.evidence || [])
+                      .filter(
+                        (e) =>
+                          e.questionId !==
+                          q.id
+                      );
 
                   const tagged =
                     items.map(
@@ -982,9 +941,7 @@ function renderMethodologyQuestions(
       );
 
       questionWrap.append(
-        createQuestionGuidance(
-          q
-        )
+        createQuestionGuidance(q)
       );
 
       container.append(
@@ -1006,13 +963,21 @@ function renderMethodologyQuestions(
   );
 }
 
+// ==========================================================================
+// FROM THIS PILLAR
+// ==========================================================================
+//
+// This is deliberately contextual.
+//
+// It shows the investigation information immediately above the judgement
+// field currently being worked on.
+//
+// It does NOT provide copy/paste controls.
+// ==========================================================================
 
-/* ==========================================================================
-   Findings snapshot
-   ========================================================================== */
-
-function renderFindingsSnapshot(
-  pillar
+function createFromPillarPanel(
+  pillar,
+  mode
 ) {
   const wrap =
     document.createElement(
@@ -1020,15 +985,15 @@ function renderFindingsSnapshot(
     );
 
   wrap.className =
-    "findings-snapshot";
-
+    "from-pillar";
+    
   const title =
     document.createElement(
       "p"
     );
 
   title.className =
-    "findings-snapshot__title";
+    "from-pillar__title";
 
   title.textContent =
     "From this pillar";
@@ -1039,10 +1004,22 @@ function renderFindingsSnapshot(
     );
 
   subtitle.className =
-    "text-caption findings-snapshot__subtitle";
+    "text-caption from-pillar__subtitle";
 
-  subtitle.textContent =
-    "Your investigation notes and evidence. Use these when writing strengths, opportunities and the professional observation. Not shown to the client as written here.";
+  if (
+    mode === "strengths"
+  ) {
+    subtitle.textContent =
+      "Investigation information to consider when identifying what is working well.";
+  } else if (
+    mode === "opportunities"
+  ) {
+    subtitle.textContent =
+      "Investigation information to consider when identifying gaps or inconsistencies.";
+  } else {
+    subtitle.textContent =
+      "The key information from this pillar to consider when forming your professional observation.";
+  }
 
   wrap.append(
     title,
@@ -1059,27 +1036,26 @@ function renderFindingsSnapshot(
     {};
 
   const evidence =
-    pillar.evidence ||
-    [];
+    pillar.evidence || [];
 
   let any = false;
 
   questions.forEach(
     (q, index) => {
-      const r =
+      const response =
         responses[q.id] ||
         {};
 
       const observed =
         (
-          r.observed ||
+          response.observed ||
           ""
         ).trim();
 
       const learned =
         (
-          r.learned ||
-          r.response ||
+          response.learned ||
+          response.response ||
           ""
         ).trim();
 
@@ -1107,7 +1083,7 @@ function renderFindingsSnapshot(
         );
 
       block.className =
-        "findings-snapshot__question";
+        "from-pillar__question";
 
       const qTitle =
         document.createElement(
@@ -1115,52 +1091,49 @@ function renderFindingsSnapshot(
         );
 
       qTitle.className =
-        "findings-snapshot__q-title";
-
-      const shortQ =
-        q.question.length >
-        90
-          ? q.question.slice(
-              0,
-              87
-            ) + "..."
-          : q.question;
+        "from-pillar__question-title";
 
       qTitle.textContent =
-        `Q${index + 1}. ${shortQ}`;
+        `Q${index + 1}`;
 
       block.append(
         qTitle
       );
 
-      if (
-        observed
-      ) {
+      if (observed) {
         const row =
           document.createElement(
-            "p"
+            "div"
           );
 
         row.className =
-          "findings-snapshot__row";
+          "from-pillar__row";
 
-        const tag =
+        const label =
           document.createElement(
             "span"
           );
 
-        tag.className =
-          "findings-snapshot__tag";
+        label.className =
+          "from-pillar__label";
 
-        tag.textContent =
+        label.textContent =
           "Observed";
 
+        const text =
+          document.createElement(
+            "span"
+          );
+
+        text.className =
+          "from-pillar__text";
+
+        text.textContent =
+          observed;
+
         row.append(
-          tag,
-          document.createTextNode(
-            " " +
-              observed
-          )
+          label,
+          text
         );
 
         block.append(
@@ -1168,34 +1141,40 @@ function renderFindingsSnapshot(
         );
       }
 
-      if (
-        learned
-      ) {
+      if (learned) {
         const row =
           document.createElement(
-            "p"
+            "div"
           );
 
         row.className =
-          "findings-snapshot__row";
+          "from-pillar__row";
 
-        const tag =
+        const label =
           document.createElement(
             "span"
           );
 
-        tag.className =
-          "findings-snapshot__tag";
+        label.className =
+          "from-pillar__label";
 
-        tag.textContent =
+        label.textContent =
           "Learned";
 
+        const text =
+          document.createElement(
+            "span"
+          );
+
+        text.className =
+          "from-pillar__text";
+
+        text.textContent =
+          learned;
+
         row.append(
-          tag,
-          document.createTextNode(
-            " " +
-              learned
-          )
+          label,
+          text
         );
 
         block.append(
@@ -1205,33 +1184,50 @@ function renderFindingsSnapshot(
 
       qEvidence.forEach(
         (e) => {
+          const content =
+            (
+              e.content ||
+              ""
+            ).trim();
+
+          if (!content) {
+            return;
+          }
+
           const row =
             document.createElement(
-              "p"
+              "div"
             );
 
           row.className =
-            "findings-snapshot__row";
+            "from-pillar__row";
 
-          const tag =
+          const label =
             document.createElement(
               "span"
             );
 
-          tag.className =
-            "findings-snapshot__tag";
+          label.className =
+            "from-pillar__label";
 
-          tag.textContent =
+          label.textContent =
             e.sourceType ||
             "Evidence";
 
+          const text =
+            document.createElement(
+              "span"
+            );
+
+          text.className =
+            "from-pillar__text";
+
+          text.textContent =
+            content;
+
           row.append(
-            tag,
-            document.createTextNode(
-              " " +
-                (e.content ||
-                  "")
-            )
+            label,
+            text
           );
 
           block.append(
@@ -1246,14 +1242,14 @@ function renderFindingsSnapshot(
     }
   );
 
-  const otherEv =
+  const otherEvidence =
     evidence.filter(
-      (e) =>
-        !e.questionId
+      (e) => !e.questionId
     );
 
   if (
-    otherEv.length > 0
+    otherEvidence.length >
+    0
   ) {
     any = true;
 
@@ -1263,7 +1259,7 @@ function renderFindingsSnapshot(
       );
 
     block.className =
-      "findings-snapshot__question";
+      "from-pillar__question";
 
     const qTitle =
       document.createElement(
@@ -1271,46 +1267,61 @@ function renderFindingsSnapshot(
       );
 
     qTitle.className =
-      "findings-snapshot__q-title";
+      "from-pillar__question-title";
 
     qTitle.textContent =
-      questions.length
-        ? "Other evidence"
-        : "Evidence";
+      "Other evidence";
 
     block.append(
       qTitle
     );
 
-    otherEv.forEach(
+    otherEvidence.forEach(
       (e) => {
+        const content =
+          (
+            e.content ||
+            ""
+          ).trim();
+
+        if (!content) {
+          return;
+        }
+
         const row =
           document.createElement(
-            "p"
+            "div"
           );
 
         row.className =
-          "findings-snapshot__row";
+          "from-pillar__row";
 
-        const tag =
+        const label =
           document.createElement(
             "span"
           );
 
-        tag.className =
-          "findings-snapshot__tag";
+        label.className =
+          "from-pillar__label";
 
-        tag.textContent =
+        label.textContent =
           e.sourceType ||
           "Evidence";
 
+        const text =
+          document.createElement(
+            "span"
+          );
+
+        text.className =
+          "from-pillar__text";
+
+        text.textContent =
+          content;
+
         row.append(
-          tag,
-          document.createTextNode(
-            " " +
-              (e.content ||
-                "")
-          )
+          label,
+          text
         );
 
         block.append(
@@ -1331,10 +1342,10 @@ function renderFindingsSnapshot(
       );
 
     empty.className =
-      "text-caption findings-snapshot__empty";
+      "text-caption from-pillar__empty";
 
     empty.textContent =
-      "No investigation notes or evidence on this pillar yet.";
+      "No investigation information has been captured on this pillar yet.";
 
     wrap.append(
       empty
@@ -1344,117 +1355,94 @@ function renderFindingsSnapshot(
   return wrap;
 }
 
+// ==========================================================================
+// CONTEXTUAL JUDGEMENT FIELD
+// ==========================================================================
 
-/* ==========================================================================
-   NEW: Interactive "From this pillar" controller
-   ========================================================================== */
-
-function createFindingsController(
-  pillar
-) {
-  const panel =
-    renderFindingsSnapshot(
-      pillar
+function createJudgementSection({
+  pillar,
+  mode,
+  label,
+  hint,
+  placeholder,
+  value,
+  onSave,
+}) {
+  const section =
+    document.createElement(
+      "div"
     );
 
-  let activeTarget =
-    null;
+  section.className =
+    "judgement-section";
 
-  function activate(
-    targetElement
-  ) {
-    if (
-      !targetElement
-    ) {
-      return;
-    }
-
-    activeTarget =
-      targetElement;
-
-    /*
-     * Move the SAME panel directly before
-     * whichever field the assessor is currently
-     * working in.
-     */
-    targetElement.parentNode.insertBefore(
-      panel,
-      targetElement
+  const heading =
+    document.createElement(
+      "p"
     );
 
-    /*
-     * Small visual state only.
-     * No tabs or navigation controls.
-     */
-    document
-      .querySelectorAll(
-        ".pillar-judgement-field"
-      )
-      .forEach(
-        (field) => {
-          field.classList.remove(
-            "pillar-judgement-field--active"
-          );
-        }
+  heading.className =
+    "field__label judgement-section__label";
+
+  heading.textContent =
+    label;
+
+  section.append(
+    heading
+  );
+
+  // Context appears directly above the field.
+  const sourcePanel =
+    createFromPillarPanel(
+      pillar,
+      mode
+    );
+
+  section.append(
+    sourcePanel
+  );
+
+  if (hint) {
+    const hintElement =
+      document.createElement(
+        "p"
       );
 
-    targetElement.classList.add(
-      "pillar-judgement-field--active"
+    hintElement.className =
+      "text-caption judgement-section__hint";
+
+    hintElement.textContent =
+      hint;
+
+    section.append(
+      hintElement
     );
   }
 
-  function bind(
-    targetElement
-  ) {
-    if (
-      !targetElement
-    ) {
-      return;
-    }
+  const field =
+    createFreeTextAreaField({
+      placeholder,
+      items: value || [],
 
-    targetElement.classList.add(
-      "pillar-judgement-field"
-    );
+      onChange: (items) => {
+        onSave(items);
+      },
+    });
 
-    /*
-     * Focus is the main trigger.
-     * This means tapping directly into the
-     * actual input opens the relevant findings.
-     */
-    targetElement.addEventListener(
-      "focusin",
-      () => {
-        activate(
-          targetElement
-        );
-      }
-    );
+  field.classList.add(
+    "judgement-section__field"
+  );
 
-    /*
-     * Click is included as well so the behaviour
-     * works consistently on iPhone/iPad.
-     */
-    targetElement.addEventListener(
-      "click",
-      () => {
-        activate(
-          targetElement
-        );
-      }
-    );
-  }
+  section.append(
+    field
+  );
 
-  return {
-    panel,
-    bind,
-    activate,
-  };
+  return section;
 }
 
-
-/* ==========================================================================
-   Health Review Layer
-   ========================================================================== */
+// ==========================================================================
+// HEALTH REVIEW LAYER
+// ==========================================================================
 
 function renderHealthReviewLayer(
   container,
@@ -1468,6 +1456,10 @@ function renderHealthReviewLayer(
       pillar.pillarKey
     ];
 
+  // --------------------------------------------------------
+  // INVESTIGATION
+  // --------------------------------------------------------
+
   renderMethodologyQuestions(
     container,
     pillar,
@@ -1476,174 +1468,293 @@ function renderHealthReviewLayer(
     refresh
   );
 
-  /*
-   * One shared findings panel.
-   * It will move above whichever judgement
-   * field the assessor is currently using.
-   */
-  const findingsController =
-    createFindingsController(
-      pillar
-    );
+  // --------------------------------------------------------
+  // YOUR JUDGEMENT
+  // --------------------------------------------------------
 
-
-  /* ------------------------------------------------------------------------
-     Strengths
-     ------------------------------------------------------------------------ */
-
-  const strengthsWrap =
+  const pillarAssessmentHeading =
     document.createElement(
-      "div"
+      "h2"
     );
 
-  strengthsWrap.className =
-    "pillar-judgement-field-wrap";
+  pillarAssessmentHeading.className =
+    "text-heading-section";
 
-  const strengthsLabel =
-    document.createElement(
-      "p"
-    );
+  pillarAssessmentHeading.textContent =
+    "Your judgement";
 
-  strengthsLabel.className =
-    "field__label";
+  container.append(
+    pillarAssessmentHeading
+  );
 
-  strengthsLabel.textContent =
-    "Strengths";
+  // --------------------------------------------------------
+  // STRENGTHS
+  // --------------------------------------------------------
 
-  const strengthsEditor =
-    createFreeTextAreaField({
+  const strengthsSection =
+    createJudgementSection({
+      pillar,
+      mode: "strengths",
+
+      label:
+        "Strengths",
+
+      hint:
+        "What is working well? Write your professional judgement. One point per line.",
+
       placeholder:
-        "What is working well? One point per line.",
+        "What is working well?",
 
-      items:
+      value:
         pillar.strengths,
 
-      onChange:
-        (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              p.strengths =
-                items;
-            }
-          );
-        },
+      onSave: (items) => {
+        mutatePillar(
+          org.id,
+          review.id,
+          pillar.pillarKey,
+          (p) => {
+            p.strengths =
+              items;
+          }
+        );
+      },
     });
 
-  strengthsWrap.append(
-    strengthsLabel,
-    strengthsEditor
+  container.append(
+    strengthsSection
   );
 
-  /*
-   * Bind to the ACTUAL input/editor.
-   */
-  findingsController.bind(
-    strengthsEditor
-  );
+  // --------------------------------------------------------
+  // OPPORTUNITIES
+  // --------------------------------------------------------
 
+  const opportunitiesSection =
+    createJudgementSection({
+      pillar,
+      mode: "opportunities",
 
-  /* ------------------------------------------------------------------------
-     Opportunities
-     ------------------------------------------------------------------------ */
+      label:
+        "Opportunities",
 
-  const opportunitiesWrap =
-    document.createElement(
-      "div"
-    );
+      hint:
+        "Name the gap or inconsistency, not the fix. One point per line.",
 
-  opportunitiesWrap.className =
-    "pillar-judgement-field-wrap";
-
-  const oppsLabel =
-    document.createElement(
-      "p"
-    );
-
-  oppsLabel.className =
-    "field__label";
-
-  oppsLabel.textContent =
-    "Opportunities";
-
-  const oppsHint =
-    document.createElement(
-      "p"
-    );
-
-  oppsHint.className =
-    "text-caption";
-
-  oppsHint.textContent =
-    "Name the gap or inconsistency, not the fix. One point per line.";
-
-  const oppsEditor =
-    createFreeTextAreaField({
       placeholder:
         "Where could operational maturity improve?",
 
-      items:
+      value:
         pillar.opportunities,
 
-      onChange:
-        (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              p.opportunities =
-                items;
-            }
-          );
-        },
+      onSave: (items) => {
+        mutatePillar(
+          org.id,
+          review.id,
+          pillar.pillarKey,
+          (p) => {
+            p.opportunities =
+              items;
+          }
+        );
+      },
     });
 
-  opportunitiesWrap.append(
-    oppsLabel,
-    oppsHint,
-    oppsEditor
+  container.append(
+    opportunitiesSection
   );
 
-  findingsController.bind(
-    oppsEditor
+  const opportunitiesGuidance =
+    createGuidancePanel(
+      guidance.opportunities
+    );
+
+  container.append(
+    opportunitiesGuidance
   );
 
+  // --------------------------------------------------------
+  // PROFESSIONAL OBSERVATION
+  // --------------------------------------------------------
 
-  /* ------------------------------------------------------------------------
-     Professional observation
-     ------------------------------------------------------------------------ */
+  const professionalSection =
+    document.createElement(
+      "div"
+    );
+
+  professionalSection.className =
+    "judgement-section";
+    
+  const professionalLabel =
+    document.createElement(
+      "p"
+    );
+
+  professionalLabel.className =
+    "field__label judgement-section__label";
+
+  professionalLabel.textContent =
+    "Professional observation (client-visible)";
+
+  professionalSection.append(
+    professionalLabel
+  );
+
+  const professionalSource =
+    createFromPillarPanel(
+      pillar,
+      "professionalObservation"
+    );
+
+  // Add the assessor's own strengths/opportunities
+  // to the contextual information for the final synthesis.
+  const judgementSummary =
+    document.createElement(
+      "div"
+    );
+
+  judgementSummary.className =
+    "from-pillar__judgement-summary";
+
+  let hasJudgement =
+    false;
+
+  if (
+    pillar.strengths?.length
+  ) {
+    hasJudgement =
+      true;
+
+    const heading =
+      document.createElement(
+        "p"
+      );
+
+    heading.className =
+      "from-pillar__question-title";
+
+    heading.textContent =
+      "Your strengths";
+
+    judgementSummary.append(
+      heading
+    );
+
+    pillar.strengths.forEach(
+      (item) => {
+        const row =
+          document.createElement(
+            "p"
+          );
+
+        row.className =
+          "from-pillar__judgement-item";
+
+        row.textContent =
+          "• " + item;
+
+        judgementSummary.append(
+          row
+        );
+      }
+    );
+  }
+
+  if (
+    pillar.opportunities?.length
+  ) {
+    hasJudgement =
+      true;
+
+    const heading =
+      document.createElement(
+        "p"
+      );
+
+    heading.className =
+      "from-pillar__question-title";
+
+    heading.textContent =
+      "Your opportunities";
+
+    judgementSummary.append(
+      heading
+    );
+
+    pillar.opportunities.forEach(
+      (item) => {
+        const row =
+          document.createElement(
+            "p"
+          );
+
+        row.className =
+          "from-pillar__judgement-item";
+
+        row.textContent =
+          "• " + item;
+
+        judgementSummary.append(
+          row
+        );
+      }
+    );
+  }
+
+  if (hasJudgement) {
+    professionalSource.append(
+      judgementSummary
+    );
+  }
+
+  professionalSection.append(
+    professionalSource
+  );
+
+  const professionalHint =
+    document.createElement(
+      "p"
+    );
+
+  professionalHint.className =
+    "text-caption judgement-section__hint";
+
+  professionalHint.textContent =
+    "This appears in the client report. Bring the findings together into a clear, balanced professional observation.";
+
+  professionalSection.append(
+    professionalHint
+  );
 
   const profObs =
     createTextField({
       id:
         "professionalObservation",
 
-      label:
-        "Professional observation (client-visible)",
+      label: "",
 
-      textarea:
-        true,
+      textarea: true,
     });
 
   profObs.input.value =
-    pillar.professionalObservation;
+    pillar.professionalObservation ||
+    "";
 
   profObs.input.placeholder =
-    "Clear, balanced summary for the client. Factual and professional. No internal confidence. No full action plan.";
+    "Clear, balanced summary for the client. Factual and professional.";
 
-  const profObsHint =
-    document.createElement(
-      "p"
+  const profLabel =
+    profObs.element.querySelector(
+      ".field__label"
     );
 
-  profObsHint.className =
-    "text-caption";
+  if (profLabel) {
+    profLabel.style.display =
+      "none";
+  }
 
-  profObsHint.textContent =
-    "This appears in the client report. Write as you would to the business owner: tight, neutral, useful.";
+  profObs.element.classList.add(
+    "judgement-section__field"
+  );
 
   profObs.input.addEventListener(
     "blur",
@@ -1660,20 +1771,23 @@ function renderHealthReviewLayer(
     }
   );
 
-  /*
-   * IMPORTANT:
-   * Bind to profObs.element rather than the input.
-   * The element is the complete field and therefore
-   * the findings panel sits above the whole field.
-   */
-  findingsController.bind(
+  professionalSection.append(
     profObs.element
   );
 
+  container.append(
+    professionalSection
+  );
 
-  /* ------------------------------------------------------------------------
-     Internal assessor notes
-     ------------------------------------------------------------------------ */
+  container.append(
+    createGuidancePanel(
+      guidance.professionalObservation
+    )
+  );
+
+  // --------------------------------------------------------
+  // INTERNAL NOTES
+  // --------------------------------------------------------
 
   const internalNotes =
     createTextField({
@@ -1683,8 +1797,7 @@ function renderHealthReviewLayer(
       label:
         "Internal assessor notes (never client-visible)",
 
-      textarea:
-        true,
+      textarea: true,
     });
 
   internalNotes.element.classList.add(
@@ -1692,7 +1805,8 @@ function renderHealthReviewLayer(
   );
 
   internalNotes.input.value =
-    pillar.internalAssessorNotes;
+    pillar.internalAssessorNotes ||
+    "";
 
   internalNotes.input.addEventListener(
     "blur",
@@ -1709,10 +1823,171 @@ function renderHealthReviewLayer(
     }
   );
 
+  container.append(
+    internalNotes.element
+  );
 
-  /* ------------------------------------------------------------------------
-     Score
-     ------------------------------------------------------------------------ */
+  // --------------------------------------------------------
+  // EARLIER UNLINKED EVIDENCE
+  // --------------------------------------------------------
+
+  const authoredQuestions =
+    (
+      PILLAR_QUESTIONS[
+        pillar.pillarKey
+      ] || []
+    ).length > 0;
+
+  const orphanEvidence =
+    (
+      pillar.evidence || []
+    ).filter(
+      (e) => !e.questionId
+    );
+
+  if (
+    authoredQuestions &&
+    orphanEvidence.length >
+      0
+  ) {
+    const orphanLabel =
+      document.createElement(
+        "p"
+      );
+
+    orphanLabel.className =
+      "field__label";
+
+    orphanLabel.textContent =
+      "Earlier evidence (not linked to a question)";
+
+    const orphanHint =
+      document.createElement(
+        "p"
+      );
+
+    orphanHint.className =
+      "text-caption";
+
+    orphanHint.textContent =
+      "Captured before evidence was recorded against each question. Still counts toward this pillar.";
+
+    const orphanEditor =
+      createEvidenceListEditor({
+        sourceTypes:
+          EVIDENCE_SOURCE_TYPES,
+
+        items:
+          orphanEvidence,
+
+        onChange:
+          (items) => {
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
+                const linked =
+                  (
+                    p.evidence ||
+                    []
+                  ).filter(
+                    (e) =>
+                      e.questionId
+                  );
+
+                p.evidence =
+                  linked.concat(
+                    items.map(
+                      (entry) => {
+                        const {
+                          questionId,
+                          ...rest
+                        } =
+                          entry;
+
+                        return rest;
+                      }
+                    )
+                  );
+              }
+            );
+
+            refresh();
+          },
+      });
+
+    container.append(
+      orphanLabel,
+      orphanHint,
+      orphanEditor
+    );
+  }
+
+  // --------------------------------------------------------
+  // EVIDENCE FOR PILLARS WITHOUT QUESTIONS
+  // --------------------------------------------------------
+
+  if (
+    !authoredQuestions
+  ) {
+    const evidenceLabel =
+      document.createElement(
+        "p"
+      );
+
+    evidenceLabel.className =
+      "field__label";
+
+    evidenceLabel.textContent =
+      "Evidence";
+
+    const evidenceHint =
+      document.createElement(
+        "p"
+      );
+
+    evidenceHint.className =
+      "text-caption";
+
+    evidenceHint.textContent =
+      "No assessment questions for this pillar yet. Capture at least one evidence item here before marking complete.";
+
+    const evidenceEditor =
+      createEvidenceListEditor({
+        sourceTypes:
+          EVIDENCE_SOURCE_TYPES,
+
+        items:
+          pillar.evidence ||
+          [],
+
+        onChange:
+          (items) => {
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
+                p.evidence =
+                  items;
+              }
+            );
+
+            refresh();
+          },
+      });
+
+    container.append(
+      evidenceLabel,
+      evidenceHint,
+      evidenceEditor
+    );
+  }
+
+  // --------------------------------------------------------
+  // SCORE
+  // --------------------------------------------------------
 
   const scoreLabel =
     document.createElement(
@@ -1794,10 +2069,18 @@ function renderHealthReviewLayer(
         },
     });
 
+  container.append(
+    scoreLabel,
+    scoreSelector,
 
-  /* ------------------------------------------------------------------------
-     Confidence
-     ------------------------------------------------------------------------ */
+    createGuidancePanel(
+      guidance.maturityScore
+    )
+  );
+
+  // --------------------------------------------------------
+  // CONFIDENCE
+  // --------------------------------------------------------
 
   const confidenceLabel =
     document.createElement(
@@ -1821,7 +2104,8 @@ function renderHealthReviewLayer(
   CONFIDENCE_LEVELS.forEach(
     (level) => {
       const selected =
-        pillar.assessorConfidence?.level ===
+        pillar.assessorConfidence
+          ?.level ===
         level;
 
       const btn =
@@ -1837,7 +2121,8 @@ function renderHealthReviewLayer(
           onClick:
             () => {
               const previous =
-                pillar.assessorConfidence?.level;
+                pillar.assessorConfidence
+                  ?.level;
 
               function commit(
                 reason
@@ -1884,17 +2169,14 @@ function renderHealthReviewLayer(
               }
 
               commit(
-                pillar
-                  .assessorConfidence
+                pillar.assessorConfidence
                   ?.reason ||
                   ""
               );
             },
         });
 
-      if (
-        selected
-      ) {
+      if (selected) {
         btn.classList.add(
           "confidence-row__selected"
         );
@@ -1906,223 +2188,8 @@ function renderHealthReviewLayer(
     }
   );
 
-
-  /* ------------------------------------------------------------------------
-     Your judgement
-     ------------------------------------------------------------------------ */
-
-  const pillarAssessmentHeading =
-    document.createElement(
-      "h2"
-    );
-
-  pillarAssessmentHeading.className =
-    "text-heading-section";
-
-  pillarAssessmentHeading.textContent =
-    "Your judgement";
-
-
-  const authoredQuestions =
-    (
-      PILLAR_QUESTIONS[
-        pillar.pillarKey
-      ] || []
-    ).length > 0;
-
-
-  const orphanEvidence =
-    (
-      pillar.evidence ||
-      []
-    ).filter(
-      (e) =>
-        !e.questionId
-    );
-
-
-  if (
-    authoredQuestions &&
-    orphanEvidence.length >
-      0
-  ) {
-    const orphanLabel =
-      document.createElement(
-        "p"
-      );
-
-    orphanLabel.className =
-      "field__label";
-
-    orphanLabel.textContent =
-      "Earlier evidence (not linked to a question)";
-
-    const orphanHint =
-      document.createElement(
-        "p"
-      );
-
-    orphanHint.className =
-      "text-caption";
-
-    orphanHint.textContent =
-      "Captured before evidence was recorded against each question. Still counts toward this pillar.";
-
-    const orphanEditor =
-      createEvidenceListEditor({
-        sourceTypes:
-          EVIDENCE_SOURCE_TYPES,
-
-        items:
-          orphanEvidence,
-
-        onChange:
-          (items) => {
-            mutatePillar(
-              org.id,
-              review.id,
-              pillar.pillarKey,
-              (p) => {
-                const linked =
-                  (
-                    p.evidence ||
-                    []
-                  ).filter(
-                    (e) =>
-                      e.questionId
-                  );
-
-                p.evidence =
-                  linked.concat(
-                    items.map(
-                      (
-                        entry
-                      ) => {
-                        const {
-                          questionId,
-                          ...rest
-                        } =
-                          entry;
-
-                        return rest;
-                      }
-                    )
-                  );
-              }
-            );
-
-            refresh();
-          },
-      });
-
-    container.append(
-      orphanLabel,
-      orphanHint,
-      orphanEditor
-    );
-  }
-
-
-  if (
-    !authoredQuestions
-  ) {
-    const evidenceLabel =
-      document.createElement(
-        "p"
-      );
-
-    evidenceLabel.className =
-      "field__label";
-
-    evidenceLabel.textContent =
-      "Evidence";
-
-    const evidenceHint =
-      document.createElement(
-        "p"
-      );
-
-    evidenceHint.className =
-      "text-caption";
-
-    evidenceHint.textContent =
-      "No assessment questions for this pillar yet. Capture at least one evidence item here before marking complete.";
-
-    const evidenceEditor =
-      createEvidenceListEditor({
-        sourceTypes:
-          EVIDENCE_SOURCE_TYPES,
-
-        items:
-          pillar.evidence ||
-          [],
-
-        onChange:
-          (items) => {
-            mutatePillar(
-              org.id,
-              review.id,
-              pillar.pillarKey,
-              (p) => {
-                p.evidence =
-                  items;
-              }
-            );
-
-            refresh();
-          },
-      });
-
-    container.append(
-      evidenceLabel,
-      evidenceHint,
-      evidenceEditor
-    );
-  }
-
-
-  /*
-   * IMPORTANT:
-   *
-   * We DO NOT append the findings panel here.
-   *
-   * It starts hidden from the page flow and is inserted
-   * dynamically directly above whichever actual field
-   * the assessor taps.
-   */
-
-
   container.append(
-    pillarAssessmentHeading,
-
-    strengthsWrap,
-
-    opportunitiesWrap,
-
-    createGuidancePanel(
-      guidance.opportunities
-    ),
-
-    profObs.element,
-
-    profObsHint,
-
-    createGuidancePanel(
-      guidance.professionalObservation
-    ),
-
-    internalNotes.element,
-
-    scoreLabel,
-
-    scoreSelector,
-
-    createGuidancePanel(
-      guidance.maturityScore
-    ),
-
     confidenceLabel,
-
     confidenceRow,
 
     createGuidancePanel(
@@ -2131,10 +2198,9 @@ function renderHealthReviewLayer(
   );
 }
 
-
-/* ==========================================================================
-   Diagnostic Layer
-   ========================================================================== */
+// ==========================================================================
+// DIAGNOSTIC LAYER
+// ==========================================================================
 
 function renderDiagnosticLayer(
   container,
@@ -2172,8 +2238,7 @@ function renderDiagnosticLayer(
       label:
         "Root cause analysis",
 
-      textarea:
-        true,
+      textarea: true,
     });
 
   rootCause.input.value =
@@ -2203,8 +2268,7 @@ function renderDiagnosticLayer(
       label:
         "Operational risk",
 
-      textarea:
-        true,
+      textarea: true,
     });
 
   risk.input.value =
@@ -2234,8 +2298,7 @@ function renderDiagnosticLayer(
       label:
         "Cost of inaction",
 
-      textarea:
-        true,
+      textarea: true,
     });
 
   cost.input.value =
@@ -2383,10 +2446,9 @@ function renderDiagnosticLayer(
   );
 }
 
-
-/* ==========================================================================
-   Main Pillar Assessment
-   ========================================================================== */
+// ==========================================================================
+// MAIN RENDER
+// ==========================================================================
 
 export function renderPillarAssessment(
   container,
@@ -2415,7 +2477,6 @@ export function renderPillarAssessment(
   screen.className =
     "screen stack";
 
-
   if (
     !org ||
     !review ||
@@ -2443,7 +2504,6 @@ export function renderPillarAssessment(
     return;
   }
 
-
   const isDiagnosticMode =
     Boolean(
       params.cycleId
@@ -2456,7 +2516,6 @@ export function renderPillarAssessment(
           params.cycleId
         )
       : null;
-
 
   if (
     isDiagnosticMode &&
@@ -2484,14 +2543,12 @@ export function renderPillarAssessment(
     return;
   }
 
-
   const cycleEntry =
     isDiagnosticMode
       ? cycle.pillars[
           pillar.pillarKey
         ]
       : null;
-
 
   if (
     isDiagnosticMode &&
@@ -2519,14 +2576,12 @@ export function renderPillarAssessment(
     return;
   }
 
-
   const pillarMeta =
     PILLARS.find(
       (p) =>
         p.key ===
         pillar.pillarKey
     );
-
 
   const heading =
     document.createElement(
@@ -2539,10 +2594,8 @@ export function renderPillarAssessment(
   heading.textContent =
     pillarMeta.name;
 
-
   screen.append(
     heading,
-
     renderSummaryStrip(
       pillar,
       isDiagnosticMode,
@@ -2550,11 +2603,9 @@ export function renderPillarAssessment(
     )
   );
 
-
   const diagnosticLocked =
     isDiagnosticMode &&
     cycle.locked;
-
 
   const form =
     document.createElement(
@@ -2563,7 +2614,6 @@ export function renderPillarAssessment(
 
   form.className =
     "stack";
-
 
   function refresh() {
     container.innerHTML =
@@ -2574,7 +2624,6 @@ export function renderPillarAssessment(
       params
     );
   }
-
 
   if (
     isDiagnosticMode
@@ -2617,11 +2666,9 @@ export function renderPillarAssessment(
     );
   }
 
-
   screen.append(
     form
   );
-
 
   if (
     isDiagnosticMode &&
@@ -2658,6 +2705,9 @@ export function renderPillarAssessment(
     );
   }
 
+  // --------------------------------------------------------
+  // ACTIONS
+  // --------------------------------------------------------
 
   const actions =
     document.createElement(
@@ -2666,7 +2716,6 @@ export function renderPillarAssessment(
 
   actions.className =
     "screen-actions stack-tight";
-
 
   if (
     !diagnosticLocked
@@ -2761,7 +2810,6 @@ export function renderPillarAssessment(
     }
   }
 
-
   actions.append(
     createButton({
       label:
@@ -2771,11 +2819,9 @@ export function renderPillarAssessment(
         "secondary",
 
       onClick:
-        () =>
-          back(),
+        () => back(),
     })
   );
-
 
   screen.append(
     actions
