@@ -9,10 +9,30 @@
 // Your judgement interprets those facts.
 //
 // The "From this pillar" briefing is contextual. It appears immediately
-// above the judgement field currently being worked on.
+// underneath the judgement section title and immediately above the
+// judgement guidance/input being worked on.
 //
-// It is deliberately NOT a copy/paste system.
-// The assessor must make their own professional judgement.
+// LOCKED JUDGEMENT STRUCTURE
+// --------------------------------------------------------------------------
+//
+// YOUR JUDGEMENT
+//
+// STRENGTHS
+// From this pillar
+// What is working well?
+// [INPUT]
+//
+// OPPORTUNITIES
+// From this pillar
+// Where could operational maturity improve?
+// [INPUT]
+//
+// PROFESSIONAL OBSERVATION
+// From this pillar
+// Clear, balanced summary for client
+// [INPUT]
+//
+// The section title MUST remain above the "From this pillar" panel.
 // ==========================================================================
 
 import { getState, updateState } from "../state/store.js";
@@ -41,7 +61,9 @@ import {
 } from "../components/listEditor.js";
 
 import { createGuidancePanel } from "../components/guidancePanel.js";
+
 import { createQuestionGuidance } from "../components/questionGuidance.js";
+
 import { back } from "../router.js";
 
 // ==========================================================================
@@ -584,8 +606,7 @@ function renderMethodologyQuestions(
           "OBSERVE_ASK_EVIDENCE";
 
       const existing =
-        pillar
-          .questionResponses?.[
+        pillar.questionResponses?.[
           q.id
         ] || {};
 
@@ -599,51 +620,54 @@ function renderMethodologyQuestions(
         "";
 
       const PLACEHOLDERS = {
-        "q1-first-impression": {
-          observed:
-            "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
+        "q1-first-impression":
+          {
+            observed:
+              "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
 
-          learned:
-            "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
-        },
+            learned:
+              "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
+          },
 
-        "q2-wayfinding-responsiveness": {
-          observed:
-            "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
+        "q2-wayfinding-responsiveness":
+          {
+            observed:
+              "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
 
-          learned:
-            "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
-        },
+            learned:
+              "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
+          },
 
-        "q3-complaint-issue-handling": {
-          observed:
-            "",
+        "q3-complaint-issue-handling":
+          {
+            observed:
+              "",
 
-          learned:
-            "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
-        },
+            learned:
+              "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
+          },
 
-        "q4-customer-satisfaction-awareness": {
-          observed:
-            "",
+        "q4-customer-satisfaction-awareness":
+          {
+            observed:
+              "",
 
-          learned:
-            "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
-        },
+            learned:
+              "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
+          },
 
-        "q5-consistency-of-interaction": {
-          observed:
-            "e.g. One colleague greeted well and knew the product; another barely looked up.",
+        "q5-consistency-of-interaction":
+          {
+            observed:
+              "e.g. One colleague greeted well and knew the product; another barely looked up.",
 
-          learned:
-            "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
-        },
+            learned:
+              "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
+          },
       };
 
       const ph =
-        PLACEHOLDERS[
-          q.id
-        ] || {
+        PLACEHOLDERS[q.id] || {
           observed:
             "Short factual notes on what you saw. A sentence or two is enough.",
 
@@ -673,18 +697,23 @@ function renderMethodologyQuestions(
               ] || {
                 observed:
                   "",
+
                 learned:
                   "",
+
                 response:
                   "",
+
                 evidenceNotes:
                   "",
+
                 capturedAt:
                   null,
               };
 
             const next = {
               ...current,
+
               [fieldName]:
                 value,
 
@@ -780,7 +809,9 @@ function renderMethodologyQuestions(
         const observedField =
           createTextField({
             id: `question-observed-${q.id}`,
+
             label: "",
+
             textarea: true,
           });
 
@@ -875,7 +906,9 @@ function renderMethodologyQuestions(
       const learnedField =
         createTextField({
           id: `question-learned-${q.id}`,
+
           label: "",
+
           textarea: true,
         });
 
@@ -952,14 +985,12 @@ function renderMethodologyQuestions(
         "Optional. Add only what supports this question. Source required.";
 
       const questionEvidence =
-        (
-          pillar.evidence ||
-          []
-        ).filter(
-          (e) =>
-            e.questionId ===
-            q.id
-        );
+        (pillar.evidence || [])
+          .filter(
+            (e) =>
+              e.questionId ===
+              q.id
+          );
 
       const evidenceEditor =
         createEvidenceListEditor({
@@ -990,6 +1021,7 @@ function renderMethodologyQuestions(
                     items.map(
                       (entry) => ({
                         ...entry,
+
                         questionId:
                           q.id,
                       })
@@ -1017,9 +1049,7 @@ function renderMethodologyQuestions(
       );
 
       questionWrap.append(
-        createQuestionGuidance(
-          q
-        )
+        createQuestionGuidance(q)
       );
 
       container.append(
@@ -1045,28 +1075,17 @@ function renderMethodologyQuestions(
 // FROM THIS PILLAR
 // ==========================================================================
 //
-// Contextual information for the judgement currently being worked on.
-//
-// IMPORTANT UX RULE
+// LOCKED UX BEHAVIOUR
 // --------------------------------------------------------------------------
-// The panel is created as part of each judgement section but is hidden until
-// that judgement field is selected/focused.
+// This panel contains contextual information only.
 //
-// Therefore the visual order is:
+// It is inserted BELOW the judgement section title and ABOVE the
+// corresponding judgement input.
 //
-//   FROM THIS PILLAR
-//   STRENGTHS
-//   Hint
-//   Input
+// It does NOT contain the words "Strengths", "Opportunities" or
+// "Professional Observation" as its section title.
 //
-// or:
-//
-//   FROM THIS PILLAR
-//   OPPORTUNITIES
-//   Hint
-//   Input
-//
-// The "From this pillar" panel NEVER moves above the judgement title.
+// Those titles belong to the judgement section itself.
 // ==========================================================================
 
 function createFromPillarPanel(
@@ -1080,9 +1099,6 @@ function createFromPillarPanel(
 
   wrap.className =
     "from-pillar";
-
-  // Hidden until the associated judgement field is selected.
-  wrap.hidden = true;
 
   const title =
     document.createElement(
@@ -1135,9 +1151,11 @@ function createFromPillarPanel(
     {};
 
   const evidence =
-    pillar.evidence || [];
+    pillar.evidence ||
+    [];
 
-  let any = false;
+  let any =
+    false;
 
   questions.forEach(
     (q, index) => {
@@ -1174,7 +1192,8 @@ function createFromPillarPanel(
         return;
       }
 
-      any = true;
+      any =
+        true;
 
       const block =
         document.createElement(
@@ -1351,7 +1370,8 @@ function createFromPillarPanel(
     otherEvidence.length >
     0
   ) {
-    any = true;
+    any =
+      true;
 
     const block =
       document.createElement(
@@ -1459,17 +1479,14 @@ function createFromPillarPanel(
 // CONTEXTUAL JUDGEMENT FIELD
 // ==========================================================================
 //
-// STRUCTURE IS LOCKED:
+// THIS FUNCTION CONTROLS THE EXACT ORDER.
 //
-//   [From this pillar]
-//   [STRENGTHS / OPPORTUNITIES / PROFESSIONAL OBSERVATION]
-//   [Hint]
-//   [Input]
+// 1. SECTION TITLE
+// 2. FROM THIS PILLAR
+// 3. HINT
+// 4. INPUT
 //
-// The contextual panel is hidden until the judgement field is selected.
-//
-// Selecting another judgement field automatically hides the previous
-// contextual panel and reveals the new one.
+// Do not move createFromPillarPanel() above the heading.
 // ==========================================================================
 
 function createJudgementSection({
@@ -1490,23 +1507,7 @@ function createJudgementSection({
     "judgement-section";
 
   // --------------------------------------------------------
-  // CONTEXT FIRST
-  // --------------------------------------------------------
-
-  const sourcePanel =
-    createFromPillarPanel(
-      pillar,
-      mode
-    );
-
-  section.append(
-    sourcePanel
-  );
-
-  // --------------------------------------------------------
-  // JUDGEMENT TITLE
-  //
-  // This MUST remain BELOW the From this pillar box.
+  // 1. SECTION TITLE
   // --------------------------------------------------------
 
   const heading =
@@ -1525,7 +1526,21 @@ function createJudgementSection({
   );
 
   // --------------------------------------------------------
-  // HINT
+  // 2. FROM THIS PILLAR
+  // --------------------------------------------------------
+
+  const sourcePanel =
+    createFromPillarPanel(
+      pillar,
+      mode
+    );
+
+  section.append(
+    sourcePanel
+  );
+
+  // --------------------------------------------------------
+  // 3. HINT
   // --------------------------------------------------------
 
   if (hint) {
@@ -1546,12 +1561,13 @@ function createJudgementSection({
   }
 
   // --------------------------------------------------------
-  // INPUT
+  // 4. INPUT
   // --------------------------------------------------------
 
   const field =
     createFreeTextAreaField({
       placeholder,
+
       items:
         value || [],
 
@@ -1567,61 +1583,6 @@ function createJudgementSection({
 
   section.append(
     field
-  );
-
-  // --------------------------------------------------------
-  // CONTEXTUAL PANEL BEHAVIOUR
-  // --------------------------------------------------------
-  //
-  // The panel belongs ONLY to this judgement section.
-  //
-  // When this section receives focus/click:
-  //   - its panel appears
-  //   - every other judgement panel disappears
-  //
-  // When focus moves elsewhere:
-  //   - the panel remains if focus is still within this section
-  //
-  // This prevents the panel from disappearing while the assessor is
-  // actively typing or interacting with the input.
-  // --------------------------------------------------------
-
-  function showContext() {
-    document
-      .querySelectorAll(
-        ".judgement-section .from-pillar"
-      )
-      .forEach(
-        (panel) => {
-          panel.hidden =
-            panel !==
-            sourcePanel;
-        }
-      );
-
-    sourcePanel.hidden =
-      false;
-  }
-
-  section.addEventListener(
-    "focusin",
-    () => {
-      showContext();
-    }
-  );
-
-  section.addEventListener(
-    "pointerdown",
-    () => {
-      showContext();
-    }
-  );
-
-  section.addEventListener(
-    "click",
-    () => {
-      showContext();
-    }
   );
 
   return section;
@@ -1778,24 +1739,8 @@ function renderHealthReviewLayer(
     "judgement-section";
 
   // --------------------------------------------------------
-  // FROM THIS PILLAR
-  //
-  // This is deliberately the FIRST element in this section.
-  // The Professional Observation title stays BELOW it.
-  // --------------------------------------------------------
-
-  const professionalSource =
-    createFromPillarPanel(
-      pillar,
-      "professionalObservation"
-    );
-
-  professionalSection.append(
-    professionalSource
-  );
-
-  // --------------------------------------------------------
   // PROFESSIONAL OBSERVATION TITLE
+  // IMPORTANT: this is appended BEFORE From this pillar.
   // --------------------------------------------------------
 
   const professionalLabel =
@@ -1814,10 +1759,18 @@ function renderHealthReviewLayer(
   );
 
   // --------------------------------------------------------
-  // CONTEXTUAL JUDGEMENT SUMMARY
-  //
-  // These are added INSIDE the From this pillar box.
-  // They do not replace the investigation information.
+  // FROM THIS PILLAR
+  // --------------------------------------------------------
+
+  const professionalSource =
+    createFromPillarPanel(
+      pillar,
+      "professionalObservation"
+    );
+
+  // --------------------------------------------------------
+  // ADD ASSESSOR'S STRENGTHS / OPPORTUNITIES
+  // INTO THE CONTEXTUAL PANEL ONLY.
   // --------------------------------------------------------
 
   const judgementSummary =
@@ -1919,8 +1872,13 @@ function renderHealthReviewLayer(
     );
   }
 
+  professionalSection.append(
+    professionalSource
+  );
+
   // --------------------------------------------------------
   // PROFESSIONAL OBSERVATION HINT
+  // This remains BELOW From this pillar and ABOVE the input.
   // --------------------------------------------------------
 
   const professionalHint =
@@ -1994,48 +1952,6 @@ function renderHealthReviewLayer(
     profObs.element
   );
 
-  // --------------------------------------------------------
-  // PROFESSIONAL OBSERVATION CONTEXT BEHAVIOUR
-  // --------------------------------------------------------
-
-  function showProfessionalContext() {
-    document
-      .querySelectorAll(
-        ".judgement-section .from-pillar"
-      )
-      .forEach(
-        (panel) => {
-          panel.hidden =
-            panel !==
-            professionalSource;
-        }
-      );
-
-    professionalSource.hidden =
-      false;
-  }
-
-  professionalSection.addEventListener(
-    "focusin",
-    () => {
-      showProfessionalContext();
-    }
-  );
-
-  professionalSection.addEventListener(
-    "pointerdown",
-    () => {
-      showProfessionalContext();
-    }
-  );
-
-  professionalSection.addEventListener(
-    "click",
-    () => {
-      showProfessionalContext();
-    }
-  );
-
   container.append(
     professionalSection
   );
@@ -2098,11 +2014,13 @@ function renderHealthReviewLayer(
       PILLAR_QUESTIONS[
         pillar.pillarKey
       ] || []
-    ).length > 0;
+    ).length >
+    0;
 
   const orphanEvidence =
     (
-      pillar.evidence || []
+      pillar.evidence ||
+      []
     ).filter(
       (e) =>
         !e.questionId
@@ -2369,8 +2287,7 @@ function renderHealthReviewLayer(
   CONFIDENCE_LEVELS.forEach(
     (level) => {
       const selected =
-        pillar
-          .assessorConfidence
+        pillar.assessorConfidence
           ?.level ===
         level;
 
@@ -3093,8 +3010,7 @@ export function renderPillarAssessment(
         "secondary",
 
       onClick:
-        () =>
-          back(),
+        () => back(),
     })
   );
 
