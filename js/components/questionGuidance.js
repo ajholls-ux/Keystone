@@ -1,29 +1,12 @@
 // ==========================================================================
-// Keystone Field Kit — Question Guidance Panel Component
-// Methodology Engine v1.0. Renders the full guidance chain for one
-// methodology question (PILLAR_QUESTIONS entry). Distinct from the
-// generic field-level guidance panel (guidancePanel.js) — this one is
-// richer and specific to a single, named assessment question.
+// Keystone Field Kit -- Question Guidance Panel Component
+// One collapsible "Assessor guidance" per question.
+// Investigation help first. Scoring anchors optional and nested so they
+// do not feel like per-question scores (pillar score stays at Your judgement).
 // ==========================================================================
 
-function collapsibleSection(label, contentEl) {
-  const details = document.createElement("details");
-  details.className = "guidance-panel";
-
-  const summary = document.createElement("summary");
-  summary.className = "guidance-panel__summary";
-  summary.textContent = label;
-  details.append(summary);
-
-  const body = document.createElement("div");
-  body.className = "guidance-panel__body";
-  body.append(contentEl);
-  details.append(body);
-
-  return details;
-}
-
 function textBlock(text) {
+  if (!text) return null;
   const p = document.createElement("p");
   p.className = "guidance-panel__text";
   p.textContent = text;
@@ -31,9 +14,9 @@ function textBlock(text) {
 }
 
 function listBlock(items) {
+  if (!items || !items.length) return null;
   const ul = document.createElement("ul");
-  ul.style.margin = "0";
-  ul.style.paddingLeft = "18px";
+  ul.className = "guidance-panel__list";
   items.forEach((item) => {
     const li = document.createElement("li");
     li.className = "guidance-panel__text";
@@ -43,54 +26,101 @@ function listBlock(items) {
   return ul;
 }
 
-function maturityBlock(maturityGuidance) {
+function section(heading, contentEl) {
+  if (!contentEl) return null;
   const wrap = document.createElement("div");
-  [1, 2, 3, 4].forEach((n) => {
-    const row = document.createElement("p");
-    row.className = "guidance-panel__text";
-    row.innerHTML = `<strong>${n}</strong> — ${maturityGuidance[n]}`;
-    wrap.append(row);
-  });
+  wrap.className = "guidance-panel__section";
+  const h = document.createElement("p");
+  h.className = "guidance-panel__heading";
+  h.textContent = heading;
+  wrap.append(h, contentEl);
   return wrap;
 }
 
+function maturityBlock(maturityGuidance) {
+  if (!maturityGuidance) return null;
+  const wrap = document.createElement("div");
+  [1, 2, 3, 4].forEach((n) => {
+    if (!maturityGuidance[n]) return;
+    const row = document.createElement("p");
+    row.className = "guidance-panel__text";
+    row.textContent = `${n}: ${maturityGuidance[n]}`;
+    wrap.append(row);
+  });
+  return wrap.childNodes.length ? wrap : null;
+}
+
 function confidenceBlock(confidenceGuidance) {
+  if (!confidenceGuidance) return null;
   const wrap = document.createElement("div");
   [
     ["High", confidenceGuidance.high],
     ["Medium", confidenceGuidance.medium],
     ["Low", confidenceGuidance.low],
   ].forEach(([label, text]) => {
+    if (!text) return;
     const row = document.createElement("p");
     row.className = "guidance-panel__text";
-    row.innerHTML = `<strong>${label}</strong> — ${text}`;
+    row.textContent = `${label}: ${text}`;
     wrap.append(row);
   });
-  return wrap;
+  return wrap.childNodes.length ? wrap : null;
 }
 
 /**
- * Creates the full collapsible guidance chain for one methodology
- * question. Each sub-section (why it matters, how to ask, etc.) is its
- * own collapsible unit, per the locked guidance UI structure.
+ * Single collapsed guidance panel for one methodology question.
  * @param {Object} q - a PILLAR_QUESTIONS entry
  */
 export function createQuestionGuidance(q) {
-  const wrap = document.createElement("div");
-  wrap.className = "stack-tight";
+  const details = document.createElement("details");
+  details.className = "guidance-panel question-guidance";
 
-  wrap.append(
-    collapsibleSection("Why this matters", textBlock(q.whyItMatters)),
-    collapsibleSection("How to ask it", textBlock(q.assessorPrompt)),
-    collapsibleSection("Follow-up prompts", listBlock(q.followUpPrompts)),
-    collapsibleSection("Good example", textBlock(q.goodExample)),
-    collapsibleSection("Poor example", textBlock(q.poorExample)),
-    collapsibleSection("What to observe", listBlock(q.whatToObserve)),
-    collapsibleSection("Evidence suggestions", listBlock(q.evidenceSuggestions)),
-    collapsibleSection("Maturity guidance", maturityBlock(q.maturityGuidance)),
-    collapsibleSection("Confidence guidance", confidenceBlock(q.confidenceGuidance)),
-    collapsibleSection("Diagnostic relevance", textBlock(q.diagnosticRelevance))
-  );
+  const summary = document.createElement("summary");
+  summary.className = "guidance-panel__summary";
+  summary.textContent = "Assessor guidance";
+  details.append(summary);
 
-  return wrap;
+  const body = document.createElement("div");
+  body.className = "guidance-panel__body";
+
+  // Investigation first (what you need while on site)
+  const primary = [
+    section("Why this matters", textBlock(q.whyItMatters)),
+    section("How to ask", textBlock(q.assessorPrompt)),
+    section("Follow-up prompts", listBlock(q.followUpPrompts)),
+    section("Good example", textBlock(q.goodExample)),
+    section("Poor example", textBlock(q.poorExample)),
+    section("What to observe", listBlock(q.whatToObserve)),
+    section("Evidence suggestions", listBlock(q.evidenceSuggestions)),
+  ].filter(Boolean);
+
+  primary.forEach((el) => body.append(el));
+
+  // Scoring anchors last, nested: supports later pillar judgement only
+  const scoringKids = [
+    section("Maturity anchors for this question", maturityBlock(q.maturityGuidance)),
+    section("Confidence anchors for this question", confidenceBlock(q.confidenceGuidance)),
+    section("Diagnostic relevance", textBlock(q.diagnosticRelevance)),
+  ].filter(Boolean);
+
+  if (scoringKids.length) {
+    const scoring = document.createElement("details");
+    scoring.className = "guidance-panel guidance-panel--nested";
+    const scoringSummary = document.createElement("summary");
+    scoringSummary.className = "guidance-panel__summary";
+    scoringSummary.textContent = "Scoring anchors (use at Your judgement)";
+    const scoringBody = document.createElement("div");
+    scoringBody.className = "guidance-panel__body";
+    const note = document.createElement("p");
+    note.className = "guidance-panel__text guidance-panel__text--note";
+    note.textContent =
+      "There is still only one maturity score and one confidence level for the whole pillar. These anchors help that judgement; they are not separate scores per question.";
+    scoringBody.append(note);
+    scoringKids.forEach((el) => scoringBody.append(el));
+    scoring.append(scoringSummary, scoringBody);
+    body.append(scoring);
+  }
+
+  details.append(body);
+  return details;
 }

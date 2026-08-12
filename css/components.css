@@ -1058,3 +1058,32 @@ details[open] > .guidance-panel__summary::before {
   color: var(--color-text-secondary);
   opacity: 0.8;
 }
+
+/* Nested scoring anchors inside question guidance */
+.guidance-panel--nested {
+  margin-top: var(--space-2);
+  background: var(--color-bg);
+  box-shadow: none;
+}
+
+.guidance-panel--nested > .guidance-panel__summary {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.question-guidance {
+  margin-top: var(--space-2);
+}
+
+.guidance-panel__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.report-cover__kind {
+  margin: var(--space-1) 0 0 0;
+  color: var(--color-orange-600);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

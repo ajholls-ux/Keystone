@@ -1,10 +1,10 @@
 // ==========================================================================
-// Keystone Field Kit — Review Overview View
+// Keystone Field Kit -- Review Overview View
 //
 // Screen 5 of the locked Screen Map (Part 2 v1.0). The assessor's command
 // centre. Governed by Assessment Engine v1.0 plus the Diagnostic Cycles
 // architectural clarification: the Review supports an ongoing improvement
-// journey — one Health Review baseline, followed by zero or more
+// journey -- one Health Review baseline, followed by zero or more
 // Diagnostic Cycles over time. Only individual completed cycles lock;
 // the Review and organisation are never permanently closed off.
 // ==========================================================================
@@ -22,7 +22,7 @@ function findOrgAndReview(state, organisationId, reviewId) {
 }
 
 function formatDate(iso) {
-  if (!iso) return "—";
+  if (!iso) return "--";
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 }
@@ -42,14 +42,14 @@ function renderSummaryCard(org, review, activeCycle) {
   const scored = review.pillarAssessments.filter((p) => p.maturityScore != null);
   const avgMaturity = scored.length
     ? (scored.reduce((sum, p) => sum + p.maturityScore, 0) / scored.length).toFixed(1)
-    : "—";
+    : "--";
 
   const lockedCycleCount = review.diagnosticCycles.filter((c) => c.locked).length;
 
   const rows = [
     ["Organisation", org.businessName],
     ["Health Review progress", `${completedCount} / 10 pillars complete`],
-    ["Health Review maturity", avgMaturity === "—" ? "—" : `${avgMaturity} / 4`],
+    ["Health Review maturity", avgMaturity === "--" ? "--" : `${avgMaturity} / 4`],
     [
       "Diagnostic history",
       lockedCycleCount === 0 ? "No completed cycles yet" : `${lockedCycleCount} completed cycle${lockedCycleCount === 1 ? "" : "s"}`,
@@ -135,7 +135,7 @@ export function renderReviewOverview(container, params) {
     });
   }
 
-  // Health Review baseline — always visible, always the permanent record.
+  // Health Review baseline -- always visible, always the permanent record.
   const hrHeading = document.createElement("p");
   hrHeading.className = "pillar-group-title";
   hrHeading.textContent = "Operational Health Review";
@@ -152,7 +152,7 @@ export function renderReviewOverview(container, params) {
   });
   screen.append(hrList);
 
-  // Active Diagnostic Cycle — pillar groupings scoped to this cycle only.
+  // Active Diagnostic Cycle -- pillar groupings scoped to this cycle only.
   if (activeCycle) {
     const cycleHeading = document.createElement("p");
     cycleHeading.className = "pillar-group-title";
@@ -181,7 +181,7 @@ export function renderReviewOverview(container, params) {
     screen.append(cycleList);
   }
 
-  // Historical, locked Diagnostic Cycles — permanent records.
+  // Historical, locked Diagnostic Cycles -- permanent records.
   const lockedCycles = review.diagnosticCycles.filter((c) => c.locked);
   if (lockedCycles.length > 0) {
     const historyHeading = document.createElement("p");
@@ -204,7 +204,7 @@ export function renderReviewOverview(container, params) {
       footer.className = "card__footer";
       footer.append(
         createButton({
-          label: "View Report",
+          label: "View Diagnostic Report",
           variant: "secondary",
           onClick: () =>
             navigate("assessmentReport", {
@@ -248,7 +248,7 @@ export function renderReviewOverview(container, params) {
   if (review.clientReportGeneratedAt) {
     actions.append(
       createButton({
-        label: "View Client Report",
+        label: "View Health Review Report",
         variant: "secondary",
         onClick: () =>
           navigate("assessmentReport", {
@@ -261,7 +261,7 @@ export function renderReviewOverview(container, params) {
   }
 
   // A new Diagnostic Cycle can start once the Client Report exists and no
-  // cycle is currently active — this deliberately does not auto-select
+  // cycle is currently active -- this deliberately does not auto-select
   // pillars by score; the assessor chooses what matters most to
   // investigate next (Assessment Engine principle: investigate only what
   // creates meaningful operational value).

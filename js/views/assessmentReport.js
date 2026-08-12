@@ -72,8 +72,15 @@ function renderCoverPage(org, review, reportType, cycle) {
   title.className = "text-display";
   title.textContent =
     reportType === "diagnostic"
-      ? `Operational Diagnostic Report${cycle ? ` -- Cycle ${cycle.cycleNumber}` : ""}`
+      ? `Operational Diagnostic Report${cycle ? ` - Cycle ${cycle.cycleNumber}` : ""}`
       : "Operational Health Review";
+
+  const reportKind = document.createElement("p");
+  reportKind.className = "text-caption report-cover__kind";
+  reportKind.textContent =
+    reportType === "diagnostic"
+      ? "Paid Diagnostic report"
+      : "Client Health Review report";
 
   const orgName = document.createElement("p");
   orgName.className = "text-heading-section";
@@ -92,7 +99,7 @@ function renderCoverPage(org, review, reportType, cycle) {
   valueStatement.textContent =
     "This report reflects a structured, evidence-led assessment of your operation. Every observation, strength, and opportunity identified here is grounded in what was directly observed, discussed, and evidenced on site.";
 
-  cover.append(brand, title, orgName, meta, valueStatement);
+  cover.append(brand, title, reportKind, orgName, meta, valueStatement);
   return cover;
 }
 
