@@ -64,10 +64,14 @@
   --space-6: 48px;
   --space-8: 64px;
 
-  /* Radius */
-  --radius-control: 12px;
-  --radius-card: 12px;
-
   /* Touch targets */
   --control-min-height: 48px;
+
+  /* Depth -- quiet, Apple-like (not heavy material elevation) */
+  --shadow-sm: 0 1px 2px rgba(33, 30, 27, 0.04), 0 1px 3px rgba(33, 30, 27, 0.06);
+  --shadow-md: 0 2px 8px rgba(33, 30, 27, 0.06), 0 1px 2px rgba(33, 30, 27, 0.04);
+
+  /* Refined radius */
+  --radius-card: 16px;
+  --radius-control: 12px;
 }
