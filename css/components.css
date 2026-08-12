@@ -1127,3 +1127,100 @@ details[open] > .guidance-panel__summary::before {
   border-color: var(--color-orange-500);
   border-style: dashed;
 }
+
+/* Visit-level timer (assessor aid only) */
+.visit-timer {
+  margin: 0 0 var(--space-3) 0;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.visit-timer__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.visit-timer__label {
+  margin: 0;
+  font-size: var(--text-caption-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.visit-timer__value {
+  margin: 0;
+  font-size: var(--text-heading-section-size);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.visit-timer__hint {
+  margin: var(--space-1) 0 var(--space-2) 0;
+}
+
+.visit-timer .btn {
+  margin-top: 0;
+}
+
+/* Observe | Discussion phase (floor-test) */
+.phase-bar {
+  margin: 0 0 var(--space-3) 0;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.phase-bar__hint {
+  margin: 0 0 var(--space-2) 0;
+}
+
+.phase-bar__buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+}
+
+.phase-bar__buttons .btn {
+  min-height: 48px;
+  font-weight: 600;
+}
+
+.phase-bar__selected {
+  box-shadow: inset 0 0 0 1px var(--color-orange-600);
+}
+
+.question-observed-readonly {
+  margin: 0 0 var(--space-2) 0;
+  padding: var(--space-2);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-size: var(--text-body-secondary-size);
+  line-height: 1.45;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+}
+
+.question-observed-readonly--empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.question-block__later {
+  margin: 0 0 var(--space-2) 0;
+}
+
+.question-guidance--observe .guidance-panel__summary {
+  font-size: 12px;
+}

@@ -453,536 +453,270 @@ function renderSummaryStrip(
 // METHODOLOGY QUESTIONS
 // ==========================================================================
 
-function renderMethodologyQuestions(
-  container,
-  pillar,
-  review,
-  org,
-  refresh
-) {
-  const questions =
-    PILLAR_QUESTIONS[
-      pillar.pillarKey
-    ] || [];
+function getPillarPhase(pillarKey) {
+  try {
+    const v = sessionStorage.getItem("keystone_phase_" + pillarKey);
+    if (v === "observe" || v === "discussion") return v;
+  } catch (_) {}
+  return "observe";
+}
 
-  const sectionHeading =
-    document.createElement(
-      "h2"
-    );
+function setPillarPhase(pillarKey, phase) {
+  try {
+    sessionStorage.setItem("keystone_phase_" + pillarKey, phase);
+  } catch (_) {}
+}
 
-  sectionHeading.className =
-    "text-heading-section";
+function renderMethodologyQuestions(container, pillar, review, org, refresh) {
+  const questions = PILLAR_QUESTIONS[pillar.pillarKey] || [];
+  const phase = getPillarPhase(pillar.pillarKey);
 
-  sectionHeading.textContent =
-    "Questions";
+  const sectionHeading = document.createElement("h2");
+  sectionHeading.className = "text-heading-section";
+  sectionHeading.textContent = "Questions";
+  container.append(sectionHeading);
 
-  container.append(
-    sectionHeading
-  );
+  // Phase control: Observe vs Discussion (same questions, different emphasis)
+  const phaseBar = document.createElement("div");
+  phaseBar.className = "phase-bar";
 
-  if (
-    questions.length === 0
-  ) {
-    const empty =
-      document.createElement(
-        "p"
-      );
+  const phaseHint = document.createElement("p");
+  phaseHint.className = "text-caption phase-bar__hint";
+  phaseHint.textContent =
+    phase === "observe"
+      ? "Observe mode. Write one short factual line before you leave each area. Discussion comes after."
+      : "Discussion mode. Read what you observed, then ask. Observed notes stay visible so you do not rely on memory.";
 
-    empty.className =
-      "text-body-secondary pillar-questions-empty";
+  const phaseRow = document.createElement("div");
+  phaseRow.className = "phase-bar__buttons";
 
+  ["observe", "discussion"].forEach((mode) => {
+    const selected = phase === mode;
+    const btn = createButton({
+      label: mode === "observe" ? "Observe" : "Discussion",
+      variant: selected ? "primary" : "secondary",
+      onClick: () => {
+        setPillarPhase(pillar.pillarKey, mode);
+        refresh();
+      },
+    });
+    if (selected) btn.classList.add("phase-bar__selected");
+    phaseRow.append(btn);
+  });
+
+  phaseBar.append(phaseHint, phaseRow);
+  container.append(phaseBar);
+
+  if (questions.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "text-body-secondary pillar-questions-empty";
     empty.textContent =
       "Assessment questions for this pillar are not authored yet. Capture evidence under Your judgement below, then score the pillar.";
-
-    container.append(
-      empty
-    );
-
+    container.append(empty);
     return;
   }
 
-  questions.forEach(
-    (q) => {
-      const questionWrap =
-        document.createElement(
-          "div"
-        );
+  const PLACEHOLDERS = {
+    "q1-first-impression": {
+      observed: "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
+      learned: "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
+    },
+    "q2-wayfinding-responsiveness": {
+      observed: "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
+      learned: "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
+    },
+    "q3-complaint-issue-handling": {
+      observed: "",
+      learned: "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
+    },
+    "q4-customer-satisfaction-awareness": {
+      observed: "",
+      learned: "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
+    },
+    "q5-consistency-of-interaction": {
+      observed: "e.g. One colleague greeted well and knew the product; another barely looked up.",
+      learned: "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
+    },
+  };
 
-      questionWrap.className =
-        "question-block stack-tight";
+  questions.forEach((q) => {
+    const questionWrap = document.createElement("div");
+    questionWrap.className = "question-block stack-tight";
+    questionWrap.dataset.phase = phase;
 
-      const route =
-        q.investigationRoute ||
-        "ASK_THEN_EVIDENCE";
+    const route = q.investigationRoute || "ASK_THEN_EVIDENCE";
+    const observeFirst =
+      route === "OBSERVE_THEN_ASK" || route === "OBSERVE_ASK_EVIDENCE";
 
-      const observeFirst =
-        route ===
-          "OBSERVE_THEN_ASK" ||
-        route ===
-          "OBSERVE_ASK_EVIDENCE";
+    const existing = pillar.questionResponses?.[q.id] || {};
+    const existingObserved = existing.observed || "";
+    const existingLearned = existing.learned || existing.response || "";
+    const ph = PLACEHOLDERS[q.id] || {
+      observed: "Short factual notes on what you saw. A sentence or two is enough.",
+      learned: "What the manager or staff told you. Keep it brief.",
+    };
 
-      const existing =
-        pillar.questionResponses?.[
-          q.id
-        ] || {};
-
-      const existingObserved =
-        existing.observed ||
-        "";
-
-      const existingLearned =
-        existing.learned ||
-        existing.response ||
-        "";
-
-      const PLACEHOLDERS = {
-        "q1-first-impression": {
-          observed:
-            "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
-
-          learned:
-            "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
-        },
-
-        "q2-wayfinding-responsiveness": {
-          observed:
-            "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
-
-          learned:
-            "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
-        },
-
-        "q3-complaint-issue-handling": {
-          observed:
-            "",
-
-          learned:
-            "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
-        },
-
-        "q4-customer-satisfaction-awareness": {
-          observed:
-            "",
-
-          learned:
-            "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
-        },
-
-        "q5-consistency-of-interaction": {
-          observed:
-            "e.g. One colleague greeted well and knew the product; another barely looked up.",
-
-          learned:
-            "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
-        },
-      };
-
-      const ph =
-        PLACEHOLDERS[q.id] || {
-          observed:
-            "Short factual notes on what you saw. A sentence or two is enough.",
-
-          learned:
-            "What the manager or staff told you. Keep it brief.",
+    function saveResponse(field, value) {
+      mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+        if (!p.questionResponses) p.questionResponses = {};
+        const prev = p.questionResponses[q.id] || {};
+        p.questionResponses[q.id] = {
+          ...prev,
+          [field]: value,
         };
+      });
+    }
 
-      function saveQuestionField(
-        fieldName,
-        value
-      ) {
-        mutatePillar(
-          org.id,
-          review.id,
-          pillar.pillarKey,
-          (p) => {
-            if (
-              !p.questionResponses
-            ) {
-              p.questionResponses =
-                {};
-            }
+    const qText = document.createElement("p");
+    qText.className = "question-block__text";
+    qText.textContent = q.question;
+    questionWrap.append(qText);
 
-            const current =
-              p.questionResponses[
-                q.id
-              ] || {
-                observed: "",
-                learned: "",
-                response: "",
-                evidenceNotes: "",
-                capturedAt: null,
-              };
+    // --- OBSERVED ---
+    if (observeFirst) {
+      const observeBlock = document.createElement("div");
+      observeBlock.className = "question-observed";
 
-            const next = {
-              ...current,
-              [fieldName]:
-                value,
+      const observeLabel = document.createElement("p");
+      observeLabel.className = "field__label";
+      observeLabel.textContent =
+        phase === "discussion" ? "What I observed (from the floor)" : "What I observed";
 
-              capturedAt:
-                current.capturedAt ||
-                new Date().toISOString(),
-            };
-
-            if (
-              fieldName ===
-              "learned"
-            ) {
-              next.response =
-                value;
-            }
-
-            p.questionResponses[
-              q.id
-            ] = next;
-          }
-        );
-      }
-
-      const questionText =
-        document.createElement(
-          "p"
-        );
-
-      questionText.className =
-        "question-block__text";
-
-      questionText.textContent =
-        q.question;
-
-      questionWrap.append(
-        questionText
-      );
-
-      if (observeFirst) {
-        const observeLabel =
-          document.createElement(
-            "p"
-          );
-
-        observeLabel.className =
-          "field__label";
-
-        observeLabel.textContent =
-          "What I observed";
-
-        const observeHint =
-          document.createElement(
-            "p"
-          );
-
-        observeHint.className =
-          "text-caption";
-
+      if (phase === "discussion") {
+        const observedRead = document.createElement("div");
+        observedRead.className = "question-observed-readonly";
+        if (existingObserved.trim()) {
+          observedRead.textContent = existingObserved;
+        } else {
+          observedRead.classList.add("question-observed-readonly--empty");
+          observedRead.textContent =
+            "No observation recorded yet. Switch to Observe if you still need to capture what you saw.";
+        }
+        observeBlock.append(observeLabel, observedRead);
+      } else {
+        const observeHint = document.createElement("p");
+        observeHint.className = "text-caption";
         observeHint.textContent =
-          "Look first. Short factual notes. A sentence or two is enough. Not the final judgement.";
+          "One short factual line is enough before you leave this area.";
 
-        questionWrap.append(
-          observeLabel,
-          observeHint
-        );
-
-        if (
-          Array.isArray(
-            q.whatToObserve
-          ) &&
-          q.whatToObserve.length >
-            0
-        ) {
-          const lookFor =
-            document.createElement(
-              "p"
-            );
-
-          lookFor.className =
-            "text-caption question-block__look-for";
-
-          lookFor.textContent =
-            "Look for: " +
-            q.whatToObserve.join(
-              ", "
-            );
-
-          questionWrap.append(
-            lookFor
-          );
+        if (q.whatToObserve && q.whatToObserve.length) {
+          const lookFor = document.createElement("p");
+          lookFor.className = "text-caption question-block__look-for";
+          lookFor.textContent = "Look for: " + q.whatToObserve.join(", ");
+          observeBlock.append(observeLabel, observeHint, lookFor);
+        } else {
+          observeBlock.append(observeLabel, observeHint);
         }
 
-        const observedField =
-          createTextField({
-            id: `question-observed-${q.id}`,
-            label: "",
-            textarea: true,
-          });
-
-        const lab =
-          observedField.element.querySelector(
-            ".field__label"
-          );
-
-        if (lab) {
-          lab.style.display =
-            "none";
-        }
-
-        observedField.input.value =
-          existingObserved;
-
-        observedField.input.rows =
-          2;
-
-        observedField.input.placeholder =
-          ph.observed;
-
-        observedField.element.classList.add(
-          "question-observed"
-        );
-
-        observedField.input.addEventListener(
-          "input",
-          () => {
-            observedField.input.style.height =
-              "auto";
-
-            observedField.input.style.height =
-              `${observedField.input.scrollHeight}px`;
-          }
-        );
-
-        observedField.input.addEventListener(
-          "blur",
-          () => {
-            saveQuestionField(
-              "observed",
-              observedField.input.value
-            );
-          }
-        );
-
-        questionWrap.append(
-          observedField.element
-        );
-
-        const askCue =
-          document.createElement(
-            "p"
-          );
-
-        askCue.className =
-          "text-caption question-block__ask-cue";
-
-        askCue.textContent =
-          "Then ask how this is normally maintained or done.";
-
-        questionWrap.append(
-          askCue
-        );
-      }
-
-      const learnedLabel =
-        document.createElement(
-          "p"
-        );
-
-      learnedLabel.className =
-        "field__label";
-
-      learnedLabel.textContent =
-        "What I learned";
-
-      const learnedHint =
-        document.createElement(
-          "p"
-        );
-
-      learnedHint.className =
-        "text-caption";
-
-      learnedHint.textContent =
-        observeFirst
-          ? "What the manager or staff told you after you looked. Keep it brief."
-          : "What the manager or staff told you, and any example they gave. Keep it brief.";
-
-      const learnedField =
-        createTextField({
-          id: `question-learned-${q.id}`,
+        const observedField = createTextField({
+          id: "observed-" + q.id,
           label: "",
           textarea: true,
         });
-
-      const learnedLab =
-        learnedField.element.querySelector(
-          ".field__label"
-        );
-
-      if (learnedLab) {
-        learnedLab.style.display =
-          "none";
+        observedField.input.placeholder = ph.observed;
+        observedField.input.value = existingObserved;
+        observedField.input.addEventListener("blur", () => {
+          saveResponse("observed", observedField.input.value);
+        });
+        observeBlock.append(observedField.element);
       }
 
-      learnedField.input.value =
-        existingLearned;
-
-      learnedField.input.rows =
-        2;
-
-      learnedField.input.placeholder =
-        ph.learned;
-
-      learnedField.element.classList.add(
-        "question-learned"
-      );
-
-      learnedField.input.addEventListener(
-        "input",
-        () => {
-          learnedField.input.style.height =
-            "auto";
-
-          learnedField.input.style.height =
-            `${learnedField.input.scrollHeight}px`;
-        }
-      );
-
-      learnedField.input.addEventListener(
-        "blur",
-        () => {
-          saveQuestionField(
-            "learned",
-            learnedField.input.value
-          );
-        }
-      );
-
-      questionWrap.append(
-        learnedLabel,
-        learnedHint,
-        learnedField.element
-      );
-
-      const evLabel =
-        document.createElement(
-          "p"
-        );
-
-      evLabel.className =
-        "field__label";
-
-      evLabel.textContent =
-        "Evidence";
-
-      const evHint =
-        document.createElement(
-          "p"
-        );
-
-      evHint.className =
-        "text-caption";
-
-      evHint.textContent =
-        "Optional. Add only what supports this question. Source required.";
-
-      const questionEvidence =
-        (pillar.evidence || [])
-          .filter(
-            (e) =>
-              e.questionId ===
-              q.id
-          );
-
-      const evidenceEditor =
-        createEvidenceListEditor({
-          sourceTypes:
-            EVIDENCE_SOURCE_TYPES,
-
-          items:
-            questionEvidence,
-
-          onChange:
-            (items) => {
-              mutatePillar(
-                org.id,
-                review.id,
-                pillar.pillarKey,
-                (p) => {
-                  const others =
-                    (p.evidence || [])
-                      .filter(
-                        (e) =>
-                          e.questionId !==
-                          q.id
-                      );
-
-                  const tagged =
-                    items.map(
-                      (entry) => ({
-                        ...entry,
-                        questionId:
-                          q.id,
-                      })
-                    );
-
-                  p.evidence =
-                    others.concat(
-                      tagged
-                    );
-                }
-              );
-
-              refresh();
-            },
-        });
-
-      evidenceEditor.classList.add(
-        "question-evidence"
-      );
-
-      questionWrap.append(
-        evLabel,
-        evHint,
-        evidenceEditor
-      );
-
-      questionWrap.append(
-        createQuestionGuidance(q)
-      );
-
-      container.append(
-        questionWrap
-      );
+      questionWrap.append(observeBlock);
     }
-  );
 
-  const divider =
-    document.createElement(
-      "hr"
+    // --- LEARNED (Discussion mode, or ask-first always) ---
+    const showLearned = phase === "discussion" || !observeFirst;
+    if (showLearned) {
+      if (observeFirst && phase === "discussion") {
+        const askCue = document.createElement("p");
+        askCue.className = "question-block__ask-cue";
+        askCue.textContent = "Then ask";
+        questionWrap.append(askCue);
+      }
+
+      const learnedLabel = document.createElement("p");
+      learnedLabel.className = "field__label";
+      learnedLabel.textContent = "What I learned";
+
+      const learnedHint = document.createElement("p");
+      learnedHint.className = "text-caption";
+      learnedHint.textContent = observeFirst
+        ? "What the manager or staff said when you checked what you saw."
+        : "What you learned from asking and any evidence they could show.";
+
+      const learnedField = createTextField({
+        id: "learned-" + q.id,
+        label: "",
+        textarea: true,
+      });
+      learnedField.input.placeholder = ph.learned;
+      learnedField.input.value = existingLearned;
+      learnedField.input.addEventListener("blur", () => {
+        saveResponse("learned", learnedField.input.value);
+      });
+
+      const learnedBlock = document.createElement("div");
+      learnedBlock.className = "question-learned";
+      learnedBlock.append(learnedLabel, learnedHint, learnedField.element);
+      questionWrap.append(learnedBlock);
+    } else if (observeFirst && phase === "observe") {
+      const later = document.createElement("p");
+      later.className = "text-caption question-block__later";
+      later.textContent = "Discussion (what you learned) is available when you switch to Discussion.";
+      questionWrap.append(later);
+    }
+
+    // --- EVIDENCE (both modes; useful while walking and at table) ---
+    const evLabel = document.createElement("p");
+    evLabel.className = "field__label";
+    evLabel.textContent = "Evidence";
+
+    const evHint = document.createElement("p");
+    evHint.className = "text-caption";
+    evHint.textContent =
+      "Optional. Add only what supports this question. Source required.";
+
+    const questionEvidence = (pillar.evidence || []).filter(
+      (e) => e.questionId === q.id
     );
 
-  divider.className =
-    "section-divider";
+    const evidenceEditor = createEvidenceListEditor({
+      sourceTypes: EVIDENCE_SOURCE_TYPES,
+      items: questionEvidence,
+      onChange: (items) => {
+        mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+          const others = (p.evidence || []).filter((e) => e.questionId !== q.id);
+          const tagged = items.map((entry) => ({
+            ...entry,
+            questionId: q.id,
+          }));
+          p.evidence = others.concat(tagged);
+        });
+        refresh();
+      },
+    });
+    evidenceEditor.classList.add("question-evidence");
 
-  container.append(
-    divider
-  );
+    // In observe mode, keep evidence available but slightly quieter via class
+    if (phase === "observe") {
+      evidenceEditor.classList.add("question-evidence--observe");
+    }
+
+    questionWrap.append(evLabel, evHint, evidenceEditor);
+
+    // Guidance: quieter in observe mode (still available)
+    if (phase === "discussion") {
+      questionWrap.append(createQuestionGuidance(q));
+    } else {
+      const guideWrap = document.createElement("div");
+      guideWrap.className = "question-guidance--observe";
+      guideWrap.append(createQuestionGuidance(q));
+      questionWrap.append(guideWrap);
+    }
+
+    container.append(questionWrap);
+  });
 }
-
-// ==========================================================================
-// FROM THIS PILLAR
-// ==========================================================================
-//
-// Contextual only.
-//
-// The panel belongs to the judgement field below it.
-// It is hidden until that field is selected/focused.
-//
-// LOCKED ORDER:
-//
-// From this pillar
-// Section title
-// Hint
-// Input
-//
-// The section title must NEVER appear above this panel.
-// ==========================================================================
 
 function createFromPillarPanel(
   pillar,
