@@ -21,31 +21,59 @@ import {
   PILLAR_GUIDANCE,
   PILLAR_QUESTIONS,
 } from "../state/schema.js";
+
 import { createTextField } from "../components/textField.js";
 import { createButton } from "../components/button.js";
-import { createScoreSelector, SCORE_LABELS } from "../components/scoreSelector.js";
+import {
+  createScoreSelector,
+  SCORE_LABELS,
+} from "../components/scoreSelector.js";
+
 import {
   createTextListEditor,
   createEvidenceListEditor,
   createFreeTextAreaField,
 } from "../components/listEditor.js";
+
 import { createGuidancePanel } from "../components/guidancePanel.js";
 import { createQuestionGuidance } from "../components/questionGuidance.js";
 import { back } from "../router.js";
 
-function findPillar(state, organisationId, reviewId, pillarKey) {
-  const org = state.organisations.find((o) => o.id === organisationId);
-  const review = org?.reviews.find((r) => r.id === reviewId);
+
+function findPillar(
+  state,
+  organisationId,
+  reviewId,
+  pillarKey
+) {
+  const org = state.organisations.find(
+    (o) => o.id === organisationId
+  );
+
+  const review = org?.reviews.find(
+    (r) => r.id === reviewId
+  );
+
   const pillar = review?.pillarAssessments.find(
     (p) => p.pillarKey === pillarKey
   );
 
-  return { org, review, pillar };
+  return {
+    org,
+    review,
+    pillar,
+  };
 }
 
+
 function findCycle(review, cycleId) {
-  return review?.diagnosticCycles.find((c) => c.id === cycleId) || null;
+  return (
+    review?.diagnosticCycles.find(
+      (c) => c.id === cycleId
+    ) || null
+  );
 }
+
 
 function mutatePillar(
   organisationId,
@@ -54,7 +82,10 @@ function mutatePillar(
   mutator
 ) {
   updateState((state) => {
-    const { review, pillar } = findPillar(
+    const {
+      review,
+      pillar,
+    } = findPillar(
       state,
       organisationId,
       reviewId,
@@ -64,11 +95,14 @@ function mutatePillar(
     if (!pillar) return state;
 
     mutator(pillar, review);
-    review.lastUpdatedAt = new Date().toISOString();
+
+    review.lastUpdatedAt =
+      new Date().toISOString();
 
     return state;
   });
 }
+
 
 function mutateCyclePillar(
   organisationId,
@@ -78,24 +112,35 @@ function mutateCyclePillar(
   mutator
 ) {
   updateState((state) => {
-    const { review } = findPillar(
+    const {
+      review,
+    } = findPillar(
       state,
       organisationId,
       reviewId,
       pillarKey
     );
 
-    const cycle = findCycle(review, cycleId);
-    const entry = cycle?.pillars[pillarKey];
+    const cycle =
+      findCycle(
+        review,
+        cycleId
+      );
+
+    const entry =
+      cycle?.pillars[pillarKey];
 
     if (!entry) return state;
 
     mutator(entry);
-    review.lastUpdatedAt = new Date().toISOString();
+
+    review.lastUpdatedAt =
+      new Date().toISOString();
 
     return state;
   });
 }
+
 
 /**
  * In-page reason sheet.
@@ -107,79 +152,184 @@ function askReason({
   onConfirm,
   onCancel,
 }) {
-  const existing = document.querySelector(".reason-sheet");
+  const existing =
+    document.querySelector(
+      ".reason-sheet"
+    );
 
-  if (existing) existing.remove();
+  if (existing) {
+    existing.remove();
+  }
 
-  const overlay = document.createElement("div");
-  overlay.className = "reason-sheet";
-  overlay.setAttribute("role", "dialog");
-  overlay.setAttribute("aria-modal", "true");
+  const overlay =
+    document.createElement(
+      "div"
+    );
 
-  const panel = document.createElement("div");
-  panel.className = "reason-sheet__panel";
+  overlay.className =
+    "reason-sheet";
 
-  const heading = document.createElement("p");
-  heading.className = "reason-sheet__title";
-  heading.textContent = title;
+  overlay.setAttribute(
+    "role",
+    "dialog"
+  );
 
-  const body = document.createElement("p");
-  body.className = "reason-sheet__message";
-  body.textContent = message;
+  overlay.setAttribute(
+    "aria-modal",
+    "true"
+  );
 
-  const input = document.createElement("textarea");
-  input.className = "field__input reason-sheet__input";
+  const panel =
+    document.createElement(
+      "div"
+    );
+
+  panel.className =
+    "reason-sheet__panel";
+
+  const heading =
+    document.createElement(
+      "p"
+    );
+
+  heading.className =
+    "reason-sheet__title";
+
+  heading.textContent =
+    title;
+
+  const body =
+    document.createElement(
+      "p"
+    );
+
+  body.className =
+    "reason-sheet__message";
+
+  body.textContent =
+    message;
+
+  const input =
+    document.createElement(
+      "textarea"
+    );
+
+  input.className =
+    "field__input reason-sheet__input";
+
   input.rows = 3;
-  input.placeholder = "Optional note";
 
-  const row = document.createElement("div");
-  row.className = "reason-sheet__actions";
+  input.placeholder =
+    "Optional note";
 
-  const cancelBtn = document.createElement("button");
-  cancelBtn.type = "button";
-  cancelBtn.className = "btn btn-secondary";
-  cancelBtn.textContent = "Cancel";
+  const row =
+    document.createElement(
+      "div"
+    );
 
-  cancelBtn.addEventListener("click", () => {
-    overlay.remove();
+  row.className =
+    "reason-sheet__actions";
 
-    if (onCancel) {
-      onCancel();
+  const cancelBtn =
+    document.createElement(
+      "button"
+    );
+
+  cancelBtn.type =
+    "button";
+
+  cancelBtn.className =
+    "btn btn-secondary";
+
+  cancelBtn.textContent =
+    "Cancel";
+
+  cancelBtn.addEventListener(
+    "click",
+    () => {
+      overlay.remove();
+
+      if (onCancel) {
+        onCancel();
+      }
     }
-  });
+  );
 
-  const okBtn = document.createElement("button");
-  okBtn.type = "button";
-  okBtn.className = "btn btn-primary";
-  okBtn.textContent = confirmLabel || "Save";
+  const okBtn =
+    document.createElement(
+      "button"
+    );
 
-  okBtn.addEventListener("click", () => {
-    const value = input.value.trim();
+  okBtn.type =
+    "button";
 
-    overlay.remove();
+  okBtn.className =
+    "btn btn-primary";
 
-    onConfirm(value);
-  });
+  okBtn.textContent =
+    confirmLabel ||
+    "Save";
 
-  row.append(cancelBtn, okBtn);
-  panel.append(heading, body, input, row);
-  overlay.append(panel);
+  okBtn.addEventListener(
+    "click",
+    () => {
+      const value =
+        input.value.trim();
 
-  document.body.append(overlay);
+      overlay.remove();
+
+      onConfirm(value);
+    }
+  );
+
+  row.append(
+    cancelBtn,
+    okBtn
+  );
+
+  panel.append(
+    heading,
+    body,
+    input,
+    row
+  );
+
+  overlay.append(
+    panel
+  );
+
+  document.body.append(
+    overlay
+  );
 
   input.focus();
 }
+
+
+/* ==========================================================================
+   Summary strip
+   ========================================================================== */
 
 function renderSummaryStrip(
   pillar,
   isDiagnosticMode,
   cycle
 ) {
-  const wrap = document.createElement("div");
-  wrap.className = "stack-tight";
+  const wrap =
+    document.createElement(
+      "div"
+    );
 
-  const strip = document.createElement("div");
-  strip.className = "summary-strip";
+  wrap.className =
+    "stack-tight";
+
+  const strip =
+    document.createElement(
+      "div"
+    );
+
+  strip.className =
+    "summary-strip";
 
   const items = [
     [
@@ -188,12 +338,14 @@ function renderSummaryStrip(
         ? `${pillar.maturityScore} (${SCORE_LABELS[pillar.maturityScore]})`
         : "Not yet scored",
     ],
+
     [
       "Assessor confidence",
       pillar.assessorConfidence
         ? pillar.assessorConfidence.level
         : "Not set",
     ],
+
     [
       "Evidence collected",
       `${pillar.evidence.length} item${
@@ -202,6 +354,7 @@ function renderSummaryStrip(
           : "s"
       }`,
     ],
+
     [
       "Stage",
       isDiagnosticMode
@@ -210,27 +363,61 @@ function renderSummaryStrip(
     ],
   ];
 
-  items.forEach(([label, value]) => {
-    const item = document.createElement("div");
-    item.className = "summary-strip__item";
+  items.forEach(
+    ([label, value]) => {
+      const item =
+        document.createElement(
+          "div"
+        );
 
-    const l = document.createElement("span");
-    l.className = "summary-strip__label";
-    l.textContent = label;
+      item.className =
+        "summary-strip__item";
 
-    const v = document.createElement("span");
-    v.className = "summary-strip__value";
-    v.textContent = value;
+      const l =
+        document.createElement(
+          "span"
+        );
 
-    item.append(l, v);
-    strip.append(item);
-  });
+      l.className =
+        "summary-strip__label";
 
-  wrap.append(strip);
+      l.textContent =
+        label;
+
+      const v =
+        document.createElement(
+          "span"
+        );
+
+      v.className =
+        "summary-strip__value";
+
+      v.textContent =
+        value;
+
+      item.append(
+        l,
+        v
+      );
+
+      strip.append(
+        item
+      );
+    }
+  );
+
+  wrap.append(
+    strip
+  );
 
   if (!isDiagnosticMode) {
-    const ready = document.createElement("p");
-    ready.className = "pillar-ready text-caption";
+    const ready =
+      document.createElement(
+        "p"
+      );
+
+    ready.className =
+      "pillar-ready text-caption";
 
     const hasEvidence =
       pillar.evidence.length > 0;
@@ -243,10 +430,14 @@ function renderSummaryStrip(
         pillar.assessorConfidence?.level
       );
 
-    if (hasEvidence && hasScore) {
-      ready.textContent = hasConfidence
-        ? "Ready to mark this pillar complete"
-        : "Ready to mark complete. Confidence still optional but useful.";
+    if (
+      hasEvidence &&
+      hasScore
+    ) {
+      ready.textContent =
+        hasConfidence
+          ? "Ready to mark this pillar complete"
+          : "Ready to mark complete. Confidence still optional but useful.";
 
       ready.classList.add(
         "pillar-ready--ok"
@@ -255,23 +446,36 @@ function renderSummaryStrip(
       const missing = [];
 
       if (!hasEvidence) {
-        missing.push("evidence");
+        missing.push(
+          "evidence"
+        );
       }
 
       if (!hasScore) {
-        missing.push("maturity score");
+        missing.push(
+          "maturity score"
+        );
       }
 
       ready.textContent =
         "Still needed: " +
-        missing.join(" and ");
+        missing.join(
+          " and "
+        );
     }
 
-    wrap.append(ready);
+    wrap.append(
+      ready
+    );
   }
 
   return wrap;
 }
+
+
+/* ==========================================================================
+   Methodology questions
+   ========================================================================== */
 
 function renderMethodologyQuestions(
   container,
@@ -281,10 +485,14 @@ function renderMethodologyQuestions(
   refresh
 ) {
   const questions =
-    PILLAR_QUESTIONS[pillar.pillarKey] || [];
+    PILLAR_QUESTIONS[
+      pillar.pillarKey
+    ] || [];
 
   const sectionHeading =
-    document.createElement("h2");
+    document.createElement(
+      "h2"
+    );
 
   sectionHeading.className =
     "text-heading-section";
@@ -292,11 +500,17 @@ function renderMethodologyQuestions(
   sectionHeading.textContent =
     "Questions";
 
-  container.append(sectionHeading);
+  container.append(
+    sectionHeading
+  );
 
-  if (questions.length === 0) {
+  if (
+    questions.length === 0
+  ) {
     const empty =
-      document.createElement("p");
+      document.createElement(
+        "p"
+      );
 
     empty.className =
       "text-body-secondary pillar-questions-empty";
@@ -304,507 +518,583 @@ function renderMethodologyQuestions(
     empty.textContent =
       "Assessment questions for this pillar are not authored yet. Capture evidence under Your judgement below, then score the pillar.";
 
-    container.append(empty);
+    container.append(
+      empty
+    );
 
     return;
   }
 
-  questions.forEach((q) => {
-    const questionWrap =
-      document.createElement("div");
+  questions.forEach(
+    (q) => {
+      const questionWrap =
+        document.createElement(
+          "div"
+        );
 
-    questionWrap.className =
-      "question-block stack-tight";
+      questionWrap.className =
+        "question-block stack-tight";
 
-    const route =
-      q.investigationRoute ||
-      "ASK_THEN_EVIDENCE";
+      const route =
+        q.investigationRoute ||
+        "ASK_THEN_EVIDENCE";
 
-    const observeFirst =
-      route === "OBSERVE_THEN_ASK" ||
-      route === "OBSERVE_ASK_EVIDENCE";
+      const observeFirst =
+        route ===
+          "OBSERVE_THEN_ASK" ||
+        route ===
+          "OBSERVE_ASK_EVIDENCE";
 
-    const existing =
-      pillar.questionResponses?.[q.id] || {};
+      const existing =
+        pillar.questionResponses?.[
+          q.id
+        ] || {};
 
-    const existingObserved =
-      existing.observed || "";
+      const existingObserved =
+        existing.observed ||
+        "";
 
-    const existingLearned =
-      existing.learned ||
-      existing.response ||
-      "";
+      const existingLearned =
+        existing.learned ||
+        existing.response ||
+        "";
 
-    const PLACEHOLDERS = {
-      "q1-first-impression": {
-        observed:
-          "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
-        learned:
-          "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
-      },
+      const PLACEHOLDERS = {
+        "q1-first-impression": {
+          observed:
+            "e.g. Entrance tidy, signage inconsistent, no staff visible on arrival.",
 
-      "q2-wayfinding-responsiveness": {
-        observed:
-          "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
-        learned:
-          "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
-      },
+          learned:
+            "e.g. Manager says duty supervisor signs a daily check. No checklist seen.",
+        },
 
-      "q3-complaint-issue-handling": {
-        observed: "",
-        learned:
-          "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
-      },
+        "q2-wayfinding-responsiveness": {
+          observed:
+            "e.g. Aisle signs unclear, customers looking lost, staff hard to find on the floor.",
 
-      "q4-customer-satisfaction-awareness": {
-        observed: "",
-        learned:
-          "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
-      },
+          learned:
+            "e.g. Staff say they help when asked. No set coverage for the trade counter at peak.",
+        },
 
-      "q5-consistency-of-interaction": {
-        observed:
-          "e.g. One colleague greeted well and knew the product; another barely looked up.",
-        learned:
-          "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
-      },
-    };
+        "q3-complaint-issue-handling": {
+          observed:
+            "",
 
-    const ph =
-      PLACEHOLDERS[q.id] || {
-        observed:
-          "Short factual notes on what you saw. A sentence or two is enough.",
-        learned:
-          "What the manager or staff told you. Keep it brief.",
+          learned:
+            "e.g. Last complaint was last month. Branch manager owned it. Not clear if it was logged.",
+        },
+
+        "q4-customer-satisfaction-awareness": {
+          observed:
+            "",
+
+          learned:
+            "e.g. Owner knows regulars by name and notices when someone stops calling. No formal survey.",
+        },
+
+        "q5-consistency-of-interaction": {
+          observed:
+            "e.g. One colleague greeted well and knew the product; another barely looked up.",
+
+          learned:
+            "e.g. Service is picked up on the job. No shared standard beyond 'be helpful'.",
+        },
       };
 
-    function saveQuestionField(
-      fieldName,
-      value
-    ) {
-      mutatePillar(
-        org.id,
-        review.id,
-        pillar.pillarKey,
-        (p) => {
-          if (!p.questionResponses) {
-            p.questionResponses = {};
-          }
+      const ph =
+        PLACEHOLDERS[q.id] ||
+        {
+          observed:
+            "Short factual notes on what you saw. A sentence or two is enough.",
 
-          const current =
-            p.questionResponses[q.id] || {
-              observed: "",
-              learned: "",
-              response: "",
-              evidenceNotes: "",
-              capturedAt: null,
+          learned:
+            "What the manager or staff told you. Keep it brief.",
+        };
+
+      function saveQuestionField(
+        fieldName,
+        value
+      ) {
+        mutatePillar(
+          org.id,
+          review.id,
+          pillar.pillarKey,
+          (p) => {
+            if (
+              !p.questionResponses
+            ) {
+              p.questionResponses =
+                {};
+            }
+
+            const current =
+              p.questionResponses[
+                q.id
+              ] || {
+                observed:
+                  "",
+                learned:
+                  "",
+                response:
+                  "",
+                evidenceNotes:
+                  "",
+                capturedAt:
+                  null,
+              };
+
+            const next = {
+              ...current,
+
+              [fieldName]:
+                value,
+
+              capturedAt:
+                current.capturedAt ||
+                new Date().toISOString(),
             };
 
-          const next = {
-            ...current,
-            [fieldName]: value,
-            capturedAt:
-              current.capturedAt ||
-              new Date().toISOString(),
-          };
+            if (
+              fieldName ===
+              "learned"
+            ) {
+              next.response =
+                value;
+            }
 
-          if (
-            fieldName === "learned"
-          ) {
-            next.response = value;
+            p.questionResponses[
+              q.id
+            ] = next;
           }
-
-          p.questionResponses[q.id] =
-            next;
-        }
-      );
-    }
-
-    const questionText =
-      document.createElement("p");
-
-    questionText.className =
-      "question-block__text";
-
-    questionText.textContent =
-      q.question;
-
-    questionWrap.append(
-      questionText
-    );
-
-    if (observeFirst) {
-      const observeLabel =
-        document.createElement("p");
-
-      observeLabel.className =
-        "field__label";
-
-      observeLabel.textContent =
-        "What I observed";
-
-      const observeHint =
-        document.createElement("p");
-
-      observeHint.className =
-        "text-caption";
-
-      observeHint.textContent =
-        "Look first. Short factual notes. A sentence or two is enough. Not the final judgement.";
-
-      questionWrap.append(
-        observeLabel,
-        observeHint
-      );
-
-      if (
-        Array.isArray(q.whatToObserve) &&
-        q.whatToObserve.length > 0
-      ) {
-        const lookFor =
-          document.createElement("p");
-
-        lookFor.className =
-          "text-caption question-block__look-for";
-
-        lookFor.textContent =
-          "Look for: " +
-          q.whatToObserve.join(", ");
-
-        questionWrap.append(
-          lookFor
         );
       }
 
-      const observedField =
+      const questionText =
+        document.createElement(
+          "p"
+        );
+
+      questionText.className =
+        "question-block__text";
+
+      questionText.textContent =
+        q.question;
+
+      questionWrap.append(
+        questionText
+      );
+
+      if (
+        observeFirst
+      ) {
+        const observeLabel =
+          document.createElement(
+            "p"
+          );
+
+        observeLabel.className =
+          "field__label";
+
+        observeLabel.textContent =
+          "What I observed";
+
+        const observeHint =
+          document.createElement(
+            "p"
+          );
+
+        observeHint.className =
+          "text-caption";
+
+        observeHint.textContent =
+          "Look first. Short factual notes. A sentence or two is enough. Not the final judgement.";
+
+        questionWrap.append(
+          observeLabel,
+          observeHint
+        );
+
+        if (
+          Array.isArray(
+            q.whatToObserve
+          ) &&
+          q.whatToObserve.length >
+            0
+        ) {
+          const lookFor =
+            document.createElement(
+              "p"
+            );
+
+          lookFor.className =
+            "text-caption question-block__look-for";
+
+          lookFor.textContent =
+            "Look for: " +
+            q.whatToObserve.join(
+              ", "
+            );
+
+          questionWrap.append(
+            lookFor
+          );
+        }
+
+        const observedField =
+          createTextField({
+            id: `question-observed-${q.id}`,
+            label: "",
+            textarea: true,
+          });
+
+        const lab =
+          observedField.element.querySelector(
+            ".field__label"
+          );
+
+        if (lab) {
+          lab.style.display =
+            "none";
+        }
+
+        observedField.input.value =
+          existingObserved;
+
+        observedField.input.rows =
+          2;
+
+        observedField.input.placeholder =
+          ph.observed;
+
+        observedField.element.classList.add(
+          "question-observed"
+        );
+
+        observedField.input.addEventListener(
+          "input",
+          () => {
+            observedField.input.style.height =
+              "auto";
+
+            observedField.input.style.height =
+              `${observedField.input.scrollHeight}px`;
+          }
+        );
+
+        observedField.input.addEventListener(
+          "blur",
+          () => {
+            saveQuestionField(
+              "observed",
+              observedField.input.value
+            );
+          }
+        );
+
+        questionWrap.append(
+          observedField.element
+        );
+
+        const askCue =
+          document.createElement(
+            "p"
+          );
+
+        askCue.className =
+          "text-caption question-block__ask-cue";
+
+        askCue.textContent =
+          "Then ask how this is normally maintained or done.";
+
+        questionWrap.append(
+          askCue
+        );
+      }
+
+      const learnedLabel =
+        document.createElement(
+          "p"
+        );
+
+      learnedLabel.className =
+        "field__label";
+
+      learnedLabel.textContent =
+        "What I learned";
+
+      const learnedHint =
+        document.createElement(
+          "p"
+        );
+
+      learnedHint.className =
+        "text-caption";
+
+      learnedHint.textContent =
+        observeFirst
+          ? "What the manager or staff told you after you looked. Keep it brief."
+          : "What the manager or staff told you, and any example they gave. Keep it brief.";
+
+      const learnedField =
         createTextField({
-          id: `question-observed-${q.id}`,
+          id: `question-learned-${q.id}`,
           label: "",
           textarea: true,
         });
 
-      const lab =
-        observedField.element.querySelector(
+      const learnedLab =
+        learnedField.element.querySelector(
           ".field__label"
         );
 
-      if (lab) {
-        lab.style.display = "none";
+      if (
+        learnedLab
+      ) {
+        learnedLab.style.display =
+          "none";
       }
 
-      observedField.input.value =
-        existingObserved;
+      learnedField.input.value =
+        existingLearned;
 
-      observedField.input.rows = 2;
+      learnedField.input.rows =
+        2;
 
-      observedField.input.placeholder =
-        ph.observed;
+      learnedField.input.placeholder =
+        ph.learned;
 
-      observedField.element.classList.add(
-        "question-observed"
+      learnedField.element.classList.add(
+        "question-learned"
       );
 
-      observedField.input.addEventListener(
+      learnedField.input.addEventListener(
         "input",
         () => {
-          observedField.input.style.height =
+          learnedField.input.style.height =
             "auto";
 
-          observedField.input.style.height =
-            `${observedField.input.scrollHeight}px`;
+          learnedField.input.style.height =
+            `${learnedField.input.scrollHeight}px`;
         }
       );
 
-      observedField.input.addEventListener(
+      learnedField.input.addEventListener(
         "blur",
         () => {
           saveQuestionField(
-            "observed",
-            observedField.input.value
+            "learned",
+            learnedField.input.value
           );
         }
       );
 
       questionWrap.append(
-        observedField.element
+        learnedLabel,
+        learnedHint,
+        learnedField.element
       );
 
-      const askCue =
-        document.createElement("p");
+      const evLabel =
+        document.createElement(
+          "p"
+        );
 
-      askCue.className =
-        "text-caption question-block__ask-cue";
+      evLabel.className =
+        "field__label";
 
-      askCue.textContent =
-        "Then ask how this is normally maintained or done.";
+      evLabel.textContent =
+        "Evidence";
+
+      const evHint =
+        document.createElement(
+          "p"
+        );
+
+      evHint.className =
+        "text-caption";
+
+      evHint.textContent =
+        "Optional. Add only what supports this question. Source required.";
+
+      const questionEvidence =
+        (
+          pillar.evidence ||
+          []
+        ).filter(
+          (e) =>
+            e.questionId ===
+            q.id
+        );
+
+      const evidenceEditor =
+        createEvidenceListEditor({
+          sourceTypes:
+            EVIDENCE_SOURCE_TYPES,
+
+          items:
+            questionEvidence,
+
+          onChange:
+            (items) => {
+              mutatePillar(
+                org.id,
+                review.id,
+                pillar.pillarKey,
+                (p) => {
+                  const others =
+                    (
+                      p.evidence ||
+                      []
+                    ).filter(
+                      (e) =>
+                        e.questionId !==
+                        q.id
+                    );
+
+                  const tagged =
+                    items.map(
+                      (entry) => ({
+                        ...entry,
+                        questionId:
+                          q.id,
+                      })
+                    );
+
+                  p.evidence =
+                    others.concat(
+                      tagged
+                    );
+                }
+              );
+
+              refresh();
+            },
+        });
+
+      evidenceEditor.classList.add(
+        "question-evidence"
+      );
 
       questionWrap.append(
-        askCue
+        evLabel,
+        evHint,
+        evidenceEditor
+      );
+
+      questionWrap.append(
+        createQuestionGuidance(
+          q
+        )
+      );
+
+      container.append(
+        questionWrap
       );
     }
-
-    const learnedLabel =
-      document.createElement("p");
-
-    learnedLabel.className =
-      "field__label";
-
-    learnedLabel.textContent =
-      "What I learned";
-
-    const learnedHint =
-      document.createElement("p");
-
-    learnedHint.className =
-      "text-caption";
-
-    learnedHint.textContent =
-      observeFirst
-        ? "What the manager or staff told you after you looked. Keep it brief."
-        : "What the manager or staff told you, and any example they gave. Keep it brief.";
-
-    const learnedField =
-      createTextField({
-        id: `question-learned-${q.id}`,
-        label: "",
-        textarea: true,
-      });
-
-    const learnedLab =
-      learnedField.element.querySelector(
-        ".field__label"
-      );
-
-    if (learnedLab) {
-      learnedLab.style.display =
-        "none";
-    }
-
-    learnedField.input.value =
-      existingLearned;
-
-    learnedField.input.rows = 2;
-
-    learnedField.input.placeholder =
-      ph.learned;
-
-    learnedField.element.classList.add(
-      "question-learned"
-    );
-
-    learnedField.input.addEventListener(
-      "input",
-      () => {
-        learnedField.input.style.height =
-          "auto";
-
-        learnedField.input.style.height =
-          `${learnedField.input.scrollHeight}px`;
-      }
-    );
-
-    learnedField.input.addEventListener(
-      "blur",
-      () => {
-        saveQuestionField(
-          "learned",
-          learnedField.input.value
-        );
-      }
-    );
-
-    questionWrap.append(
-      learnedLabel,
-      learnedHint,
-      learnedField.element
-    );
-
-    const evLabel =
-      document.createElement("p");
-
-    evLabel.className =
-      "field__label";
-
-    evLabel.textContent =
-      "Evidence";
-
-    const evHint =
-      document.createElement("p");
-
-    evHint.className =
-      "text-caption";
-
-    evHint.textContent =
-      "Optional. Add only what supports this question. Source required.";
-
-    const questionEvidence =
-      (pillar.evidence || []).filter(
-        (e) => e.questionId === q.id
-      );
-
-    const evidenceEditor =
-      createEvidenceListEditor({
-        sourceTypes:
-          EVIDENCE_SOURCE_TYPES,
-
-        items:
-          questionEvidence,
-
-        onChange: (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              const others =
-                (p.evidence || []).filter(
-                  (e) =>
-                    e.questionId !== q.id
-                );
-
-              const tagged =
-                items.map(
-                  (entry) => ({
-                    ...entry,
-                    questionId:
-                      q.id,
-                  })
-                );
-
-              p.evidence =
-                others.concat(
-                  tagged
-                );
-            }
-          );
-
-          refresh();
-        },
-      });
-
-    evidenceEditor.classList.add(
-      "question-evidence"
-    );
-
-    questionWrap.append(
-      evLabel,
-      evHint,
-      evidenceEditor
-    );
-
-    questionWrap.append(
-      createQuestionGuidance(q)
-    );
-
-    container.append(
-      questionWrap
-    );
-  });
+  );
 
   const divider =
-    document.createElement("hr");
+    document.createElement(
+      "hr"
+    );
 
   divider.className =
     "section-divider";
 
-  container.append(divider);
+  container.append(
+    divider
+  );
 }
 
+
 /* ==========================================================================
-   FROM THIS PILLAR
+   Findings snapshot
    ========================================================================== */
 
-/**
- * Creates the evidence/findings context that sits immediately above
- * whichever judgement box the assessor has selected.
- *
- * This deliberately uses the information already captured in the pillar.
- * It does not invent a judgement or write the assessor's conclusion for them.
- */
-function renderFindingContext(
-  pillar,
-  type
+function renderFindingsSnapshot(
+  pillar
 ) {
   const wrap =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   wrap.className =
-    "judgement-context";
+    "findings-snapshot";
 
-  const heading =
-    document.createElement("p");
+  const title =
+    document.createElement(
+      "p"
+    );
 
-  heading.className =
-    "judgement-context__title";
+  title.className =
+    "findings-snapshot__title";
 
-  heading.textContent =
+  title.textContent =
     "From this pillar";
 
   const subtitle =
-    document.createElement("p");
+    document.createElement(
+      "p"
+    );
 
   subtitle.className =
-    "judgement-context__subtitle";
-
-  const subtitles = {
-    strengths:
-      "Use the evidence below to identify what is working well.",
-
-    opportunities:
-      "Use the evidence below to identify gaps, inconsistency or areas of weaker maturity.",
-
-    observation:
-      "Use the evidence below to form a balanced professional view.",
-  };
+    "text-caption findings-snapshot__subtitle";
 
   subtitle.textContent =
-    subtitles[type] ||
-    subtitles.strengths;
+    "Your investigation notes and evidence. Use these when writing strengths, opportunities and the professional observation. Not shown to the client as written here.";
 
   wrap.append(
-    heading,
+    title,
     subtitle
   );
 
   const questions =
-    PILLAR_QUESTIONS[pillar.pillarKey] ||
-    [];
+    PILLAR_QUESTIONS[
+      pillar.pillarKey
+    ] || [];
 
   const responses =
-    pillar.questionResponses || {};
+    pillar.questionResponses ||
+    {};
 
   const evidence =
-    pillar.evidence || [];
+    pillar.evidence ||
+    [];
 
   let any = false;
 
   questions.forEach(
     (q, index) => {
-      const response =
-        responses[q.id] || {};
+      const r =
+        responses[q.id] ||
+        {};
 
       const observed =
         (
-          response.observed || ""
+          r.observed ||
+          ""
         ).trim();
 
       const learned =
         (
-          response.learned ||
-          response.response ||
+          r.learned ||
+          r.response ||
           ""
         ).trim();
 
       const qEvidence =
         evidence.filter(
           (e) =>
-            e.questionId === q.id
+            e.questionId ===
+            q.id
         );
 
       if (
         !observed &&
         !learned &&
-        qEvidence.length === 0
+        qEvidence.length ===
+          0
       ) {
         return;
       }
@@ -812,40 +1102,55 @@ function renderFindingContext(
       any = true;
 
       const block =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       block.className =
-        "judgement-context__question";
+        "findings-snapshot__question";
 
       const qTitle =
-        document.createElement("p");
+        document.createElement(
+          "p"
+        );
 
       qTitle.className =
-        "judgement-context__question-title";
+        "findings-snapshot__q-title";
 
-      const shortQuestion =
-        q.question.length > 100
-          ? q.question.slice(0, 97) +
-            "..."
+      const shortQ =
+        q.question.length >
+        90
+          ? q.question.slice(
+              0,
+              87
+            ) + "..."
           : q.question;
 
       qTitle.textContent =
-        `Q${index + 1}. ${shortQuestion}`;
+        `Q${index + 1}. ${shortQ}`;
 
-      block.append(qTitle);
+      block.append(
+        qTitle
+      );
 
-      if (observed) {
+      if (
+        observed
+      ) {
         const row =
-          document.createElement("p");
+          document.createElement(
+            "p"
+          );
 
         row.className =
-          "judgement-context__row";
+          "findings-snapshot__row";
 
         const tag =
-          document.createElement("span");
+          document.createElement(
+            "span"
+          );
 
         tag.className =
-          "judgement-context__tag";
+          "findings-snapshot__tag";
 
         tag.textContent =
           "Observed";
@@ -853,25 +1158,34 @@ function renderFindingContext(
         row.append(
           tag,
           document.createTextNode(
-            " " + observed
+            " " +
+              observed
           )
         );
 
-        block.append(row);
+        block.append(
+          row
+        );
       }
 
-      if (learned) {
+      if (
+        learned
+      ) {
         const row =
-          document.createElement("p");
+          document.createElement(
+            "p"
+          );
 
         row.className =
-          "judgement-context__row";
+          "findings-snapshot__row";
 
         const tag =
-          document.createElement("span");
+          document.createElement(
+            "span"
+          );
 
         tag.className =
-          "judgement-context__tag";
+          "findings-snapshot__tag";
 
         tag.textContent =
           "Learned";
@@ -879,26 +1193,33 @@ function renderFindingContext(
         row.append(
           tag,
           document.createTextNode(
-            " " + learned
+            " " +
+              learned
           )
         );
 
-        block.append(row);
+        block.append(
+          row
+        );
       }
 
       qEvidence.forEach(
         (e) => {
           const row =
-            document.createElement("p");
+            document.createElement(
+              "p"
+            );
 
           row.className =
-            "judgement-context__row";
+            "findings-snapshot__row";
 
           const tag =
-            document.createElement("span");
+            document.createElement(
+              "span"
+            );
 
           tag.className =
-            "judgement-context__tag";
+            "findings-snapshot__tag";
 
           tag.textContent =
             e.sourceType ||
@@ -908,60 +1229,76 @@ function renderFindingContext(
             tag,
             document.createTextNode(
               " " +
-                (e.content || "")
+                (e.content ||
+                  "")
             )
           );
 
-          block.append(row);
+          block.append(
+            row
+          );
         }
       );
 
-      wrap.append(block);
+      wrap.append(
+        block
+      );
     }
   );
 
-  const otherEvidence =
+  const otherEv =
     evidence.filter(
-      (e) => !e.questionId
+      (e) =>
+        !e.questionId
     );
 
   if (
-    otherEvidence.length > 0
+    otherEv.length > 0
   ) {
     any = true;
 
     const block =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     block.className =
-      "judgement-context__question";
+      "findings-snapshot__question";
 
-    const title =
-      document.createElement("p");
+    const qTitle =
+      document.createElement(
+        "p"
+      );
 
-    title.className =
-      "judgement-context__question-title";
+    qTitle.className =
+      "findings-snapshot__q-title";
 
-    title.textContent =
+    qTitle.textContent =
       questions.length
         ? "Other evidence"
         : "Evidence";
 
-    block.append(title);
+    block.append(
+      qTitle
+    );
 
-    otherEvidence.forEach(
+    otherEv.forEach(
       (e) => {
         const row =
-          document.createElement("p");
+          document.createElement(
+            "p"
+          );
 
         row.className =
-          "judgement-context__row";
+          "findings-snapshot__row";
 
         const tag =
-          document.createElement("span");
+          document.createElement(
+            "span"
+          );
 
         tag.className =
-          "judgement-context__tag";
+          "findings-snapshot__tag";
 
         tag.textContent =
           e.sourceType ||
@@ -971,35 +1308,152 @@ function renderFindingContext(
           tag,
           document.createTextNode(
             " " +
-              (e.content || "")
+              (e.content ||
+                "")
           )
         );
 
-        block.append(row);
+        block.append(
+          row
+        );
       }
     );
 
-    wrap.append(block);
+    wrap.append(
+      block
+    );
   }
 
   if (!any) {
     const empty =
-      document.createElement("p");
+      document.createElement(
+        "p"
+      );
 
     empty.className =
-      "judgement-context__empty";
+      "text-caption findings-snapshot__empty";
 
     empty.textContent =
-      "No investigation notes or evidence have been captured on this pillar yet.";
+      "No investigation notes or evidence on this pillar yet.";
 
-    wrap.append(empty);
+    wrap.append(
+      empty
+    );
   }
 
   return wrap;
 }
 
+
 /* ==========================================================================
-   HEALTH REVIEW LAYER
+   NEW: Interactive "From this pillar" controller
+   ========================================================================== */
+
+function createFindingsController(
+  pillar
+) {
+  const panel =
+    renderFindingsSnapshot(
+      pillar
+    );
+
+  let activeTarget =
+    null;
+
+  function activate(
+    targetElement
+  ) {
+    if (
+      !targetElement
+    ) {
+      return;
+    }
+
+    activeTarget =
+      targetElement;
+
+    /*
+     * Move the SAME panel directly before
+     * whichever field the assessor is currently
+     * working in.
+     */
+    targetElement.parentNode.insertBefore(
+      panel,
+      targetElement
+    );
+
+    /*
+     * Small visual state only.
+     * No tabs or navigation controls.
+     */
+    document
+      .querySelectorAll(
+        ".pillar-judgement-field"
+      )
+      .forEach(
+        (field) => {
+          field.classList.remove(
+            "pillar-judgement-field--active"
+          );
+        }
+      );
+
+    targetElement.classList.add(
+      "pillar-judgement-field--active"
+    );
+  }
+
+  function bind(
+    targetElement
+  ) {
+    if (
+      !targetElement
+    ) {
+      return;
+    }
+
+    targetElement.classList.add(
+      "pillar-judgement-field"
+    );
+
+    /*
+     * Focus is the main trigger.
+     * This means tapping directly into the
+     * actual input opens the relevant findings.
+     */
+    targetElement.addEventListener(
+      "focusin",
+      () => {
+        activate(
+          targetElement
+        );
+      }
+    );
+
+    /*
+     * Click is included as well so the behaviour
+     * works consistently on iPhone/iPad.
+     */
+    targetElement.addEventListener(
+      "click",
+      () => {
+        activate(
+          targetElement
+        );
+      }
+    );
+  }
+
+  return {
+    panel,
+    bind,
+    activate,
+  };
+}
+
+
+/* ==========================================================================
+   Health Review Layer
    ========================================================================== */
 
 function renderHealthReviewLayer(
@@ -1010,7 +1464,9 @@ function renderHealthReviewLayer(
   refresh
 ) {
   const guidance =
-    PILLAR_GUIDANCE[pillar.pillarKey];
+    PILLAR_GUIDANCE[
+      pillar.pillarKey
+    ];
 
   renderMethodologyQuestions(
     container,
@@ -1020,420 +1476,200 @@ function renderHealthReviewLayer(
     refresh
   );
 
-  const pillarAssessmentHeading =
-    document.createElement("h2");
+  /*
+   * One shared findings panel.
+   * It will move above whichever judgement
+   * field the assessor is currently using.
+   */
+  const findingsController =
+    createFindingsController(
+      pillar
+    );
 
-  pillarAssessmentHeading.className =
-    "text-heading-section";
-
-  pillarAssessmentHeading.textContent =
-    "Your judgement";
-
-  container.append(
-    pillarAssessmentHeading
-  );
 
   /* ------------------------------------------------------------------------
-     Judgement selector
+     Strengths
      ------------------------------------------------------------------------ */
 
-  const judgementSelector =
-    document.createElement("div");
-
-  judgementSelector.className =
-    "judgement-selector";
-
-  const judgementOptions = [
-    {
-      key: "strengths",
-      label: "Strengths",
-    },
-    {
-      key: "opportunities",
-      label: "Opportunities",
-    },
-    {
-      key: "observation",
-      label: "Professional Observation",
-    },
-  ];
-
-  const judgementContent =
-    document.createElement("div");
-
-  judgementContent.className =
-    "judgement-content";
-
-  let activeJudgement =
-    "strengths";
-
-  function renderJudgement() {
-    judgementContent.innerHTML =
-      "";
-
-    const context =
-      renderFindingContext(
-        pillar,
-        activeJudgement
-      );
-
-    judgementContent.append(
-      context
+  const strengthsWrap =
+    document.createElement(
+      "div"
     );
 
-    /* ----------------------------------------------------------------------
-       Strengths
-       ---------------------------------------------------------------------- */
+  strengthsWrap.className =
+    "pillar-judgement-field-wrap";
 
-    if (
-      activeJudgement ===
-      "strengths"
-    ) {
-      const label =
-        document.createElement("p");
+  const strengthsLabel =
+    document.createElement(
+      "p"
+    );
 
-      label.className =
-        "field__label";
+  strengthsLabel.className =
+    "field__label";
 
-      label.textContent =
-        "Strengths";
+  strengthsLabel.textContent =
+    "Strengths";
 
-      const editor =
-        createFreeTextAreaField({
-          placeholder:
-            "What is working well? One point per line.",
-          items:
-            pillar.strengths,
+  const strengthsEditor =
+    createFreeTextAreaField({
+      placeholder:
+        "What is working well? One point per line.",
 
-          onChange: (items) => {
-            mutatePillar(
-              org.id,
-              review.id,
-              pillar.pillarKey,
-              (p) => {
-                p.strengths =
-                  items;
-              }
-            );
-          },
-        });
+      items:
+        pillar.strengths,
 
-      judgementContent.append(
-        label,
-        editor
-      );
-
-      return;
-    }
-
-    /* ----------------------------------------------------------------------
-       Opportunities
-       ---------------------------------------------------------------------- */
-
-    if (
-      activeJudgement ===
-      "opportunities"
-    ) {
-      const label =
-        document.createElement("p");
-
-      label.className =
-        "field__label";
-
-      label.textContent =
-        "Opportunities";
-
-      const hint =
-        document.createElement("p");
-
-      hint.className =
-        "text-caption";
-
-      hint.textContent =
-        "Name the gap or inconsistency, not the fix. One point per line.";
-
-      const editor =
-        createFreeTextAreaField({
-          placeholder:
-            "Where could operational maturity improve?",
-          items:
-            pillar.opportunities,
-
-          onChange: (items) => {
-            mutatePillar(
-              org.id,
-              review.id,
-              pillar.pillarKey,
-              (p) => {
-                p.opportunities =
-                  items;
-              }
-            );
-          },
-        });
-
-      judgementContent.append(
-        label,
-        hint,
-        editor,
-
-        createGuidancePanel(
-          guidance.opportunities
-        )
-      );
-
-      return;
-    }
-
-    /* ----------------------------------------------------------------------
-       Professional Observation
-       ---------------------------------------------------------------------- */
-
-    if (
-      activeJudgement ===
-      "observation"
-    ) {
-      const profObs =
-        createTextField({
-          id: "professionalObservation",
-          label:
-            "Professional observation (client-visible)",
-          textarea: true,
-        });
-
-      profObs.input.value =
-        pillar.professionalObservation;
-
-      profObs.input.placeholder =
-        "Clear, balanced summary for the client. Factual and professional. No internal confidence. No full action plan.";
-
-      const profObsHint =
-        document.createElement("p");
-
-      profObsHint.className =
-        "text-caption";
-
-      profObsHint.textContent =
-        "This appears in the client report. Write as you would to the business owner: tight, neutral, useful.";
-
-      profObs.input.addEventListener(
-        "blur",
-        () => {
+      onChange:
+        (items) => {
           mutatePillar(
             org.id,
             review.id,
             pillar.pillarKey,
             (p) => {
-              p.professionalObservation =
-                profObs.input.value;
-            }
-          );
-        }
-      );
-
-      judgementContent.append(
-        profObs.element,
-        profObsHint,
-
-        createGuidancePanel(
-          guidance.professionalObservation
-        )
-      );
-    }
-  }
-
-  judgementOptions.forEach(
-    (option) => {
-      const button =
-        document.createElement("button");
-
-      button.type = "button";
-
-      button.className =
-        "judgement-selector__button";
-
-      button.textContent =
-        option.label;
-
-      if (
-        option.key ===
-        activeJudgement
-      ) {
-        button.classList.add(
-          "judgement-selector__button--active"
-        );
-      }
-
-      button.addEventListener(
-        "click",
-        () => {
-          activeJudgement =
-            option.key;
-
-          Array.from(
-            judgementSelector.children
-          ).forEach(
-            (child) => {
-              child.classList.remove(
-                "judgement-selector__button--active"
-              );
-            }
-          );
-
-          button.classList.add(
-            "judgement-selector__button--active"
-          );
-
-          renderJudgement();
-        }
-      );
-
-      judgementSelector.append(
-        button
-      );
-    }
-  );
-
-  container.append(
-    judgementSelector,
-    judgementContent
-  );
-
-  renderJudgement();
-
-  /* ------------------------------------------------------------------------
-     Earlier / orphan evidence
-     ------------------------------------------------------------------------ */
-
-  const authoredQuestions =
-    (
-      PILLAR_QUESTIONS[
-        pillar.pillarKey
-      ] || []
-    ).length > 0;
-
-  const orphanEvidence =
-    (pillar.evidence || []).filter(
-      (e) => !e.questionId
-    );
-
-  if (
-    authoredQuestions &&
-    orphanEvidence.length > 0
-  ) {
-    const orphanLabel =
-      document.createElement("p");
-
-    orphanLabel.className =
-      "field__label";
-
-    orphanLabel.textContent =
-      "Earlier evidence (not linked to a question)";
-
-    const orphanHint =
-      document.createElement("p");
-
-    orphanHint.className =
-      "text-caption";
-
-    orphanHint.textContent =
-      "Captured before evidence was recorded against each question. Still counts toward this pillar.";
-
-    const orphanEditor =
-      createEvidenceListEditor({
-        sourceTypes:
-          EVIDENCE_SOURCE_TYPES,
-
-        items:
-          orphanEvidence,
-
-        onChange: (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              const linked =
-                (p.evidence || []).filter(
-                  (e) =>
-                    e.questionId
-                );
-
-              p.evidence =
-                linked.concat(
-                  items.map(
-                    (entry) => {
-                      const {
-                        questionId,
-                        ...rest
-                      } = entry;
-
-                      return rest;
-                    }
-                  )
-                );
-            }
-          );
-
-          refresh();
-        },
-      });
-
-    container.append(
-      orphanLabel,
-      orphanHint,
-      orphanEditor
-    );
-  }
-
-  if (!authoredQuestions) {
-    const evidenceLabel =
-      document.createElement("p");
-
-    evidenceLabel.className =
-      "field__label";
-
-    evidenceLabel.textContent =
-      "Evidence";
-
-    const evidenceHint =
-      document.createElement("p");
-
-    evidenceHint.className =
-      "text-caption";
-
-    evidenceHint.textContent =
-      "No assessment questions for this pillar yet. Capture at least one evidence item here before marking complete.";
-
-    const evidenceEditor =
-      createEvidenceListEditor({
-        sourceTypes:
-          EVIDENCE_SOURCE_TYPES,
-
-        items:
-          pillar.evidence || [],
-
-        onChange: (items) => {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              p.evidence =
+              p.strengths =
                 items;
             }
           );
-
-          refresh();
         },
-      });
+    });
 
-    container.append(
-      evidenceLabel,
-      evidenceHint,
-      evidenceEditor
+  strengthsWrap.append(
+    strengthsLabel,
+    strengthsEditor
+  );
+
+  /*
+   * Bind to the ACTUAL input/editor.
+   */
+  findingsController.bind(
+    strengthsEditor
+  );
+
+
+  /* ------------------------------------------------------------------------
+     Opportunities
+     ------------------------------------------------------------------------ */
+
+  const opportunitiesWrap =
+    document.createElement(
+      "div"
     );
-  }
+
+  opportunitiesWrap.className =
+    "pillar-judgement-field-wrap";
+
+  const oppsLabel =
+    document.createElement(
+      "p"
+    );
+
+  oppsLabel.className =
+    "field__label";
+
+  oppsLabel.textContent =
+    "Opportunities";
+
+  const oppsHint =
+    document.createElement(
+      "p"
+    );
+
+  oppsHint.className =
+    "text-caption";
+
+  oppsHint.textContent =
+    "Name the gap or inconsistency, not the fix. One point per line.";
+
+  const oppsEditor =
+    createFreeTextAreaField({
+      placeholder:
+        "Where could operational maturity improve?",
+
+      items:
+        pillar.opportunities,
+
+      onChange:
+        (items) => {
+          mutatePillar(
+            org.id,
+            review.id,
+            pillar.pillarKey,
+            (p) => {
+              p.opportunities =
+                items;
+            }
+          );
+        },
+    });
+
+  opportunitiesWrap.append(
+    oppsLabel,
+    oppsHint,
+    oppsEditor
+  );
+
+  findingsController.bind(
+    oppsEditor
+  );
+
+
+  /* ------------------------------------------------------------------------
+     Professional observation
+     ------------------------------------------------------------------------ */
+
+  const profObs =
+    createTextField({
+      id:
+        "professionalObservation",
+
+      label:
+        "Professional observation (client-visible)",
+
+      textarea:
+        true,
+    });
+
+  profObs.input.value =
+    pillar.professionalObservation;
+
+  profObs.input.placeholder =
+    "Clear, balanced summary for the client. Factual and professional. No internal confidence. No full action plan.";
+
+  const profObsHint =
+    document.createElement(
+      "p"
+    );
+
+  profObsHint.className =
+    "text-caption";
+
+  profObsHint.textContent =
+    "This appears in the client report. Write as you would to the business owner: tight, neutral, useful.";
+
+  profObs.input.addEventListener(
+    "blur",
+    () => {
+      mutatePillar(
+        org.id,
+        review.id,
+        pillar.pillarKey,
+        (p) => {
+          p.professionalObservation =
+            profObs.input.value;
+        }
+      );
+    }
+  );
+
+  /*
+   * IMPORTANT:
+   * Bind to profObs.element rather than the input.
+   * The element is the complete field and therefore
+   * the findings panel sits above the whole field.
+   */
+  findingsController.bind(
+    profObs.element
+  );
+
 
   /* ------------------------------------------------------------------------
      Internal assessor notes
@@ -1441,10 +1677,14 @@ function renderHealthReviewLayer(
 
   const internalNotes =
     createTextField({
-      id: "internalAssessorNotes",
+      id:
+        "internalAssessorNotes",
+
       label:
         "Internal assessor notes (never client-visible)",
-      textarea: true,
+
+      textarea:
+        true,
     });
 
   internalNotes.element.classList.add(
@@ -1469,16 +1709,15 @@ function renderHealthReviewLayer(
     }
   );
 
-  container.append(
-    internalNotes.element
-  );
 
   /* ------------------------------------------------------------------------
-     Maturity score
+     Score
      ------------------------------------------------------------------------ */
 
   const scoreLabel =
-    document.createElement("p");
+    document.createElement(
+      "p"
+    );
 
   scoreLabel.className =
     "field__label";
@@ -1491,78 +1730,79 @@ function renderHealthReviewLayer(
       value:
         pillar.maturityScore,
 
-      onChange: (score) => {
-        const previousScore =
-          pillar.maturityScore;
+      onChange:
+        (score) => {
+          const previousScore =
+            pillar.maturityScore;
 
-        function commit(reason) {
-          mutatePillar(
-            org.id,
-            review.id,
-            pillar.pillarKey,
-            (p) => {
-              p.maturityScore =
-                score;
+          function commit(
+            reason
+          ) {
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
+                p.maturityScore =
+                  score;
 
-              p.scoreHistory.push({
-                score,
+                p.scoreHistory.push({
+                  score,
 
-                setAt:
-                  new Date().toISOString(),
+                  setAt:
+                    new Date().toISOString(),
 
-                reason:
-                  reason ||
-                  (previousScore ==
-                  null
-                    ? "Initial score"
-                    : ""),
-              });
-            }
-          );
+                  reason:
+                    reason ||
+                    (
+                      previousScore ==
+                      null
+                    )
+                      ? "Initial score"
+                      : "",
+                });
+              }
+            );
 
-          refresh();
-        }
+            refresh();
+          }
 
-        if (
-          previousScore != null &&
-          previousScore !== score
-        ) {
-          askReason({
-            title:
-              "Score revision",
+          if (
+            previousScore !=
+              null &&
+            previousScore !==
+              score
+          ) {
+            askReason({
+              title:
+                "Score revision",
 
-            message:
-              `Changing from ${previousScore} to ${score}. A short note helps if you revisit this later.`,
+              message:
+                `Changing from ${previousScore} to ${score}. A short note helps if you revisit this later.`,
 
-            confirmLabel:
-              "Save score",
+              confirmLabel:
+                "Save score",
 
-            onConfirm:
-              commit,
-          });
+              onConfirm:
+                commit,
+            });
 
-          return;
-        }
+            return;
+          }
 
-        commit("");
-      },
+          commit("");
+        },
     });
 
-  container.append(
-    scoreLabel,
-    scoreSelector,
-
-    createGuidancePanel(
-      guidance.maturityScore
-    )
-  );
 
   /* ------------------------------------------------------------------------
-     Assessor confidence
+     Confidence
      ------------------------------------------------------------------------ */
 
   const confidenceLabel =
-    document.createElement("p");
+    document.createElement(
+      "p"
+    );
 
   confidenceLabel.className =
     "field__label";
@@ -1571,7 +1811,9 @@ function renderHealthReviewLayer(
     "Assessor confidence (internal only)";
 
   const confidenceRow =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   confidenceRow.className =
     "confidence-row";
@@ -1579,72 +1821,80 @@ function renderHealthReviewLayer(
   CONFIDENCE_LEVELS.forEach(
     (level) => {
       const selected =
-        pillar.assessorConfidence
-          ?.level === level;
+        pillar.assessorConfidence?.level ===
+        level;
 
       const btn =
         createButton({
-          label: level,
+          label:
+            level,
 
           variant:
             selected
               ? "primary"
               : "secondary",
 
-          onClick: () => {
-            const previous =
-              pillar.assessorConfidence
-                ?.level;
+          onClick:
+            () => {
+              const previous =
+                pillar.assessorConfidence?.level;
 
-            function commit(reason) {
-              mutatePillar(
-                org.id,
-                review.id,
-                pillar.pillarKey,
-                (p) => {
-                  p.assessorConfidence =
-                    {
-                      level,
+              function commit(
+                reason
+              ) {
+                mutatePillar(
+                  org.id,
+                  review.id,
+                  pillar.pillarKey,
+                  (p) => {
+                    p.assessorConfidence =
+                      {
+                        level,
 
-                      reason:
-                        reason || "",
-                    };
-                }
+                        reason:
+                          reason ||
+                          "",
+                      };
+                  }
+                );
+
+                refresh();
+              }
+
+              if (
+                previous &&
+                previous !==
+                  level
+              ) {
+                askReason({
+                  title:
+                    "Confidence change",
+
+                  message:
+                    `Changing from ${previous} to ${level}. Optional note for your own reference.`,
+
+                  confirmLabel:
+                    "Save",
+
+                  onConfirm:
+                    commit,
+                });
+
+                return;
+              }
+
+              commit(
+                pillar
+                  .assessorConfidence
+                  ?.reason ||
+                  ""
               );
-
-              refresh();
-            }
-
-            if (
-              previous &&
-              previous !== level
-            ) {
-              askReason({
-                title:
-                  "Confidence change",
-
-                message:
-                  `Changing from ${previous} to ${level}. Optional note for your own reference.`,
-
-                confirmLabel:
-                  "Save",
-
-                onConfirm:
-                  commit,
-              });
-
-              return;
-            }
-
-            commit(
-              pillar
-                .assessorConfidence
-                ?.reason || ""
-            );
-          },
+            },
         });
 
-      if (selected) {
+      if (
+        selected
+      ) {
         btn.classList.add(
           "confidence-row__selected"
         );
@@ -1656,8 +1906,223 @@ function renderHealthReviewLayer(
     }
   );
 
+
+  /* ------------------------------------------------------------------------
+     Your judgement
+     ------------------------------------------------------------------------ */
+
+  const pillarAssessmentHeading =
+    document.createElement(
+      "h2"
+    );
+
+  pillarAssessmentHeading.className =
+    "text-heading-section";
+
+  pillarAssessmentHeading.textContent =
+    "Your judgement";
+
+
+  const authoredQuestions =
+    (
+      PILLAR_QUESTIONS[
+        pillar.pillarKey
+      ] || []
+    ).length > 0;
+
+
+  const orphanEvidence =
+    (
+      pillar.evidence ||
+      []
+    ).filter(
+      (e) =>
+        !e.questionId
+    );
+
+
+  if (
+    authoredQuestions &&
+    orphanEvidence.length >
+      0
+  ) {
+    const orphanLabel =
+      document.createElement(
+        "p"
+      );
+
+    orphanLabel.className =
+      "field__label";
+
+    orphanLabel.textContent =
+      "Earlier evidence (not linked to a question)";
+
+    const orphanHint =
+      document.createElement(
+        "p"
+      );
+
+    orphanHint.className =
+      "text-caption";
+
+    orphanHint.textContent =
+      "Captured before evidence was recorded against each question. Still counts toward this pillar.";
+
+    const orphanEditor =
+      createEvidenceListEditor({
+        sourceTypes:
+          EVIDENCE_SOURCE_TYPES,
+
+        items:
+          orphanEvidence,
+
+        onChange:
+          (items) => {
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
+                const linked =
+                  (
+                    p.evidence ||
+                    []
+                  ).filter(
+                    (e) =>
+                      e.questionId
+                  );
+
+                p.evidence =
+                  linked.concat(
+                    items.map(
+                      (
+                        entry
+                      ) => {
+                        const {
+                          questionId,
+                          ...rest
+                        } =
+                          entry;
+
+                        return rest;
+                      }
+                    )
+                  );
+              }
+            );
+
+            refresh();
+          },
+      });
+
+    container.append(
+      orphanLabel,
+      orphanHint,
+      orphanEditor
+    );
+  }
+
+
+  if (
+    !authoredQuestions
+  ) {
+    const evidenceLabel =
+      document.createElement(
+        "p"
+      );
+
+    evidenceLabel.className =
+      "field__label";
+
+    evidenceLabel.textContent =
+      "Evidence";
+
+    const evidenceHint =
+      document.createElement(
+        "p"
+      );
+
+    evidenceHint.className =
+      "text-caption";
+
+    evidenceHint.textContent =
+      "No assessment questions for this pillar yet. Capture at least one evidence item here before marking complete.";
+
+    const evidenceEditor =
+      createEvidenceListEditor({
+        sourceTypes:
+          EVIDENCE_SOURCE_TYPES,
+
+        items:
+          pillar.evidence ||
+          [],
+
+        onChange:
+          (items) => {
+            mutatePillar(
+              org.id,
+              review.id,
+              pillar.pillarKey,
+              (p) => {
+                p.evidence =
+                  items;
+              }
+            );
+
+            refresh();
+          },
+      });
+
+    container.append(
+      evidenceLabel,
+      evidenceHint,
+      evidenceEditor
+    );
+  }
+
+
+  /*
+   * IMPORTANT:
+   *
+   * We DO NOT append the findings panel here.
+   *
+   * It starts hidden from the page flow and is inserted
+   * dynamically directly above whichever actual field
+   * the assessor taps.
+   */
+
+
   container.append(
+    pillarAssessmentHeading,
+
+    strengthsWrap,
+
+    opportunitiesWrap,
+
+    createGuidancePanel(
+      guidance.opportunities
+    ),
+
+    profObs.element,
+
+    profObsHint,
+
+    createGuidancePanel(
+      guidance.professionalObservation
+    ),
+
+    internalNotes.element,
+
+    scoreLabel,
+
+    scoreSelector,
+
+    createGuidancePanel(
+      guidance.maturityScore
+    ),
+
     confidenceLabel,
+
     confidenceRow,
 
     createGuidancePanel(
@@ -1666,8 +2131,9 @@ function renderHealthReviewLayer(
   );
 }
 
+
 /* ==========================================================================
-   DIAGNOSTIC LAYER
+   Diagnostic Layer
    ========================================================================== */
 
 function renderDiagnosticLayer(
@@ -1680,13 +2146,17 @@ function renderDiagnosticLayer(
   refresh
 ) {
   const divider =
-    document.createElement("hr");
+    document.createElement(
+      "hr"
+    );
 
   divider.className =
     "section-divider";
 
   const heading =
-    document.createElement("h2");
+    document.createElement(
+      "h2"
+    );
 
   heading.className =
     "text-heading-section";
@@ -1696,10 +2166,14 @@ function renderDiagnosticLayer(
 
   const rootCause =
     createTextField({
-      id: "rootCauseAnalysis",
+      id:
+        "rootCauseAnalysis",
+
       label:
         "Root cause analysis",
-      textarea: true,
+
+      textarea:
+        true,
     });
 
   rootCause.input.value =
@@ -1723,10 +2197,14 @@ function renderDiagnosticLayer(
 
   const risk =
     createTextField({
-      id: "operationalRisk",
+      id:
+        "operationalRisk",
+
       label:
         "Operational risk",
-      textarea: true,
+
+      textarea:
+        true,
     });
 
   risk.input.value =
@@ -1750,10 +2228,14 @@ function renderDiagnosticLayer(
 
   const cost =
     createTextField({
-      id: "costOfInaction",
+      id:
+        "costOfInaction",
+
       label:
         "Cost of inaction",
-      textarea: true,
+
+      textarea:
+        true,
     });
 
   cost.input.value =
@@ -1776,7 +2258,9 @@ function renderDiagnosticLayer(
   );
 
   const recLabel =
-    document.createElement("p");
+    document.createElement(
+      "p"
+    );
 
   recLabel.className =
     "field__label";
@@ -1791,39 +2275,47 @@ function renderDiagnosticLayer(
 
       items:
         cycleEntry.recommendations.map(
-          (r) => r.text
+          (r) =>
+            r.text
         ),
 
-      onChange: (texts) => {
-        mutateCyclePillar(
-          org.id,
-          review.id,
-          cycleId,
-          pillarKey,
-          (e) => {
-            e.recommendations =
-              texts.map(
-                (text, i) => ({
-                  id:
-                    e.recommendations[
-                      i
-                    ]?.id ||
-                    `rec_${Date.now().toString(
-                      36
-                    )}_${i}`,
+      onChange:
+        (texts) => {
+          mutateCyclePillar(
+            org.id,
+            review.id,
+            cycleId,
+            pillarKey,
+            (e) => {
+              e.recommendations =
+                texts.map(
+                  (
+                    text,
+                    i
+                  ) => ({
+                    id:
+                      e.recommendations[
+                        i
+                      ]?.id ||
+                      `rec_${Date.now().toString(
+                        36
+                      )}_${i}`,
 
-                  text,
+                    text,
 
-                  businessImpact: [],
-                })
-              );
-          }
-        );
-      },
+                    businessImpact:
+                      [],
+                  })
+                );
+            }
+          );
+        },
     });
 
   const planLabel =
-    document.createElement("p");
+    document.createElement(
+      "p"
+    );
 
   planLabel.className =
     "field__label";
@@ -1838,40 +2330,44 @@ function renderDiagnosticLayer(
 
       items:
         cycleEntry.implementationPlan.map(
-          (s) => s.step
+          (s) =>
+            s.step
         ),
 
-      onChange: (steps) => {
-        mutateCyclePillar(
-          org.id,
-          review.id,
-          cycleId,
-          pillarKey,
-          (e) => {
-            e.implementationPlan =
-              steps.map(
-                (step, i) => ({
-                  id:
-                    e.implementationPlan[
-                      i
-                    ]?.id ||
-                    `plan_${Date.now().toString(
-                      36
-                    )}_${i}`,
+      onChange:
+        (steps) => {
+          mutateCyclePillar(
+            org.id,
+            review.id,
+            cycleId,
+            pillarKey,
+            (e) => {
+              e.implementationPlan =
+                steps.map(
+                  (
+                    step,
+                    i
+                  ) => ({
+                    id:
+                      e.implementationPlan[
+                        i
+                      ]?.id ||
+                      `plan_${Date.now().toString(
+                        36
+                      )}_${i}`,
 
-                  step,
+                    step,
 
-                  timeframe:
-                    e
-                      .implementationPlan[
-                      i
-                    ]?.timeframe ||
-                    "",
-                })
-              );
-          }
-        );
-      },
+                    timeframe:
+                      e.implementationPlan[
+                        i
+                      ]?.timeframe ||
+                      "",
+                  })
+                );
+            }
+          );
+        },
     });
 
   container.append(
@@ -1887,8 +2383,9 @@ function renderDiagnosticLayer(
   );
 }
 
+
 /* ==========================================================================
-   MAIN RENDER
+   Main Pillar Assessment
    ========================================================================== */
 
 export function renderPillarAssessment(
@@ -1911,10 +2408,13 @@ export function renderPillarAssessment(
     );
 
   const screen =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   screen.className =
     "screen stack";
+
 
   if (
     !org ||
@@ -1922,7 +2422,9 @@ export function renderPillarAssessment(
     !pillar
   ) {
     const notFound =
-      document.createElement("p");
+      document.createElement(
+        "p"
+      );
 
     notFound.className =
       "text-body-secondary";
@@ -1941,8 +2443,11 @@ export function renderPillarAssessment(
     return;
   }
 
+
   const isDiagnosticMode =
-    Boolean(params.cycleId);
+    Boolean(
+      params.cycleId
+    );
 
   const cycle =
     isDiagnosticMode
@@ -1952,12 +2457,15 @@ export function renderPillarAssessment(
         )
       : null;
 
+
   if (
     isDiagnosticMode &&
     !cycle
   ) {
     const notFound =
-      document.createElement("p");
+      document.createElement(
+        "p"
+      );
 
     notFound.className =
       "text-body-secondary";
@@ -1976,6 +2484,7 @@ export function renderPillarAssessment(
     return;
   }
 
+
   const cycleEntry =
     isDiagnosticMode
       ? cycle.pillars[
@@ -1983,12 +2492,15 @@ export function renderPillarAssessment(
         ]
       : null;
 
+
   if (
     isDiagnosticMode &&
     !cycleEntry
   ) {
     const notFound =
-      document.createElement("p");
+      document.createElement(
+        "p"
+      );
 
     notFound.className =
       "text-body-secondary";
@@ -2007,6 +2519,7 @@ export function renderPillarAssessment(
     return;
   }
 
+
   const pillarMeta =
     PILLARS.find(
       (p) =>
@@ -2014,14 +2527,18 @@ export function renderPillarAssessment(
         pillar.pillarKey
     );
 
+
   const heading =
-    document.createElement("h1");
+    document.createElement(
+      "h1"
+    );
 
   heading.className =
     "text-heading-screen";
 
   heading.textContent =
     pillarMeta.name;
+
 
   screen.append(
     heading,
@@ -2033,15 +2550,20 @@ export function renderPillarAssessment(
     )
   );
 
+
   const diagnosticLocked =
     isDiagnosticMode &&
     cycle.locked;
 
+
   const form =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   form.className =
     "stack";
+
 
   function refresh() {
     container.innerHTML =
@@ -2053,10 +2575,17 @@ export function renderPillarAssessment(
     );
   }
 
-  if (isDiagnosticMode) {
-    if (diagnosticLocked) {
+
+  if (
+    isDiagnosticMode
+  ) {
+    if (
+      diagnosticLocked
+    ) {
       const lockedNotice =
-        document.createElement("p");
+        document.createElement(
+          "p"
+        );
 
       lockedNotice.className =
         "text-body-secondary";
@@ -2088,9 +2617,11 @@ export function renderPillarAssessment(
     );
   }
 
+
   screen.append(
     form
   );
+
 
   if (
     isDiagnosticMode &&
@@ -2127,14 +2658,22 @@ export function renderPillarAssessment(
     );
   }
 
+
   const actions =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   actions.className =
     "screen-actions stack-tight";
 
-  if (!diagnosticLocked) {
-    if (isDiagnosticMode) {
+
+  if (
+    !diagnosticLocked
+  ) {
+    if (
+      isDiagnosticMode
+    ) {
       const currentStatus =
         cycleEntry.status;
 
@@ -2149,20 +2688,21 @@ export function renderPillarAssessment(
           variant:
             "primary",
 
-          onClick: () => {
-            mutateCyclePillar(
-              org.id,
-              review.id,
-              cycle.id,
-              pillar.pillarKey,
-              (e) => {
-                e.status =
-                  "complete";
-              }
-            );
+          onClick:
+            () => {
+              mutateCyclePillar(
+                org.id,
+                review.id,
+                cycle.id,
+                pillar.pillarKey,
+                (e) => {
+                  e.status =
+                    "complete";
+                }
+              );
 
-            back();
-          },
+              back();
+            },
         });
 
       actions.append(
@@ -2173,7 +2713,8 @@ export function renderPillarAssessment(
         pillar.healthReviewStatus;
 
       const canComplete =
-        pillar.evidence.length > 0 &&
+        pillar.evidence.length >
+          0 &&
         pillar.maturityScore !=
           null;
 
@@ -2188,27 +2729,30 @@ export function renderPillarAssessment(
           variant:
             "primary",
 
-          onClick: () => {
-            if (!canComplete) {
-              window.alert(
-                "Add at least one piece of evidence on this pillar (under any question) and a maturity score before marking complete."
+          onClick:
+            () => {
+              if (
+                !canComplete
+              ) {
+                window.alert(
+                  "Add at least one piece of evidence on this pillar (under any question) and a maturity score before marking complete."
+                );
+
+                return;
+              }
+
+              mutatePillar(
+                org.id,
+                review.id,
+                pillar.pillarKey,
+                (p) => {
+                  p.healthReviewStatus =
+                    "complete";
+                }
               );
 
-              return;
-            }
-
-            mutatePillar(
-              org.id,
-              review.id,
-              pillar.pillarKey,
-              (p) => {
-                p.healthReviewStatus =
-                  "complete";
-              }
-            );
-
-            back();
-          },
+              back();
+            },
         });
 
       actions.append(
@@ -2216,6 +2760,7 @@ export function renderPillarAssessment(
       );
     }
   }
+
 
   actions.append(
     createButton({
@@ -2225,10 +2770,12 @@ export function renderPillarAssessment(
       variant:
         "secondary",
 
-      onClick: () =>
-        back(),
+      onClick:
+        () =>
+          back(),
     })
   );
+
 
   screen.append(
     actions
