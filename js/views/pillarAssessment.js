@@ -1654,6 +1654,128 @@ function createJudgementSection({
   return section;
 }
 
+
+/**
+ * Package B: suggested confidence from coverage + evidence + source diversity.
+ * Does not write assessorConfidence. Transparent profile for the UI.
+ * @param {object} pillar
+ * @returns {{ level: 'Low'|'Medium'|'High', profile: object, warnings: string[] }}
+ */
+function suggestAssessorConfidence(pillar) {
+  const questions = PILLAR_QUESTIONS[pillar.pillarKey] || [];
+  const questionCount = questions.length;
+  const responses = pillar.questionResponses || {};
+  const evidence = pillar.evidence || [];
+
+  let questionsInvestigated = 0;
+  questions.forEach((q) => {
+    const r = responses[q.id] || {};
+    const observed = (r.observed || "").trim();
+    const learned = (r.learned || r.response || "").trim();
+    if (observed || learned) questionsInvestigated += 1;
+  });
+
+  // Unauthored pillars: treat pillar-level notes lightly via evidence only
+  if (questionCount === 0) {
+    questionsInvestigated = 0;
+  }
+
+  const questionsWithEvidence = new Set(
+    evidence.map((e) => e.questionId).filter(Boolean)
+  ).size;
+
+  // Orphan / pillar-level evidence still counts as "some evidence"
+  const evidenceCount = evidence.length;
+  const sourceTypes = [
+    ...new Set(evidence.map((e) => e.sourceType).filter(Boolean)),
+  ];
+  const sourceCount = sourceTypes.length;
+
+  const profile = {
+    questionCount,
+    questionsInvestigated,
+    questionsWithEvidence,
+    evidenceCount,
+    sourceTypes,
+    sourceCount,
+  };
+
+  // --- Simple transparent rules (not quantity alone) ---
+  let level = "Low";
+
+  if (questionCount === 0) {
+    // No question architecture: base on evidence breadth only
+    if (evidenceCount === 0) level = "Low";
+    else if (evidenceCount >= 2 && sourceCount >= 2) level = "High";
+    else if (evidenceCount >= 1) level = "Medium";
+    else level = "Low";
+  } else {
+    const narrowEvidence =
+      evidenceCount > 0 && questionsWithEvidence <= 1 && sourceCount <= 1;
+    const strong =
+      questionsWithEvidence >= 3 &&
+      sourceCount >= 2 &&
+      questionsInvestigated >= Math.min(4, questionCount);
+    const moderate =
+      (questionsWithEvidence >= 2 && sourceCount >= 1) ||
+      (questionsInvestigated >= 3 && evidenceCount >= 1) ||
+      (evidenceCount >= 2 && questionsWithEvidence >= 2);
+
+    if (evidenceCount === 0 && questionsInvestigated === 0) {
+      level = "Low";
+    } else if (evidenceCount === 0 && questionsInvestigated > 0) {
+      // Notes without formal evidence: still limited support
+      level = questionsInvestigated >= 4 ? "Medium" : "Low";
+    } else if (narrowEvidence && questionsInvestigated <= 2) {
+      level = "Low";
+    } else if (strong) {
+      level = "High";
+    } else if (moderate) {
+      level = "Medium";
+    } else {
+      level = "Low";
+    }
+  }
+
+  const warnings = [];
+  const chosen = pillar.assessorConfidence?.level;
+  const score = pillar.maturityScore;
+
+  if (chosen === "High" && (level === "Low" || (evidenceCount <= 1 && questionsWithEvidence <= 1))) {
+    warnings.push(
+      "High confidence with limited evidence. Review before completing."
+    );
+  }
+  if (score === 4 && (level === "Low" || evidenceCount === 0 || questionsWithEvidence <= 1)) {
+    warnings.push(
+      "Score 4 with limited supporting evidence. Make sure the judgement is based on observed evidence, not assumption."
+    );
+  }
+  if (score === 1 && evidenceCount === 0 && questionsInvestigated <= 1) {
+    warnings.push(
+      "Low maturity score with little on file. Confirm this reflects what you found, not a gap in capture."
+    );
+  }
+
+  return { level, profile, warnings };
+}
+
+function formatConfidenceProfile(profile) {
+  if (profile.questionCount === 0) {
+    const src =
+      profile.sourceCount > 0
+        ? `${profile.sourceCount} evidence source${profile.sourceCount === 1 ? "" : "s"}`
+        : "no formal evidence sources yet";
+    return `${profile.evidenceCount} evidence item${profile.evidenceCount === 1 ? "" : "s"} · ${src}`;
+  }
+  return (
+    `${profile.questionsInvestigated}/${profile.questionCount} questions investigated · ` +
+    `${profile.questionsWithEvidence}/${profile.questionCount} have formal evidence · ` +
+    `${profile.sourceCount} evidence source${profile.sourceCount === 1 ? "" : "s"}`
+  );
+}
+
+
 // ==========================================================================
 // HEALTH REVIEW LAYER
 // ==========================================================================
@@ -2418,123 +2540,88 @@ function renderHealthReviewLayer(
   );
 
   // --------------------------------------------------------
-  // CONFIDENCE
+  // CONFIDENCE (Package B: suggestion + human choice)
   // --------------------------------------------------------
 
-  const confidenceLabel =
-    document.createElement(
-      "p"
-    );
+  const confidenceSuggestion = suggestAssessorConfidence(pillar);
 
-  confidenceLabel.className =
-    "field__label";
+  const confidenceLabel = document.createElement("p");
+  confidenceLabel.className = "field__label";
+  confidenceLabel.textContent = "Assessor confidence (internal only)";
 
-  confidenceLabel.textContent =
-    "Assessor confidence (internal only)";
+  const suggestionBox = document.createElement("div");
+  suggestionBox.className = "confidence-suggestion";
 
-  const confidenceRow =
-    document.createElement(
-      "div"
-    );
+  const suggestionLine = document.createElement("p");
+  suggestionLine.className = "confidence-suggestion__line";
+  suggestionLine.innerHTML =
+    `<span class="confidence-suggestion__label">Suggested:</span> ` +
+    `<strong>${confidenceSuggestion.level}</strong>`;
 
-  confidenceRow.className =
-    "confidence-row";
+  const profileLine = document.createElement("p");
+  profileLine.className = "text-caption confidence-suggestion__profile";
+  profileLine.textContent = formatConfidenceProfile(confidenceSuggestion.profile);
 
-  CONFIDENCE_LEVELS.forEach(
-    (level) => {
-      const selected =
-        pillar.assessorConfidence
-          ?.level ===
-        level;
+  suggestionBox.append(suggestionLine, profileLine);
 
-      const btn =
-        createButton({
-          label:
-            level,
+  confidenceSuggestion.warnings.forEach((msg) => {
+    const warn = document.createElement("p");
+    warn.className = "confidence-suggestion__warning";
+    warn.textContent = msg;
+    suggestionBox.append(warn);
+  });
 
-          variant:
-            selected
-              ? "primary"
-              : "secondary",
+  const confidenceRow = document.createElement("div");
+  confidenceRow.className = "confidence-row";
 
-          onClick:
-            () => {
-              const previous =
-                pillar.assessorConfidence
-                  ?.level;
+  CONFIDENCE_LEVELS.forEach((level) => {
+    const selected = pillar.assessorConfidence?.level === level;
+    const btn = createButton({
+      label: level,
+      variant: selected ? "primary" : "secondary",
+      onClick: () => {
+        const previous = pillar.assessorConfidence?.level;
 
-              function commit(
-                reason
-              ) {
-                mutatePillar(
-                  org.id,
-                  review.id,
-                  pillar.pillarKey,
-                  (p) => {
-                    p.assessorConfidence =
-                      {
-                        level,
+        function commit(reason) {
+          mutatePillar(org.id, review.id, pillar.pillarKey, (p) => {
+            p.assessorConfidence = { level, reason: reason || "" };
+          });
+          refresh();
+        }
 
-                        reason:
-                          reason ||
-                          "",
-                      };
-                  }
-                );
+        if (previous && previous !== level) {
+          askReason({
+            title: "Confidence change",
+            message: `Changing from ${previous} to ${level}. Optional note for your own reference.`,
+            confirmLabel: "Save",
+            onConfirm: commit,
+          });
+          return;
+        }
 
-                refresh();
-              }
+        commit(pillar.assessorConfidence?.reason || "");
+      },
+    });
 
-              if (
-                previous &&
-                previous !==
-                  level
-              ) {
-                askReason({
-                  title:
-                    "Confidence change",
-
-                  message:
-                    `Changing from ${previous} to ${level}. Optional note for your own reference.`,
-
-                  confirmLabel:
-                    "Save",
-
-                  onConfirm:
-                    commit,
-                });
-
-                return;
-              }
-
-              commit(
-                pillar.assessorConfidence
-                  ?.reason ||
-                  ""
-              );
-            },
-        });
-
-      if (selected) {
-        btn.classList.add(
-          "confidence-row__selected"
-        );
-      }
-
-      confidenceRow.append(
-        btn
-      );
+    if (selected) {
+      btn.classList.add("confidence-row__selected");
     }
-  );
+
+    // Quiet hint when button matches suggestion and nothing chosen yet
+    if (!pillar.assessorConfidence?.level && level === confidenceSuggestion.level) {
+      btn.classList.add("confidence-row__suggested");
+    }
+
+    confidenceRow.append(btn);
+  });
 
   container.append(
     confidenceLabel,
+    suggestionBox,
     confidenceRow,
-
-    createGuidancePanel(
-      guidance.assessorConfidence
-    )
+    createGuidancePanel(guidance.assessorConfidence)
   );
+
 }
 
 // ==========================================================================
