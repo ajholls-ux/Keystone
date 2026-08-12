@@ -1,9 +1,9 @@
 /* ==========================================================================
    Keystone Field Kit -- Components
-   Button, status marker. Grows as later milestones add components.
+   Button, status marker, forms, assessment components.
    ========================================================================== */
 
-/* Buttons -- one primary, one secondary. No tertiary variant. */
+/* Buttons */
 
 .btn {
   display: inline-flex;
@@ -17,7 +17,11 @@
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
 }
 
 .btn:active {
@@ -26,11 +30,11 @@
 
 .btn-primary {
   background: var(--color-orange-600);
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .btn-primary:active {
-  background: #9C4F26;
+  background: #9c4f26;
 }
 
 .btn-secondary {
@@ -43,7 +47,7 @@
   background: var(--color-orange-50);
 }
 
-/* Status marker -- status is never colour-only: dot + label always paired. */
+/* Status marker */
 
 .status-marker {
   display: inline-flex;
@@ -84,7 +88,7 @@
   color: var(--color-text-primary);
 }
 
-/* Form fields -- labels always visible above the input. */
+/* Form fields */
 
 .field__label {
   display: block;
@@ -105,6 +109,8 @@
   color: var(--color-text-primary);
   font-family: var(--font-family);
   font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+  box-sizing: border-box;
 }
 
 textarea.field__input {
@@ -120,7 +126,14 @@ textarea.field__input {
   border-color: var(--color-orange-500);
 }
 
-/* Question evidence notes -- secondary to the main Response field */
+/* Internal fields */
+
+.field--internal .field__input {
+  background: var(--color-bg);
+}
+
+/* Question evidence notes */
+
 .question-evidence-notes .field__label {
   color: var(--color-text-secondary);
   font-weight: 500;
@@ -132,7 +145,7 @@ textarea.field__input {
   font-size: var(--text-body-secondary-size);
 }
 
-/* Cards -- list items only, not a general container. */
+/* Cards */
 
 .card {
   display: flex;
@@ -176,7 +189,7 @@ textarea.field__input {
   color: var(--color-text-secondary);
 }
 
-/* Secondary action row (e.g. backup controls) */
+/* Action rows */
 
 .action-row {
   display: flex;
@@ -188,7 +201,9 @@ textarea.field__input {
   flex: 1;
 }
 
-/* Score selector */
+/* ==========================================================================
+   Score selector
+   ========================================================================== */
 
 .score-selector {
   display: grid;
@@ -201,13 +216,16 @@ textarea.field__input {
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   background: var(--color-surface);
   cursor: pointer;
   text-align: left;
   font-family: var(--font-family);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 
 .score-selector__option--selected {
@@ -226,7 +244,9 @@ textarea.field__input {
   color: var(--color-text-secondary);
 }
 
-/* List editor */
+/* ==========================================================================
+   List editor
+   ========================================================================== */
 
 .list-editor__list {
   list-style: none;
@@ -279,7 +299,7 @@ textarea.field__input {
 }
 
 .list-editor__textarea {
-  min-height: 88px; /* ~4 lines at 17px body text -- substantial usable height on iPhone */
+  min-height: 88px;
   resize: vertical;
   line-height: var(--text-body-line);
 }
@@ -305,7 +325,9 @@ textarea.field__input {
   width: 100%;
 }
 
-/* Progress bar */
+/* ==========================================================================
+   Progress
+   ========================================================================== */
 
 .progress-bar {
   width: 100%;
@@ -322,7 +344,9 @@ textarea.field__input {
   transition: width 200ms ease;
 }
 
-/* Summary card (Review Overview) */
+/* ==========================================================================
+   Summary card
+   ========================================================================== */
 
 .summary-card {
   background: var(--color-surface);
@@ -350,7 +374,9 @@ textarea.field__input {
   text-align: right;
 }
 
-/* Pillar row (Review Overview groupings) */
+/* ==========================================================================
+   Pillar rows
+   ========================================================================== */
 
 .pillar-row {
   display: flex;
@@ -373,13 +399,16 @@ textarea.field__input {
   margin-top: var(--space-3);
 }
 
-/* Assessment summary strip (Pillar Assessment) */
+/* ==========================================================================
+   Pillar Assessment -- Summary
+   ========================================================================== */
 
 .summary-strip {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-1) var(--space-2);
+  gap: var(--space-2);
   background: var(--color-orange-50);
+  border: 1px solid var(--color-orange-50);
   border-radius: var(--radius-card);
   padding: var(--space-2);
 }
@@ -387,19 +416,176 @@ textarea.field__input {
 .summary-strip__item {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .summary-strip__label {
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1.2;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   color: var(--color-text-secondary);
+  margin-bottom: 2px;
 }
 
 .summary-strip__value {
   font-size: var(--text-body-secondary-size);
   font-weight: 600;
   color: var(--color-text-primary);
+  line-height: 1.35;
+}
+
+.pillar-ready {
+  margin: 0;
+}
+
+.pillar-ready--ok {
+  color: var(--color-status-complete);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Pillar Assessment -- Questions
+   ========================================================================== */
+
+.question-block {
+  margin: 0 0 var(--space-3) 0;
+  padding: 0 0 var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.question-block:last-of-type {
+  border-bottom: none;
+  margin-bottom: var(--space-2);
+}
+
+.question-block__text {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+
+.question-block .field__label {
+  margin-top: var(--space-2);
+}
+
+.question-block .text-caption {
+  line-height: 1.4;
+}
+
+.question-block__look-for {
+  margin: 0 0 var(--space-1) 0;
+  padding-left: var(--space-1);
+  color: var(--color-text-secondary);
+}
+
+.question-block__ask-cue {
+  margin: var(--space-1) 0 var(--space-1) 0;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.question-observed .field__input {
+  background: var(--color-bg);
+  min-height: 72px;
+}
+
+.question-learned .field__input {
+  background: var(--color-surface);
+  min-height: 72px;
+}
+
+.question-evidence {
+  margin-top: var(--space-1);
+}
+
+.question-evidence .list-editor__add {
+  min-height: 44px;
+}
+
+.pillar-questions-empty {
+  margin: 0 0 var(--space-2) 0;
+}
+
+/* ==========================================================================
+   Pillar Assessment -- Findings snapshot
+   ========================================================================== */
+
+.findings-snapshot {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.findings-snapshot__title {
+  margin: 0 0 2px 0;
+  font-size: var(--text-body-secondary-size);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.findings-snapshot__subtitle {
+  margin: 0 0 var(--space-2) 0;
+  line-height: 1.4;
+}
+
+.findings-snapshot__question {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.findings-snapshot__question:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.findings-snapshot__q-title {
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--text-caption-size);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+
+.findings-snapshot__row {
+  margin: 0 0 6px 0;
+  font-size: var(--text-body-secondary-size);
+  color: var(--color-text-primary);
+  line-height: 1.45;
+}
+
+.findings-snapshot__row:last-child {
+  margin-bottom: 0;
+}
+
+.findings-snapshot__tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-orange-600);
+  margin-right: 4px;
+}
+
+.findings-snapshot__empty {
+  margin: 0;
+}
+
+/* ==========================================================================
+   Pillar Assessment -- Your judgement
+   ========================================================================== */
+
+.text-heading-section {
+  margin-top: var(--space-3);
+}
+
+.question-block + .section-divider {
+  margin-top: var(--space-2);
 }
 
 .section-divider {
@@ -408,7 +594,35 @@ textarea.field__input {
   margin: var(--space-3) 0;
 }
 
-/* Guidance panel */
+/* ==========================================================================
+   Confidence controls
+   ========================================================================== */
+
+.confidence-row {
+  display: flex;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.confidence-row .btn {
+  flex: 1;
+  width: auto;
+  min-height: 44px;
+  font-size: var(--text-body-secondary-size);
+}
+
+.confidence-row .btn-secondary {
+  border-color: var(--color-border);
+}
+
+.confidence-row__selected,
+.confidence-row .btn-primary {
+  box-shadow: inset 0 0 0 1px var(--color-orange-600);
+}
+
+/* ==========================================================================
+   Guidance panel
+   ========================================================================== */
 
 .guidance-panel {
   border: 1px solid var(--color-border);
@@ -485,12 +699,11 @@ details[open] > .guidance-panel__summary::before {
   margin: 0;
 }
 
-/* Distinct level blocks inside scoring guidance */
 .guidance-panel__level {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2);
   margin-bottom: var(--space-1);
 }
 
@@ -513,7 +726,9 @@ details[open] > .guidance-panel__summary::before {
   line-height: 1.45;
 }
 
-/* Health indicator */
+/* ==========================================================================
+   Health indicator
+   ========================================================================== */
 
 .health-indicator {
   display: flex;
@@ -523,104 +738,38 @@ details[open] > .guidance-panel__summary::before {
   font-weight: 600;
 }
 
+.health-indicator__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-border);
+}
+
 .health-indicator__emoji {
   font-size: 20px;
 }
 
-/* Report / cover page */
-
-.report-cover {
-  text-align: center;
-  padding: var(--space-6) var(--space-2);
+.health-indicator--green .health-indicator__dot {
+  background: var(--color-status-complete);
 }
 
-.report-section {
-  padding: var(--space-3) 0;
-  border-top: 1px solid var(--color-border);
+.health-indicator--yellow .health-indicator__dot {
+  background: var(--color-status-in-progress);
 }
 
-.report-section:first-of-type {
-  border-top: none;
+.health-indicator--red .health-indicator__dot {
+  background: #c45c4a;
 }
 
-.report-toolbar {
-  display: flex;
-  gap: var(--space-1);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.report-toolbar .btn {
-  width: auto;
-  flex: 1;
-}
-
-.report-document {
-  background: var(--color-surface);
-}
-
-
-/* Question blocks on Pillar Assessment */
-.question-block {
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.question-block:last-of-type {
-  border-bottom: none;
-}
-
-.question-block__text {
-  font-weight: 600;
-  font-size: var(--text-body-size);
+.health-indicator__label {
   color: var(--color-text-primary);
-  margin: 0;
-  line-height: 1.35;
 }
 
-.pillar-questions-empty {
-  margin: 0 0 var(--space-2) 0;
-}
+/* ==========================================================================
+   Reason sheet
+   ========================================================================== */
 
-/* Pillar readiness line under summary strip */
-.pillar-ready {
-  margin: 0;
-}
-
-.pillar-ready--ok {
-  color: var(--color-status-complete);
-  font-weight: 600;
-}
-
-/* Confidence controls: quieter unselected, clear selected */
-.confidence-row {
-  display: flex;
-  gap: var(--space-1);
-}
-
-.confidence-row .btn {
-  flex: 1;
-  width: auto;
-  min-height: 44px;
-  font-size: var(--text-body-secondary-size);
-}
-
-.confidence-row .btn-secondary {
-  border-color: var(--color-border);
-}
-
-.confidence-row__selected,
-.confidence-row .btn-primary {
-  box-shadow: inset 0 0 0 1px var(--color-orange-600);
-}
-
-/* Internal notes: slightly distinct surface */
-.field--internal .field__input {
-  background: var(--color-bg);
-}
-
-/* Reason sheet (replaces window.prompt) */
 .reason-sheet {
   position: fixed;
   inset: 0;
@@ -668,116 +817,36 @@ details[open] > .guidance-panel__summary::before {
   flex: 1;
 }
 
+/* ==========================================================================
+   Report / cover page
+   ========================================================================== */
 
-/* Observe then ask question capture */
-.question-observed .field__input {
-  background: var(--color-bg);
+.report-cover {
+  text-align: center;
+  padding: var(--space-6) var(--space-2);
 }
 
-.question-learned .field__input {
-  background: var(--color-surface);
-}
-
-.question-block__look-for {
-  margin: 0 0 var(--space-1) 0;
-}
-
-.question-block__ask-cue {
-  margin: var(--space-1) 0 0 0;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-
-/* Evidence under a question: same list editor, slightly tighter */
-.question-evidence {
-  margin-top: var(--space-1);
-}
-
-.question-evidence .list-editor__add {
-  min-height: 44px;
-}
-
-
-.health-indicator__dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--color-border);
-}
-
-.health-indicator--green .health-indicator__dot {
-  background: var(--color-status-complete);
-}
-
-.health-indicator--yellow .health-indicator__dot {
-  background: var(--color-status-in-progress);
-}
-
-.health-indicator--red .health-indicator__dot {
-  background: #C45C4A;
-}
-
-.health-indicator__label {
-  color: var(--color-text-primary);
-}
-
-/* Read-only findings next to synthesis */
-.findings-snapshot {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  padding: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.findings-snapshot__title {
-  margin: 0 0 2px 0;
-  font-size: var(--text-body-secondary-size);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.findings-snapshot__subtitle {
-  margin: 0 0 var(--space-2) 0;
-}
-
-.findings-snapshot__question {
-  padding: var(--space-1) 0;
+.report-section {
+  padding: var(--space-3) 0;
   border-top: 1px solid var(--color-border);
 }
 
-.findings-snapshot__question:first-of-type {
+.report-section:first-of-type {
   border-top: none;
-  padding-top: 0;
 }
 
-.findings-snapshot__q-title {
-  margin: 0 0 4px 0;
-  font-size: var(--text-caption-size);
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  line-height: 1.35;
+.report-toolbar {
+  display: flex;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.findings-snapshot__row {
-  margin: 0 0 4px 0;
-  font-size: var(--text-body-secondary-size);
-  color: var(--color-text-primary);
-  line-height: 1.4;
+.report-toolbar .btn {
+  width: auto;
+  flex: 1;
 }
 
-.findings-snapshot__tag {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--color-orange-600);
-  margin-right: 4px;
-}
-
-.findings-snapshot__empty {
-  margin: 0;
+.report-document {
+  background: var(--color-surface);
 }
