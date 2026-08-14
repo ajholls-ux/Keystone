@@ -12,7 +12,7 @@
 // ==========================================================================
 
 import { getState } from "../state/store.js";
-import { PILLARS, calculateHealthIndicator, calculatePillarIndicatorLevel } from "../state/schema.js";
+import { PILLARS, calculateHealthIndicator, calculatePillarIndicatorLevel, normalizeDiagnosticCycle, normalizeCyclePillarEntry } from "../state/schema.js";
 import { SCORE_LABELS } from "../components/scoreSelector.js";
 import { createButton } from "../components/button.js";
 import { back } from "../router.js";
@@ -290,74 +290,158 @@ function renderClosing() {
   return wrap;
 }
 
+
+function para(text, className) {
+  const p = document.createElement("p");
+  if (className) p.className = className;
+  p.textContent = text;
+  return p;
+}
+
+function label(text) {
+  const p = document.createElement("p");
+  p.style.fontWeight = "600";
+  p.style.marginTop = "0.75rem";
+  p.textContent = text;
+  return p;
+}
+
 function renderDiagnosticSections(cycle) {
-  const completeEntries = Object.entries(cycle.pillars).filter(([, entry]) => entry.status === "complete");
-  if (completeEntries.length === 0) return document.createDocumentFragment();
+  cycle = normalizeDiagnosticCycle(cycle);
+  const completeEntries = Object.entries(cycle.pillars || {}).filter(
+    ([, entry]) => entry.status === "complete"
+  );
+  if (completeEntries.length === 0) {
+    return para(
+      "No pillars are marked complete in this Diagnostic cycle yet.",
+      "text-body-secondary"
+    );
+  }
 
   const frag = document.createDocumentFragment();
 
-  completeEntries.forEach(([pillarKey, entry]) => {
-    const pillarMeta = PILLARS.find((p) => p.key === pillarKey);
-    const wrap = section(pillarMeta.name);
+  // Scope
+  const scopeSec = section("Scope of this Diagnostic Cycle");
+  const ul = document.createElement("ul");
+  completeEntries.forEach(([pillarKey]) => {
+    const meta = PILLARS.find((p) => p.key === pillarKey);
+    const li = document.createElement("li");
+    li.className = "text-body-secondary";
+    li.textContent = meta ? meta.name : pillarKey;
+    ul.append(li);
+  });
+  scopeSec.append(para("Pillars investigated in this paid cycle:", "text-body-secondary"), ul);
+  if ((cycle.outOfScopeNotes || "").trim()) {
+    scopeSec.append(label("Out of scope this cycle"));
+    scopeSec.append(para(cycle.outOfScopeNotes, "text-body-secondary"));
+  } else {
+    scopeSec.append(
+      para(
+        "Only the pillars listed above were investigated in depth. Other pillars remain available for a later cycle.",
+        "text-caption"
+      )
+    );
+  }
+  frag.append(scopeSec);
 
-    const fields = [
-      ["Root Cause Analysis", entry.rootCauseAnalysis],
-      ["Operational Risk", entry.operationalRisk],
-      ["Cost of Inaction", entry.costOfInaction],
+  scopeSec.append(
+    para(
+      "How to read this report: for each pillar you will see what we found, why it matters, the main cause, what to change, what not to do, and how to start.",
+      "text-body-secondary"
+    )
+  );
+
+  if ((cycle.connectedPicture || "").trim()) {
+    const pic = section("Connected picture");
+    pic.append(para(cycle.connectedPicture, "text-body-secondary"));
+    frag.append(pic);
+  }
+
+  if ((cycle.priorityAcrossCycle || "").trim()) {
+    const pr = section("Priority across this cycle");
+    pr.append(para(cycle.priorityAcrossCycle, "text-body-secondary"));
+    frag.append(pr);
+  }
+
+  completeEntries.forEach(([pillarKey, raw]) => {
+    const entry = normalizeCyclePillarEntry(raw);
+    const pillarMeta = PILLARS.find((p) => p.key === pillarKey);
+    const wrap = section(pillarMeta ? pillarMeta.name : pillarKey);
+
+    const blocks = [
+      ["What we found", entry.findings],
+      ["Why it matters", entry.whyItMatters],
+      ["Root cause", entry.rootCauseAnalysis],
+      ["Operational risk", entry.operationalRisk],
+      ["Cost of inaction", entry.costOfInaction],
     ];
-    fields.forEach(([label, value]) => {
-      if (!value) return;
-      const l = document.createElement("p");
-      l.style.fontWeight = "600";
-      l.textContent = label;
-      const v = document.createElement("p");
-      v.className = "text-body-secondary";
-      v.textContent = value;
-      wrap.append(l, v);
+    blocks.forEach(([title, value]) => {
+      if (!(value || "").trim()) return;
+      wrap.append(label(title));
+      wrap.append(para(value, "text-body-secondary"));
     });
 
-    if (entry.recommendations.length > 0) {
-      const l = document.createElement("p");
-      l.style.fontWeight = "600";
-      l.textContent = "Recommendations";
-      wrap.append(l);
-      const ul = document.createElement("ul");
+    if (entry.recommendations.length) {
+      wrap.append(label("Recommendations"));
+      const list = document.createElement("ul");
       entry.recommendations.forEach((r) => {
+        if (!(r.text || "").trim()) return;
         const li = document.createElement("li");
         li.className = "text-body-secondary";
         li.textContent = r.text;
-        ul.append(li);
+        list.append(li);
       });
-      wrap.append(ul);
+      wrap.append(list);
     }
 
-    if (entry.implementationPlan.length > 0) {
-      const l = document.createElement("p");
-      l.style.fontWeight = "600";
-      l.textContent = "Implementation Plan";
-      wrap.append(l);
-      const ul = document.createElement("ul");
-      entry.implementationPlan.forEach((step) => {
+    if ((entry.doNotDo || []).length) {
+      wrap.append(label("Do not do"));
+      const list = document.createElement("ul");
+      entry.doNotDo.forEach((r) => {
+        const text = r.text || r;
+        if (!(text || "").trim()) return;
         const li = document.createElement("li");
         li.className = "text-body-secondary";
-        li.textContent = step.step;
-        ul.append(li);
+        li.textContent = text;
+        list.append(li);
       });
-      wrap.append(ul);
+      wrap.append(list);
+    }
+
+    if (entry.implementationPlan.length) {
+      wrap.append(label("How to start"));
+      const list = document.createElement("ul");
+      entry.implementationPlan.forEach((s) => {
+        if (!(s.step || "").trim()) return;
+        const li = document.createElement("li");
+        li.className = "text-body-secondary";
+        li.textContent = s.step;
+        list.append(li);
+      });
+      wrap.append(list);
     }
 
     frag.append(wrap);
   });
 
-  const priorityMatrix = section("Priority Matrix");
-  const note = document.createElement("p");
-  note.className = "text-caption";
-  note.textContent = "The Keystone prioritisation methodology is under active development.";
-  priorityMatrix.append(note);
-  frag.append(priorityMatrix);
+  if ((cycle.successLooksLike || "").trim()) {
+    const suc = section("What better looks like in 4-6 weeks");
+    suc.append(para(cycle.successLooksLike, "text-body-secondary"));
+    frag.append(suc);
+  }
+
+  const limits = section("Limits of this report");
+  limits.append(
+    para(
+      "This Diagnostic does not implement the changes for you and does not guarantee financial returns. It explains what is going on, why it matters, and a practical way to start. Serious safety or legal issues should be handled as operational matters straight away.",
+      "text-body-secondary"
+    )
+  );
+  frag.append(limits);
 
   return frag;
 }
+
 
 export function renderAssessmentReport(container, params) {
   const state = getState();
@@ -401,19 +485,21 @@ export function renderAssessmentReport(container, params) {
   doc.className = "report-document";
 
   doc.append(renderCoverPage(org, review, reportType, cycle));
-  doc.append(renderExecutiveSummary(review));
-  doc.append(renderOverallHealth(review));
-  doc.append(renderStrengths(review));
-  doc.append(renderOpportunities(review));
-  doc.append(renderPillarOverview(review));
-  doc.append(renderProfessionalObservations(review));
-  doc.append(renderFurtherConsideration(review));
 
   if (reportType === "diagnostic") {
+    // Paid Diagnostic is its own document - not Free report plus appendix
     doc.append(renderDiagnosticSections(cycle));
+    doc.append(renderClosing());
+  } else {
+    doc.append(renderExecutiveSummary(review));
+    doc.append(renderOverallHealth(review));
+    doc.append(renderStrengths(review));
+    doc.append(renderOpportunities(review));
+    doc.append(renderPillarOverview(review));
+    doc.append(renderProfessionalObservations(review));
+    doc.append(renderFurtherConsideration(review));
+    doc.append(renderClosing());
   }
-
-  doc.append(renderClosing());
 
   screen.append(toolbar, doc);
   container.append(screen);

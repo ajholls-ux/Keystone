@@ -1981,10 +1981,10 @@ export const PILLAR_QUESTIONS = {
     }
   ]
 };
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 
 /** Product release version shown on the landing screen. Bump on every shipped update. */
-export const APP_VERSION = "5.0.1";
+export const APP_VERSION = "5.1.0";
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)
@@ -2046,12 +2046,45 @@ export function createPillarAssessment(pillarKey) {
 export function createCyclePillarEntry() {
   return {
     status: "selected-not-started", // selected-not-started | in-progress | complete
-    rootCauseAnalysis: "",
-    operationalRisk: "",
-    costOfInaction: "",
-    recommendations: [],   // { id, text, businessImpact: [] } -- businessImpact reserved, unused
-    implementationPlan: [], // { id, step, timeframe }
+    // Paid Diagnostic methodology (v5.1) - required for credible client report
+    findings: "",              // What we found (evidence-based)
+    whyItMatters: "",          // Consequence for the business
+    rootCauseAnalysis: "",     // One main cause
+    operationalRisk: "",       // Optional extra risk detail
+    costOfInaction: "",        // Optional - only where evidence supports money/impact
+    recommendations: [],       // { id, text, businessImpact: [] }
+    doNotDo: [],               // { id, text } - what not to do
+    implementationPlan: [],    // { id, step, timeframe }
   };
+}
+
+/** Fill missing Diagnostic fields on older cycle entries (additive migration). */
+export function normalizeCyclePillarEntry(entry) {
+  if (!entry || typeof entry !== "object") return createCyclePillarEntry();
+  const base = createCyclePillarEntry();
+  return {
+    ...base,
+    ...entry,
+    findings: entry.findings ?? "",
+    whyItMatters: entry.whyItMatters ?? "",
+    doNotDo: Array.isArray(entry.doNotDo) ? entry.doNotDo : [],
+    recommendations: Array.isArray(entry.recommendations) ? entry.recommendations : [],
+    implementationPlan: Array.isArray(entry.implementationPlan) ? entry.implementationPlan : [],
+  };
+}
+
+/** True when a pillar has the minimum content for a paid Diagnostic report. */
+export function canCompleteDiagnosticPillar(entry) {
+  const e = normalizeCyclePillarEntry(entry);
+  const hasRec = e.recommendations.some((r) => (r.text || "").trim());
+  const hasPlan = e.implementationPlan.some((s) => (s.step || "").trim());
+  return (
+    (e.findings || "").trim().length > 0 &&
+    (e.whyItMatters || "").trim().length > 0 &&
+    (e.rootCauseAnalysis || "").trim().length > 0 &&
+    hasRec &&
+    hasPlan
+  );
 }
 
 /**
@@ -2070,7 +2103,26 @@ export function createDiagnosticCycle(cycleNumber) {
     reportGeneratedAt: null,
     locked: false, // true once this cycle is marked complete -- permanent, cycle-scoped only
     pillars: {}, // keyed by pillarKey -> createCyclePillarEntry()
+    // Cycle-level synthesis for paid report (v5.1)
+    connectedPicture: "",
+    priorityAcrossCycle: "",
+    successLooksLike: "",
+    outOfScopeNotes: "",
   };
+}
+
+export function normalizeDiagnosticCycle(cycle) {
+  if (!cycle || typeof cycle !== "object") return cycle;
+  if (cycle.connectedPicture == null) cycle.connectedPicture = "";
+  if (cycle.priorityAcrossCycle == null) cycle.priorityAcrossCycle = "";
+  if (cycle.successLooksLike == null) cycle.successLooksLike = "";
+  if (cycle.outOfScopeNotes == null) cycle.outOfScopeNotes = "";
+  if (cycle.pillars) {
+    for (const k of Object.keys(cycle.pillars)) {
+      cycle.pillars[k] = normalizeCyclePillarEntry(cycle.pillars[k]);
+    }
+  }
+  return cycle;
 }
 
 /**
