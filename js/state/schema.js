@@ -1984,7 +1984,7 @@ export const PILLAR_QUESTIONS = {
 export const SCHEMA_VERSION = 13;
 
 /** Product release version shown on the landing screen. Bump on every shipped update. */
-export const APP_VERSION = "5.1.0";
+export const APP_VERSION = "5.1.1";
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)

@@ -2362,11 +2362,142 @@ function renderHealthReviewLayer(
 }
 
 
+
 // ==========================================================================
 // DIAGNOSTIC LAYER (Paid methodology v5.1)
-// Forces: findings -> why it matters -> root cause -> recommendations ->
-// do-not-do -> how to start. Matches client Diagnostic report structure.
+// Reference from Free only - never auto-fills client Diagnostic fields.
+// Prompts and examples guide the assessor; judgement stays human.
 // ==========================================================================
+
+function diagnosticFieldGuide(title, body) {
+  const wrap = document.createElement("div");
+  wrap.className = "diag-guide";
+  const t = document.createElement("p");
+  t.className = "text-caption";
+  t.style.fontWeight = "600";
+  t.textContent = title;
+  const b = document.createElement("p");
+  b.className = "text-caption";
+  b.textContent = body;
+  wrap.append(t, b);
+  return wrap;
+}
+
+function renderHealthReviewReference(container, pillar) {
+  const box = document.createElement("div");
+  box.className = "card";
+  box.style.background = "var(--color-surface, #F3F1EC)";
+
+  const title = document.createElement("p");
+  title.className = "card__title";
+  title.textContent = "From the Health Review (read only)";
+
+  const hint = document.createElement("p");
+  hint.className = "text-caption";
+  hint.textContent =
+    "Use this as your map. Do not copy it straight into the Diagnostic. Rewrite in paid language: evidence, consequence, cause, action.";
+
+  box.append(title, hint);
+
+  const score = pillar.maturityScore;
+  const conf = pillar.assessorConfidence;
+  const meta = document.createElement("p");
+  meta.className = "text-caption";
+  meta.textContent =
+    "Score: " +
+    (score != null ? String(score) : "not set") +
+    " · Confidence: " +
+    (conf || "not set");
+  box.append(meta);
+
+  function listBlock(label, items) {
+    if (!items || !items.length) return;
+    const h = document.createElement("p");
+    h.className = "text-caption";
+    h.style.fontWeight = "600";
+    h.textContent = label;
+    box.append(h);
+    const ul = document.createElement("ul");
+    items.forEach((item) => {
+      const text =
+        typeof item === "string"
+          ? item
+          : item.text || item.note || item.description || "";
+      if (!String(text).trim()) return;
+      const li = document.createElement("li");
+      li.className = "text-caption";
+      li.textContent = text;
+      ul.append(li);
+    });
+    if (ul.childNodes.length) box.append(ul);
+  }
+
+  listBlock("Strengths", pillar.strengths);
+  listBlock("Opportunities", pillar.opportunities);
+
+  if ((pillar.professionalObservation || "").trim()) {
+    const h = document.createElement("p");
+    h.className = "text-caption";
+    h.style.fontWeight = "600";
+    h.textContent = "Professional observation";
+    const p = document.createElement("p");
+    p.className = "text-caption";
+    p.textContent = pillar.professionalObservation;
+    box.append(h, p);
+  }
+
+  // Evidence / question notes if present
+  const evidenceBits = [];
+  if (Array.isArray(pillar.evidence)) {
+    pillar.evidence.forEach((ev) => {
+      const t = ev.note || ev.text || ev.summary || "";
+      if (String(t).trim()) evidenceBits.push(t);
+    });
+  }
+  if (Array.isArray(pillar.questionResponses)) {
+    pillar.questionResponses.forEach((qr) => {
+      if ((qr.observedNote || "").trim())
+        evidenceBits.push("Observed: " + qr.observedNote);
+      if ((qr.learnedNote || "").trim())
+        evidenceBits.push("Learned: " + qr.learnedNote);
+    });
+  }
+  // schema may store responses differently
+  if (pillar.responses && typeof pillar.responses === "object") {
+    Object.values(pillar.responses).forEach((qr) => {
+      if (!qr || typeof qr !== "object") return;
+      if ((qr.observedNote || qr.whatIObserved || "").trim())
+        evidenceBits.push(
+          "Observed: " + (qr.observedNote || qr.whatIObserved)
+        );
+      if ((qr.learnedNote || qr.whatILearned || "").trim())
+        evidenceBits.push(
+          "Learned: " + (qr.learnedNote || qr.whatILearned)
+        );
+    });
+  }
+  if (evidenceBits.length) {
+    listBlock(
+      "Evidence / notes (sample)",
+      evidenceBits.slice(0, 8).map((t) => t)
+    );
+  }
+
+  const none =
+    !pillar.strengths?.length &&
+    !pillar.opportunities?.length &&
+    !(pillar.professionalObservation || "").trim() &&
+    !evidenceBits.length;
+  if (none) {
+    const p = document.createElement("p");
+    p.className = "text-caption";
+    p.textContent =
+      "No Free content on this pillar yet. Complete or consult the Health Review before deep Diagnostic work if you can.";
+    box.append(p);
+  }
+
+  container.append(box);
+}
 
 function renderDiagnosticLayer(
   container,
@@ -2378,6 +2509,8 @@ function renderDiagnosticLayer(
   refresh
 ) {
   const entry = normalizeCyclePillarEntry(cycleEntry);
+  const pillar =
+    review.pillarAssessments.find((p) => p.pillarKey === pillarKey) || {};
 
   const divider = document.createElement("hr");
   divider.className = "section-divider";
@@ -2389,7 +2522,11 @@ function renderDiagnosticLayer(
   const intro = document.createElement("p");
   intro.className = "text-caption";
   intro.textContent =
-    "Paid depth for this pillar only. Use evidence. Write so an owner or branch manager knows what to do next week. Do not re-ask the full Health Review.";
+    "Paid depth for this pillar only. Free content above is for reference. You write the Diagnostic. No auto-fill into the client report.";
+
+  container.append(divider, heading, intro);
+
+  renderHealthReviewReference(container, pillar);
 
   function save(patch) {
     mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
@@ -2397,121 +2534,169 @@ function renderDiagnosticLayer(
     });
   }
 
-  function field(id, label, value, key, placeholder) {
+  function fieldBlock(id, label, value, key, placeholder, guideTitle, guideBody) {
+    const wrap = document.createElement("div");
+    wrap.className = "stack-tight";
+    wrap.append(diagnosticFieldGuide(guideTitle, guideBody));
     const f = createTextField({ id, label, textarea: true });
     f.input.value = value || "";
     if (placeholder) f.input.placeholder = placeholder;
     f.input.addEventListener("blur", () => {
       save({ [key]: f.input.value });
     });
-    return f.element;
+    wrap.append(f.element);
+    return wrap;
   }
 
-  const findingsEl = field(
-    "diag-findings",
-    "What we found",
-    entry.findings,
-    "findings",
-    "Specific evidence: what you saw, heard, or checked. Use A/B/C points if helpful."
+  container.append(
+    fieldBlock(
+      "diag-findings",
+      "What we found",
+      entry.findings,
+      "findings",
+      "e.g. Three of eight core lines wrong on the shelf vs system. Dead stock blocking two pallet locations.",
+      "Prompt",
+      "Write specific evidence: what you saw, checked, or were told with an example. Prefer A/B/C short points. Avoid vague lines like culture needs improvement."
+    )
   );
 
-  const whyEl = field(
-    "diag-why",
-    "Why it matters",
-    entry.whyItMatters,
-    "whyItMatters",
-    "What this does to customers, time, margin, risk, or reliance on a few people."
+  container.append(
+    fieldBlock(
+      "diag-why",
+      "Why it matters",
+      entry.whyItMatters,
+      "whyItMatters",
+      "e.g. Customers learn stock cannot be trusted. Staff time is burned hunting product. Cash sits in slow lines.",
+      "Prompt",
+      "State the effect on the business: customers, time, margin, risk, or reliance on a few people. This is consequence, not the fix."
+    )
   );
 
-  const rootEl = field(
-    "diag-root",
-    "Root cause",
-    entry.rootCauseAnalysis,
-    "rootCauseAnalysis",
-    "One main cause. Not a long list. Not blame without evidence."
+  container.append(
+    fieldBlock(
+      "diag-root",
+      "Root cause",
+      entry.rootCauseAnalysis,
+      "rootCauseAnalysis",
+      "e.g. Stock truth is not owned. Adjustments are informal. Dead stock is not actively cleared.",
+      "Prompt",
+      "One main cause. Not a long list. Not personal blame without evidence. Ask: why does this keep happening?"
+    )
   );
 
-  const riskEl = field(
-    "diag-risk",
-    "Operational risk (optional detail)",
-    entry.operationalRisk,
-    "operationalRisk",
-    "Extra risk detail if needed. Can be short."
+  container.append(
+    fieldBlock(
+      "diag-risk",
+      "Operational risk (optional)",
+      entry.operationalRisk,
+      "operationalRisk",
+      "e.g. Risk grows when the experienced warehouse person is off.",
+      "Prompt",
+      "Optional. Extra risk detail if needed. Keep short."
+    )
   );
 
-  const costEl = field(
-    "diag-cost",
-    "Cost of inaction (optional - only if evidence supports it)",
-    entry.costOfInaction,
-    "costOfInaction",
-    "Money or clear operational cost only where you can support it. Otherwise leave blank."
+  container.append(
+    fieldBlock(
+      "diag-cost",
+      "Cost of inaction (optional)",
+      entry.costOfInaction,
+      "costOfInaction",
+      "Only if evidence supports it. Otherwise leave blank.",
+      "Prompt",
+      "Optional. Money or clear operational cost only when you can support it. Do not invent a pound figure."
+    )
   );
 
+  // Recommendations
+  const recWrap = document.createElement("div");
+  recWrap.className = "stack-tight";
+  recWrap.append(
+    diagnosticFieldGuide(
+      "Prompt",
+      "Few practical changes. Client-visible. Example: Name one person for core-line accuracy. Daily check of 10 lines for two weeks."
+    )
+  );
   const recLabel = document.createElement("p");
   recLabel.className = "field__label";
   recLabel.textContent = "Recommendations (what should change)";
+  recWrap.append(recLabel);
+  recWrap.append(
+    createTextListEditor({
+      placeholder: "e.g. Name one person accountable for core-line accuracy",
+      items: entry.recommendations.map((r) => r.text),
+      onChange: (texts) => {
+        mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
+          e.recommendations = texts.map((text, i) => ({
+            id: e.recommendations[i]?.id || `rec_${Date.now().toString(36)}_${i}`,
+            text,
+            businessImpact: [],
+          }));
+        });
+      },
+    })
+  );
+  container.append(recWrap);
 
-  const recHint = document.createElement("p");
-  recHint.className = "text-caption";
-  recHint.textContent = "Few, practical items. Client-visible.";
+  // Do not do
+  const doWrap = document.createElement("div");
+  doWrap.className = "stack-tight";
+  doWrap.append(
+    diagnosticFieldGuide(
+      "Prompt",
+      "Stop the wrong fix. Example: Do not buy a new stock system before ownership and daily checks exist. Do not run a full stocktake as the first move."
+    )
+  );
+  const doLabel = document.createElement("p");
+  doLabel.className = "field__label";
+  doLabel.textContent = "Do not do";
+  doWrap.append(doLabel);
+  doWrap.append(
+    createTextListEditor({
+      placeholder: "e.g. Do not run a full stocktake as the first move",
+      items: (entry.doNotDo || []).map((r) => r.text || r),
+      onChange: (texts) => {
+        mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
+          e.doNotDo = texts.map((text, i) => ({
+            id: e.doNotDo?.[i]?.id || `donot_${Date.now().toString(36)}_${i}`,
+            text,
+          }));
+        });
+      },
+    })
+  );
+  container.append(doWrap);
 
-  const recEditor = createTextListEditor({
-    placeholder: "e.g. Name one person accountable for core-line accuracy",
-    items: entry.recommendations.map((r) => r.text),
-    onChange: (texts) => {
-      mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
-        e.recommendations = texts.map((text, i) => ({
-          id: e.recommendations[i]?.id || `rec_${Date.now().toString(36)}_${i}`,
-          text,
-          businessImpact: [],
-        }));
-      });
-    },
-  });
-
-  const doNotLabel = document.createElement("p");
-  doNotLabel.className = "field__label";
-  doNotLabel.textContent = "Do not do (important)";
-
-  const doNotHint = document.createElement("p");
-  doNotHint.className = "text-caption";
-  doNotHint.textContent =
-    "Stop the wrong fix. e.g. Do not buy new software before ownership exists.";
-
-  const doNotEditor = createTextListEditor({
-    placeholder: "e.g. Do not run a full stocktake as the first move",
-    items: (entry.doNotDo || []).map((r) => r.text || r),
-    onChange: (texts) => {
-      mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
-        e.doNotDo = texts.map((text, i) => ({
-          id: e.doNotDo?.[i]?.id || `donot_${Date.now().toString(36)}_${i}`,
-          text,
-        }));
-      });
-    },
-  });
-
+  // How to start
+  const planWrap = document.createElement("div");
+  planWrap.className = "stack-tight";
+  planWrap.append(
+    diagnosticFieldGuide(
+      "Prompt",
+      "Who does what in the next 1-2 weeks. Example: Owner decides write-downs this week. Warehouse lead runs daily 10-line check. Manager reviews the miss log every Friday."
+    )
+  );
   const planLabel = document.createElement("p");
   planLabel.className = "field__label";
   planLabel.textContent = "How to start (implementation outline)";
-
-  const planHint = document.createElement("p");
-  planHint.className = "text-caption";
-  planHint.textContent = "Who does what in the first 1-2 weeks. Keep it small.";
-
-  const planEditor = createTextListEditor({
-    placeholder: "e.g. Owner sets discount bands this week; manager reviews overrides on Friday",
-    items: entry.implementationPlan.map((s) => s.step),
-    onChange: (steps) => {
-      mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
-        e.implementationPlan = steps.map((step, i) => ({
-          id: e.implementationPlan[i]?.id || `plan_${Date.now().toString(36)}_${i}`,
-          step,
-          timeframe: e.implementationPlan[i]?.timeframe || "",
-        }));
-      });
-    },
-  });
+  planWrap.append(planLabel);
+  planWrap.append(
+    createTextListEditor({
+      placeholder:
+        "e.g. Owner sets bands this week; manager reviews overrides on Friday",
+      items: entry.implementationPlan.map((s) => s.step),
+      onChange: (steps) => {
+        mutateCyclePillar(org.id, review.id, cycleId, pillarKey, (e) => {
+          e.implementationPlan = steps.map((step, i) => ({
+            id: e.implementationPlan[i]?.id || `plan_${Date.now().toString(36)}_${i}`,
+            step,
+            timeframe: e.implementationPlan[i]?.timeframe || "",
+          }));
+        });
+      },
+    })
+  );
+  container.append(planWrap);
 
   const qa = document.createElement("p");
   qa.className = "text-caption";
@@ -2519,27 +2704,7 @@ function renderDiagnosticLayer(
   qa.textContent = ready
     ? "Minimum content for this pillar is present. You can mark complete."
     : "Before mark complete: findings, why it matters, root cause, at least one recommendation, and at least one how-to-start step.";
-
-  container.append(
-    divider,
-    heading,
-    intro,
-    findingsEl,
-    whyEl,
-    rootEl,
-    riskEl,
-    costEl,
-    recLabel,
-    recHint,
-    recEditor,
-    doNotLabel,
-    doNotHint,
-    doNotEditor,
-    planLabel,
-    planHint,
-    planEditor,
-    qa
-  );
+  container.append(qa);
 }
 
 

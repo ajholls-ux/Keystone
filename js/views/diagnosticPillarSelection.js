@@ -146,7 +146,7 @@ export function renderDiagnosticPillarSelection(container, params) {
   const synthHint = document.createElement("p");
   synthHint.className = "text-caption";
   synthHint.textContent =
-    "Fill these once you have worked the pillars. They appear in the paid Diagnostic report. Plain language for the owner.";
+    "Fill these once you have worked the pillars. They appear in the paid Diagnostic report. Plain language for the owner. No auto-fill from Free - you write the synthesis.";
 
   screen.append(synthHead, synthHint);
 
@@ -164,22 +164,25 @@ export function renderDiagnosticPillarSelection(container, params) {
       key: "connectedPicture",
       label: "Connected picture",
       placeholder:
-        "How these pillars link in this business. One short paragraph.",
+        "e.g. Stock truth is weak, so the counter discounts under pressure. Leadership priorities differ by role, so neither issue fully closes.",
     },
     {
       key: "priorityAcrossCycle",
       label: "Priority across this cycle",
-      placeholder: "1. ... 2. ... 3. ... What to do first and why.",
+      placeholder:
+        "e.g. 1) One shared weekly priority and huddle. 2) Stock truth checks. 3) Simple discount bands.",
     },
     {
       key: "successLooksLike",
       label: "What better looks like in 4-6 weeks",
-      placeholder: "A few plain signs that things have improved.",
+      placeholder:
+        "e.g. Counter and yard name the same priority. Core-line misses are falling. Overrides have a reason logged.",
     },
     {
       key: "outOfScopeNotes",
       label: "Out of scope this cycle",
-      placeholder: "What you are not covering in this fee / cycle.",
+      placeholder:
+        "e.g. Full process redesign, new WMS, Safety deep-dive, and implementation programme management.",
     },
   ];
 
