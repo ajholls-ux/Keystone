@@ -267,8 +267,8 @@ export const PILLAR_QUESTIONS = {
       question:
         "What would a new customer notice first when they arrive here, and what does the site do to make sure that first impression is maintained?",
       whyItMatters:
-        "Tests whether presentation is deliberately maintained or simply fixed when someone happens to notice a problem.",
-      assessorPrompt: "Walk me through what a new customer sees from the moment they arrive.",
+        "Tests whether presentation is deliberately maintained or simply fixed when someone happens to notice a problem. Cover both what is seen and whether it is controlled.",
+      assessorPrompt: "Walk the arrival path. Note what a new customer would notice first, then establish how that standard is kept -- not only how it looks today.",
       followUpPrompts: [
         "Is there a defined presentation standard?",
         "Who is responsible for checking it?",
@@ -289,19 +289,19 @@ export const PILLAR_QUESTIONS = {
         "Staff visibility and approachability",
       ],
       evidenceSuggestions: [
-        "Direct observation",
-        "Presentation or checklist documentation",
+        "Direct observation of arrival and front of house",
+        "Presentation or checklist documentation if used",
         "Corroboration from another staff member",
       ],
       maturityGuidance: {
         1: "No clear standard. Presentation is reactive.",
         2: "Informal expectations exist but aren't consistently checked or owned.",
         3: "A defined standard exists and is generally followed, with some checking.",
-        4: "Standards are documented or clearly defined, routinely checked and maintained regardless of who is working.",
+        4: "Standards are clear (written or not), routinely checked and maintained regardless of who is working.",
       },
       confidenceGuidance: {
-        high: "Direct observation supports what is being described.",
-        medium: "Some supporting evidence exists but the assessor hasn't been able to observe the standard over time.",
+        high: "Direct observation supports what is being described, including how standards are maintained.",
+        medium: "Some supporting evidence exists but the assessor hasn't been able to see maintenance over time.",
         low: "Judgement relies mainly on management assertion without corroboration.",
       },
       diagnosticRelevance:
@@ -635,9 +635,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Named ownership. Recent error corrected and checked.",
       poorExample: "We all keep an eye on it.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example",
         "System adjustment",
@@ -661,36 +659,40 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q1-process-defined",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "For the main jobs here, is there an agreed way of doing them, or does each person do it their own way?",
-      whyItMatters: "Tests whether important work has a defined method.",
-      assessorPrompt: "Pick a main job. Is there an agreed way?",
+      question:
+        "For the main jobs here, is there an agreed way of doing them, or does each person do it their own way?",
+      whyItMatters:
+        "Tests whether important work has a defined method. The method does not have to be written down. Informal and consistent can be mature; informal and fragile is not.",
+      assessorPrompt: "Pick a main job. Is there an agreed way people actually follow, even if it is not written down?",
       followUpPrompts: [
-        "Written, on screen, or just known?",
         "Would two people describe the same steps?",
-        "When last made clear?"
+        "Is it written, on screen, or just known?",
+        "Does it hold when a key person is away?",
+        "When was it last made clear?",
       ],
-      goodExample: "Main jobs have an agreed way. Staff describe the same steps.",
+      goodExample:
+        "Main jobs have an agreed way. Staff describe the same steps. It is simple and people follow it -- written or not.",
       poorExample: "Everyone knows what they are doing. Common sense.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
-        "Checklist or screen steps",
-        "Observation of consistent method"
+        "Second person describing the same method where available",
+        "Checklist or screen steps if used",
+        "Observation of consistent method if seen",
       ],
       maturityGuidance: {
-        1: "No agreed method.",
-        2: "Partial methods. Large variation.",
-        3: "Agreed ways for main jobs, generally understood.",
-        4: "Clear methods are normal and reinforced.",
+        1: "No agreed method. Pure individual habit.",
+        2: "Partial methods. Large variation by person, or method lives only in one head.",
+        3: "Agreed ways exist for main jobs and are generally understood and followed.",
+        4: "Methods are normal habit, transferable, and hold without depending on one person. Written form is optional if behaviour is embedded.",
       },
       confidenceGuidance: {
-        high: "More than one source describes the same method.",
-        medium: "Single interview.",
-        low: "Vague.",
+        high: "More than one source describes the same method, or clear demonstration.",
+        medium: "Single interview with a concrete example.",
+        low: "Vague answers with no example.",
       },
-      diagnosticRelevance: "No defined methods may justify Diagnostic.",
+      diagnosticRelevance:
+        "No defined methods with operational risk may justify Diagnostic on ways of working.",
     },
     {
       id: "q2-process-followed",
@@ -740,9 +742,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Known fallback for common breaks. Real example given.",
       poorExample: "We just deal with it. You have to be flexible.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example"
       ],
@@ -772,9 +772,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Shortcuts noticed and addressed. Example with outcome.",
       poorExample: "As long as the job gets done we do not make a fuss.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example"
       ],
@@ -804,9 +802,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Method still holds with cover. Quality dips little.",
       poorExample: "It gets harder. We manage.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Recent absence example"
@@ -829,67 +825,76 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q1-leadership-owner",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "Who is actually responsible for how this branch should run day to day, and do the team know that?",
-      whyItMatters: "Tests clear operational ownership.",
-      assessorPrompt: "Who sets and protects day-to-day standards here?",
+      question:
+        "Who is actually responsible for how this branch should run day to day, and do the team know that?",
+      whyItMatters:
+        "Tests clear operational ownership. A manager saying they are responsible is weak evidence on its own.",
+      assessorPrompt: "Who sets and protects day-to-day standards here? Establish that with more than a job title.",
       followUpPrompts: [
-        "One person or split?",
-        "Would staff name the same owner?",
-        "Branch vs head office?"
+        "Is it one person or split?",
+        "Would another relevant person name the same owner where available?",
+        "What happens when that standard is not met?",
+        "What does head office own vs the branch?",
       ],
-      goodExample: "Named owner. Staff would give the same answer.",
-      poorExample: "We all take responsibility.",
-      whatToObserve: [
-        "N/A"
-      ],
+      goodExample:
+        "Named owner. Another relevant person would give the same answer. A recent example shows what happens when a standard slips.",
+      poorExample: "We all take responsibility. It is a team effort.",
+      whatToObserve: [],
       evidenceSuggestions: [
-        "Interview manager and another if possible"
+        "Interview with manager",
+        "Corroboration from another relevant person where available",
+        "Concrete example of ownership in action",
       ],
       maturityGuidance: {
-        1: "No clear owner.",
-        2: "Owner in name only.",
-        3: "Clear enough ownership known to the team.",
-        4: "Ownership clear, visible, accepted.",
+        1: "No clear owner of operational standards.",
+        2: "Owner in name only. Team unclear or standards not enforced.",
+        3: "Clear enough ownership known to the team, with some follow-through.",
+        4: "Ownership is clear, visible and accepted; standards are protected in practice.",
       },
       confidenceGuidance: {
-        high: "More than one person names the same owner.",
-        medium: "Manager claim only.",
-        low: "Conflicting answers.",
+        high: "Manager claim plus corroboration or a strong concrete example.",
+        medium: "Clear claim with a partial example.",
+        low: "Title-only claim with no corroboration or example.",
       },
-      diagnosticRelevance: "Unclear ownership may justify Diagnostic.",
+      diagnosticRelevance:
+        "Unclear ownership with operational drift may justify Diagnostic.",
     },
     {
       id: "q2-leadership-expectations",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "If you asked staff what good looks like in their job this week, would their answer match yours?",
-      whyItMatters: "Tests whether expectations are clear.",
-      assessorPrompt: "What does good look like on the floor this week?",
+      question:
+        "If you asked staff what good looks like in their job this week, would their answer match yours?",
+      whyItMatters:
+        "Tests whether expectations exist outside the manager's head. A second-person check helps where available; a concrete shared example can also suffice.",
+      assessorPrompt: "What does good look like on the floor this week? How would you know the team shares that?",
       followUpPrompts: [
         "How do you set that?",
-        "How often reinforced?",
-        "Priority if time is short?"
+        "How often is it reinforced?",
+        "What is the priority if time is short?",
+        "Would another relevant person describe the same standard where available?",
       ],
-      goodExample: "Manager and staff describe the same practical standard.",
-      poorExample: "They know they need to work hard.",
-      whatToObserve: [
-        "Visible standards if present"
-      ],
+      goodExample:
+        "Manager and team describe the same practical standard for the current week, or a clear recent example shows shared expectations.",
+      poorExample: "They know they need to work hard and look after customers.",
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
-        "Short staff check if appropriate"
+        "Light check with another relevant person where available",
+        "Visible standards or brief notes if used",
       ],
       maturityGuidance: {
         1: "Expectations vague or conflicting.",
         2: "Some clarity. Not shared consistently.",
-        3: "Team can describe current expectations.",
-        4: "Expectations clear, current, shared.",
+        3: "Team can describe current expectations in practical terms.",
+        4: "Expectations are clear, current and shared in day-to-day work.",
       },
       confidenceGuidance: {
-        high: "Staff answer aligns with manager.",
-        medium: "Manager only.",
-        low: "No clear standard.",
+        high: "Alignment confirmed beyond the manager alone.",
+        medium: "Manager gives a specific, testable standard.",
+        low: "Generic claims only.",
       },
-      diagnosticRelevance: "Misaligned expectations may justify Diagnostic.",
+      diagnosticRelevance:
+        "Persistent misalignment of expectations may justify Diagnostic. Shared live priorities across roles also sit under Communication.",
     },
     {
       id: "q3-leadership-followthrough",
@@ -904,9 +909,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Specific slip, action taken, outcome known.",
       poorExample: "We talk about it. Things improve eventually.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example"
       ],
@@ -936,9 +939,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Repeated issues addressed clearly. Example shows progression.",
       poorExample: "We keep reminding them.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example"
       ],
@@ -1030,35 +1031,37 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q2-commercial-margin-awareness",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "How do people know whether a sale is commercially sensible, not only whether the customer is happy?",
-      whyItMatters: "Tests margin awareness in day-to-day selling.",
-      assessorPrompt: "When you discount, how do you know you are not giving the job away?",
+      question:
+        "How do people here know whether a sale is commercially sensible, not only whether the customer is happy?",
+      whyItMatters:
+        "Tests margin awareness in day-to-day selling. Knowing margins in theory is not enough without a real decision example.",
+      assessorPrompt: "When you discount or negotiate, how do you know you are not giving the job away? Give a recent example.",
       followUpPrompts: [
         "Do staff see margin or only price?",
         "What is protected?",
-        "Recent example?"
+        "What is a recent example of a shaped, refused or adjusted deal?",
       ],
-      goodExample: "Team understands commercial limits. Example of a shaped or refused deal.",
-      poorExample: "We try to win the work. Volume matters.",
-      whatToObserve: [
-        "N/A"
-      ],
+      goodExample:
+        "Team understands commercial limits. Recent example of a refused or shaped deal with a clear commercial reason.",
+      poorExample: "We know our margins. We try to win the work. Volume matters.",
+      whatToObserve: [],
       evidenceSuggestions: [
-        "Interview with example",
-        "Margin guidance if any"
+        "Interview with a specific decision example",
+        "Any margin guidance used in practice",
       ],
       maturityGuidance: {
         1: "No commercial filter on deals.",
         2: "Weak awareness. Hero managers only.",
         3: "Generally aware. Major deals controlled.",
-        4: "Strong commercial awareness in normal selling.",
+        4: "Strong commercial awareness in normal selling, shown in real decisions.",
       },
       confidenceGuidance: {
-        high: "Clear example.",
-        medium: "General talk.",
-        low: "No evidence.",
+        high: "Clear recent example of commercial judgement in a deal.",
+        medium: "Plausible practice with a weaker example.",
+        low: "General talk with no example.",
       },
-      diagnosticRelevance: "Value-destroying deals may justify Diagnostic.",
+      diagnosticRelevance:
+        "Repeated value-destroying deals may justify Diagnostic.",
     },
     {
       id: "q3-commercial-exceptions",
@@ -1073,9 +1076,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Specials follow a path. Paperwork matches the agreement.",
       poorExample: "We note it and hope it comes out right.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Example note"
@@ -1130,35 +1131,37 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q5-commercial-ownership",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "Who owns commercial discipline here, and how do they know it is holding?",
-      whyItMatters: "Tests ownership of commercial control.",
-      assessorPrompt: "Who is responsible for margin and discount discipline?",
+      question:
+        "How do you know commercial discipline is holding across the branch, and what do you do when it is not?",
+      whyItMatters:
+        "Tests monitoring and intervention over time, not who can change a price (that is price control). One useful signal and one intervention example is enough for a Health Review.",
+      assessorPrompt: "What tells you commercial discipline is slipping, and what did you last do about it?",
       followUpPrompts: [
-        "What do they review?",
-        "How often?",
-        "Last action?"
+        "What signal do you actually use?",
+        "How often do you look at it?",
+        "Give a recent example of intervening when discipline slipped.",
       ],
-      goodExample: "Named owner. Reviews something real. Recent action.",
-      poorExample: "The manager keeps an eye on things.",
-      whatToObserve: [
-        "N/A"
-      ],
+      goodExample:
+        "We watch discount levels on a simple weekly view. Last month one counter was over-discounting; the manager reset the rule and checked the following week.",
+      poorExample: "I own commercial discipline. I keep an eye on things.",
+      whatToObserve: [],
       evidenceSuggestions: [
-        "Interview",
-        "Commercial report if used"
+        "Interview with monitoring signal and intervention example",
+        "Any simple report or note used in practice",
       ],
       maturityGuidance: {
-        1: "No commercial ownership.",
-        2: "Informal ownership.",
-        3: "Clear ownership with some review.",
-        4: "Active commercial ownership with evidence.",
+        1: "No monitoring of commercial discipline. Slippage goes unnoticed.",
+        2: "Informal awareness only. Rare or weak intervention.",
+        3: "Some signal is used and issues are usually addressed.",
+        4: "Commercial discipline is actively watched and corrected when it slips.",
       },
       confidenceGuidance: {
-        high: "Owner plus example.",
-        medium: "Name only.",
-        low: "No owner.",
+        high: "Clear signal plus a concrete intervention example.",
+        medium: "Signal described with a weaker example.",
+        low: "Ownership claim with no signal or intervention.",
       },
-      diagnosticRelevance: "No commercial ownership may justify Diagnostic.",
+      diagnosticRelevance:
+        "No grip on commercial slippage with weak results may justify Diagnostic.",
     }
   ],
   "safety-compliance-risk-culture": [
@@ -1211,9 +1214,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Recent example reported and acted on.",
       poorExample: "We would deal with it if something happened.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Report if exists"
@@ -1234,37 +1235,42 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q3-safety-compliance-basics",
       investigationRoute: "OBSERVE_THEN_ASK",
-      question: "Are basic compliance expectations present and followed for this environment?",
-      whyItMatters: "Tests basic compliance habit, not a full legal audit.",
-      assessorPrompt: "What must be in place here, and can you show it is real?",
+      question:
+        "Are basic compliance expectations present and followed for this environment?",
+      whyItMatters:
+        "Tests practical basics for this site, not a legal compliance programme. Absence of paperwork alone must not lower maturity where practical control is working. Serious or immediate issues are escalated, not treated only as a maturity score.",
+      assessorPrompt: "What must be in place here for this kind of operation, and is it actually followed on the day?",
       followUpPrompts: [
-        "Out of date?",
-        "Who checks?",
-        "What when expired?"
+        "What is out of date or missing in practice?",
+        "Who checks the basics that matter here?",
+        "What happens when something expires or fails?",
       ],
-      goodExample: "Basic controls present and current enough for confidence on the day.",
-      poorExample: "Head office handles that.",
+      goodExample:
+        "Basic required controls for this environment are present and followed enough for confidence on the day. Practice matches what people say.",
+      poorExample: "Head office handles that. We are covered. It is all in the folder.",
       whatToObserve: [
-        "Records if appropriate",
-        "Obvious gaps"
+        "Obvious site controls relevant to this environment",
+        "Practice vs poster",
+        "Clear gaps that affect risk on the day",
       ],
       evidenceSuggestions: [
-        "Observation",
-        "Documentation sample",
-        "Interview"
+        "Observation of practical controls",
+        "Sample of records only where they support real practice",
+        "Interview",
       ],
       maturityGuidance: {
-        1: "Basics missing or neglected.",
-        2: "Partial or outdated.",
-        3: "Basics largely in place.",
-        4: "Compliance habits sound and checked.",
+        1: "Basics missing or clearly neglected in practice.",
+        2: "Partial or outdated controls; weak day-to-day follow-through.",
+        3: "Basics largely in place and followed for this environment.",
+        4: "Practical compliance habits are sound and checked. Paperwork is not required for a 4 if behaviour is embedded.",
       },
       confidenceGuidance: {
-        high: "Saw records or clear practice.",
-        medium: "Partial view.",
-        low: "No access.",
+        high: "Saw practice and/or clear current controls on the day.",
+        medium: "Partial view of practice or records.",
+        low: "Claims only, or folder evidence with no link to practice.",
       },
-      diagnosticRelevance: "Compliance gaps may justify Diagnostic.",
+      diagnosticRelevance:
+        "Compliance gaps may justify Diagnostic. Serious legal or immediate safety risk needs proper escalation outside a maturity debate.",
     },
     {
       id: "q4-safety-challenge",
@@ -1279,9 +1285,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Challenge accepted. Credible support.",
       poorExample: "They can say something. We need to get the work out.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Staff interview if possible",
         "Manager interview"
@@ -1312,9 +1316,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Named owner. Practical checks. Recent action.",
       poorExample: "Everyone owns safety.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Check record if any"
@@ -1346,9 +1348,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Skills match the work. Gaps known and managed.",
       poorExample: "They learn on the job. We get by.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Training sample",
@@ -1380,9 +1380,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Cover exists. Recent absence handled without collapse.",
       poorExample: "We struggle if the wrong person is off.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Absence example"
@@ -1413,9 +1411,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Critical knowledge shared or recorded enough to protect the branch.",
       poorExample: "A few people just know.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview"
       ],
@@ -1445,9 +1441,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Structured enough onboarding. Readiness checked somehow.",
       poorExample: "They shadow someone and pick it up.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Induction checklist if any"
@@ -1478,9 +1472,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Performance discussed practically. Example of action.",
       poorExample: "We know who the good ones are.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example"
       ],
@@ -1548,9 +1540,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Absence absorbed with clear choices about what to protect.",
       poorExample: "We all just do more.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example"
       ],
@@ -1580,9 +1570,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Response organised. Example shows control under pressure.",
       poorExample: "We muddle through.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Incident note if any"
@@ -1603,34 +1591,38 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q4-resilience-bottlenecks",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "What is the real bottleneck that limits this branch, and is it understood?",
-      whyItMatters: "Tests whether constraints are known.",
-      assessorPrompt: "What limits you most on a hard day?",
+      question:
+        "What is the real bottleneck that limits this branch, and is it understood?",
+      whyItMatters:
+        "Tests whether constraints are known from evidence, not only opinion. Naming a bottleneck without proof is weak.",
+      assessorPrompt: "What limits you most on a hard day? What evidence makes you believe that, what effect does it have, and what have you tried?",
       followUpPrompts: [
-        "People, space, vehicles, system, suppliers?",
-        "Measured or only felt?",
-        "Any action?"
+        "What evidence supports that this is the bottleneck?",
+        "What operational effect does it create?",
+        "What have you attempted to relieve it?",
+        "Would another relevant person name the same constraint?",
       ],
-      goodExample: "Bottleneck named the same way by more than one person.",
-      poorExample: "Everything is a bottleneck when busy.",
-      whatToObserve: [
-        "N/A"
-      ],
+      goodExample:
+        "Yard capacity at peak is the limit. We see queues and delayed loads on Fridays. We tried staggered collections last month; it helped a bit.",
+      poorExample: "The yard is our bottleneck. Everything is a bottleneck when it is busy.",
+      whatToObserve: [],
       evidenceSuggestions: [
-        "Interview"
+        "Interview with evidence chain",
+        "Any measure, example day, or attempted relief",
       ],
       maturityGuidance: {
-        1: "No shared view of constraints.",
-        2: "Vague sense of limits.",
-        3: "Main bottleneck understood.",
-        4: "Constraints known and managed.",
+        1: "No shared view of constraints, or pure opinion with no evidence.",
+        2: "Vague sense of limits. Little action.",
+        3: "Main bottleneck understood with some evidence and some response.",
+        4: "Constraints are known from evidence and actively managed.",
       },
       confidenceGuidance: {
-        high: "Consistent answers.",
-        medium: "One view only.",
-        low: "No clarity.",
+        high: "Claim plus evidence, effect, and relief attempt (or clear reason none was tried).",
+        medium: "Claim plus partial evidence.",
+        low: "Name only.",
       },
-      diagnosticRelevance: "Unmanaged bottlenecks may justify Diagnostic.",
+      diagnosticRelevance:
+        "Unmanaged critical bottlenecks may justify Diagnostic.",
     },
     {
       id: "q5-resilience-recovery",
@@ -1645,9 +1637,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Recovery deliberate and relatively quick.",
       poorExample: "It takes a while to settle.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview"
       ],
@@ -1669,21 +1659,23 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q1-communication-priority",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "If you asked two different people what matters most operationally today, would you get the same answer?",
-      whyItMatters: "Core test: shared live operational picture.",
-      assessorPrompt: "What is the main operational priority today? Who else would say the same?",
+      question:
+        "If you asked two different people what matters most operationally today, would you get the same answer?",
+      whyItMatters:
+        "Tests shared live operational understanding. This is not the same as leadership ownership (who owns standards). Here the test is whether people share the same operational priority today.",
+      assessorPrompt: "What is the main operational priority today? Who else would give the same answer?",
       followUpPrompts: [
-        "How set?",
-        "How shared?",
-        "When priorities clash?"
+        "How was that priority set?",
+        "How was it shared?",
+        "What happens when priorities clash?",
       ],
-      goodExample: "Manager and another person name the same priority in practical terms.",
+      goodExample:
+        "Manager and another person name the same priority in practical terms.",
       poorExample: "Everyone knows they need to work hard.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
-        "Interview two roles if possible"
+        "Interview two roles where available",
+        "Any brief or board that states today's priority if used in practice",
       ],
       maturityGuidance: {
         1: "No shared priority. Conflicting stories.",
@@ -1692,11 +1684,12 @@ export const PILLAR_QUESTIONS = {
         4: "Tight alignment on what matters now.",
       },
       confidenceGuidance: {
-        high: "Two consistent answers.",
-        medium: "One answer only.",
-        low: "Conflicting or empty.",
+        high: "Two consistent answers from different people.",
+        medium: "One clear answer with a weak second check.",
+        low: "Conflicting or empty answers.",
       },
-      diagnosticRelevance: "Chronic misalignment may justify Diagnostic.",
+      diagnosticRelevance:
+        "Chronic misalignment may justify Diagnostic. Ownership of standards sits under Leadership, not this question.",
     },
     {
       id: "q2-communication-handover",
@@ -1744,9 +1737,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Problem reached the right person. Answer came back clearly.",
       poorExample: "They tell me eventually.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview with example"
       ],
@@ -1776,9 +1767,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Mixed messages rare and challenged.",
       poorExample: "Depends who is on the counter.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Observation if seen"
@@ -1809,9 +1798,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Briefs produce actions. Example of change from a meeting.",
       poorExample: "We have meetings when we can.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Action note if any"
@@ -1844,9 +1831,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Recurring issue named with a real change attempted and reviewed.",
       poorExample: "Same things crop up. We deal with them as they come.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Action log if any"
@@ -1910,9 +1895,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Review with actions that were followed up.",
       poorExample: "We review when something goes wrong.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview",
         "Action notes"
@@ -1943,9 +1926,7 @@ export const PILLAR_QUESTIONS = {
       ],
       goodExample: "Idea taken seriously. Trial or clear reason for no.",
       poorExample: "They can always speak up.",
-      whatToObserve: [
-        "N/A"
-      ],
+      whatToObserve: [],
       evidenceSuggestions: [
         "Interview staff if possible"
       ],
@@ -1965,38 +1946,42 @@ export const PILLAR_QUESTIONS = {
     {
       id: "q5-ci-ownership",
       investigationRoute: "ASK_THEN_EVIDENCE",
-      question: "Who owns making the branch better over time, not only keeping it running today?",
-      whyItMatters: "Tests improvement ownership beyond firefighting.",
-      assessorPrompt: "Who drives improvement here, and how do you know progress is real?",
+      question:
+        "Who owns making the branch better over time, not only keeping it running today?",
+      whyItMatters:
+        "Tests improvement ownership through a real change story, not a declaration that someone owns improvement.",
+      assessorPrompt: "Give a specific improvement from the last period. What changed, why, who drove it, and what happened afterwards?",
       followUpPrompts: [
-        "Only the manager?",
-        "Simple plan?",
-        "What improved last quarter?"
+        "What was the problem before?",
+        "Who drove the change?",
+        "What is different now?",
+        "How do you know it stuck?",
       ],
-      goodExample: "Clear owner. Real improvement named in the last period.",
-      poorExample: "We all try to improve.",
-      whatToObserve: [
-        "N/A"
-      ],
+      goodExample:
+        "Lost picks on aisle three kept recurring. Warehouse lead changed put-away labels in February. Error rate dropped and has stayed lower.",
+      poorExample: "We are always looking to improve. We all own improvement.",
+      whatToObserve: [],
       evidenceSuggestions: [
-        "Interview"
+        "Interview with a specific improvement story",
+        "Any before/after note or simple measure if used",
       ],
       maturityGuidance: {
-        1: "No improvement ownership.",
-        2: "Aspirational only.",
-        3: "Someone owns improvement with some results.",
-        4: "Active improvement ownership with evidence of change.",
+        1: "No improvement ownership and no real change examples.",
+        2: "Aspirational ownership. Weak or no follow-through.",
+        3: "Someone owns improvement with some evidenced results.",
+        4: "Active improvement ownership with clear change stories and results.",
       },
       confidenceGuidance: {
-        high: "Owner plus real change.",
-        medium: "Name only.",
-        low: "None.",
+        high: "Specific story with who, why, and after-effect.",
+        medium: "Partial story.",
+        low: "Ownership claim only.",
       },
-      diagnosticRelevance: "No improvement engine may justify Diagnostic.",
+      diagnosticRelevance:
+        "No improvement engine with declining performance may justify Diagnostic.",
     }
   ]
 };
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)
