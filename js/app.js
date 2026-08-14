@@ -1,5 +1,5 @@
 // ==========================================================================
-// Keystone Field Kit — App Entry Point
+// Decamark Field Kit — App Entry Point
 //
 // Initialises the store, initialises the router, registers all views,
 // and mounts the first screen. This is the only file that wires the

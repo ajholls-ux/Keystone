@@ -1,8 +1,8 @@
 // ==========================================================================
-// Keystone Field Kit — Analysis Transition View
+// Decamark Field Kit — Analysis Transition View
 //
 // Screen 9 of the locked Screen Map. Deliberate brief transition between
-// assessment completion and report generation, reinforcing that Keystone
+// assessment completion and report generation, reinforcing that Decamark
 // transforms captured information into insight. Auto-advances.
 // ==========================================================================
 

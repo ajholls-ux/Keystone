@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Keystone Field Kit -- Design Tokens
+   Decamark Field Kit -- Design Tokens
    Source of truth: Product Specification Part 4 (locked)
    No raw colour, spacing, or type values should appear outside this file.
    ========================================================================== */
@@ -16,7 +16,7 @@
   /* Colour -- structure */
   --color-border: #E6E1DB;
 
-  /* Colour -- orange (Keystone identity accent) */
+  /* Colour -- orange (Decamark identity accent) */
   --color-orange-50: #FBEDE1;
   --color-orange-100: #F5D8BE;
   --color-orange-500: #D97A42; /* identity colour -- icons, borders, selected states, links */

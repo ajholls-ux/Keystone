@@ -1,5 +1,5 @@
 // ==========================================================================
-// Keystone Field Kit — Organisation List View
+// Decamark Field Kit — Organisation List View
 //
 // Screen 3 of the locked Screen Map (Part 2). The assessor's home screen —
 // the only true hub in the MVP.
@@ -92,7 +92,7 @@ function renderBackupSection(container) {
       await importBackup(file);
       replace("organisationList");
     } catch (err) {
-      window.alert("This file could not be read as a Keystone backup.");
+      window.alert("This file could not be read as a Decamark backup.");
       console.error(err);
     } finally {
       importInput.value = "";
