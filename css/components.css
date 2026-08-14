@@ -1224,3 +1224,11 @@ details[open] > .guidance-panel__summary::before {
 .question-guidance--observe .guidance-panel__summary {
   font-size: 12px;
 }
+
+
+/* Product version on landing */
+.app-version {
+  margin: var(--space-2) 0 0 0;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}

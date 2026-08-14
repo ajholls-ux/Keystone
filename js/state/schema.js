@@ -268,7 +268,7 @@ export const PILLAR_QUESTIONS = {
         "What would a new customer notice first when they arrive here, and what does the site do to make sure that first impression is maintained?",
       whyItMatters:
         "Tests whether presentation is deliberately maintained or simply fixed when someone happens to notice a problem. Cover both what is seen and whether it is controlled.",
-      assessorPrompt: "Walk the arrival path. Note what a new customer would notice first, then establish how that standard is kept -- not only how it looks today.",
+      assessorPrompt: "Walk the arrival path. Note what a new customer would notice first, then establish how that standard is kept - not only how it looks today.",
       followUpPrompts: [
         "Is there a defined presentation standard?",
         "Who is responsible for checking it?",
@@ -671,7 +671,7 @@ export const PILLAR_QUESTIONS = {
         "When was it last made clear?",
       ],
       goodExample:
-        "Main jobs have an agreed way. Staff describe the same steps. It is simple and people follow it -- written or not.",
+        "Main jobs have an agreed way. Staff describe the same steps. It is simple and people follow it - written or not.",
       poorExample: "Everyone knows what they are doing. Common sense.",
       whatToObserve: [],
       evidenceSuggestions: [
@@ -1982,6 +1982,9 @@ export const PILLAR_QUESTIONS = {
   ]
 };
 export const SCHEMA_VERSION = 12;
+
+/** Product release version shown on the landing screen. Bump on every shipped update. */
+export const APP_VERSION = "5.0.1";
 
 // The Assessment Engine version governing reviews created under this
 // schema. Recorded per-Review so future methodology versions (v1.1, v1.2...)

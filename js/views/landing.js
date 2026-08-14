@@ -1,7 +1,7 @@
 // ==========================================================================
-// Keystone Field Kit — Landing View
+// Keystone Field Kit - Landing View
 //
-// Screen 2 of the locked Screen Map (Part 2). Not a marketing website —
+// Screen 2 of the locked Screen Map (Part 2). Not a marketing website -
 // establishes identity and moves the assessor into the tool. Copy below is
 // placeholder per founder note, but written to hold the intended
 // positioning: professional, calm, precise, operational. No feature-benefit
@@ -10,6 +10,7 @@
 
 import { createButton } from "../components/button.js";
 import { navigate } from "../router.js";
+import { APP_VERSION } from "../state/schema.js";
 
 export function renderLanding(container) {
   const screen = document.createElement("div");
@@ -27,9 +28,13 @@ export function renderLanding(container) {
   const subhead = document.createElement("p");
   subhead.className = "text-body-secondary";
   subhead.textContent =
-    "A structured instrument for assessing operational health — built for use on site.";
+    "A structured instrument for assessing operational health - built for use on site.";
 
-  content.append(heading, subhead);
+  const version = document.createElement("p");
+  version.className = "text-caption app-version";
+  version.textContent = "Version " + APP_VERSION;
+
+  content.append(heading, subhead, version);
 
   const actions = document.createElement("div");
   actions.className = "screen-actions";
